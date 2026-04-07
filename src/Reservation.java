@@ -1,11 +1,6 @@
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
-enum Status {
-    PENDING,
-    CONFIRMED,
-    CANCELLED,
-    COMPLETED,
-}
 
 public class Reservation {
 
@@ -13,14 +8,14 @@ public class Reservation {
     private Room room;
     private LocalDate checkinDate;
     private LocalDate checkoutDate;
-    private Status status;
+    private ReservationStatus reservationStatus;
 
     public Reservation(Guest guest, Room room, LocalDate checkinDate, LocalDate checkoutDate) {
         this.guest = guest;
         this.room = room;
         this.checkinDate = checkinDate;
         this.checkoutDate = checkoutDate;
-        this.status = Status.PENDING;
+        this.reservationStatus = ReservationStatus.PENDING;
     }
 
     public Guest getGuest() {
@@ -55,12 +50,12 @@ public class Reservation {
         this.checkoutDate = checkoutDate;
     }
 
-    public Status getStatus() {
-        return status;
+    public ReservationStatus getReservationStatus() {
+        return reservationStatus;
     }
 
-    public void setStatus(Status status) {
-        this.status = status;
+    public void setReservationStatus(ReservationStatus status) {
+        this.reservationStatus = status;
     }    
 
 }
