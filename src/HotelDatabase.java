@@ -14,11 +14,11 @@ public class HotelDatabase {
     // Method to pre-populate dummy data
     public static void initializeDummyData() {
         // 1. Create Dummy Guests
-        Guest guest1 = new Guest("Radwan", "pass123", LocalDate.of(1990, 5, 15), "123 Main", Gender.MALE, "High floor, quiet");
+        Guest guest1 = new Guest("Radwan", "pass123", LocalDate.of(1990, 5, 15), 120.0, "123 main", Gender.MALE, "High Floor");
         guest1.setBalance(500.0);
         guests.add(guest1);
 
-        Guest guest2 = new Guest("Zein", "pass", LocalDate.of(1992, 8, 20), "Zayed", Gender.FEMALE, "Near elevator");
+        Guest guest2 = new Guest("Zein", "pass", LocalDate.of(1992, 8, 20), 4200.0, "Zayed",Gender.FEMALE, "Near Elevator");
         guests.add(guest2);
 
         // 2. Create Dummy Room Types & Amenities
