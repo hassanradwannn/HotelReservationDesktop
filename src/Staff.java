@@ -21,4 +21,8 @@ public abstract class Staff extends User {
 
     public int getWorkingHours() { return workingHours; }
     public void setWorkingHours(int workingHours) { this.workingHours = workingHours; }
+
+    public static Staff login(String username, String password) throws InvalidCredentialsException {
+        return (Staff)userLogin(username, password, false);
+    }
 }

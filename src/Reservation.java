@@ -1,6 +1,5 @@
 import java.time.LocalDate;
 
-
 public class Reservation {
 
     private Guest guest;

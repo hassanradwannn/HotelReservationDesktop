@@ -56,7 +56,7 @@ public class Database {
         System.out.println("System initialized with dummy data successfully.");
     }
 
-    static User authenticate(String username, String password, boolean isGuest) throws InvalidCredentialsException {
+    public static User authenticate(String username, String password, boolean isGuest) throws InvalidCredentialsException {
         User user = findUser(username);
         if (user != null) {
             boolean matchtype = isGuest ? (user instanceof Guest) : (user instanceof Staff);
@@ -71,7 +71,7 @@ public class Database {
         throw new UserNotFoundException();
     }
 
-    static void register(User user, boolean isGuest) throws InvalidCredentialsException {
+    public static void register(User user) throws InvalidCredentialsException {
         if (findUser(user.getUsername()) != null) {
             throw new UsernameAlreadyTakenException();
         }
