@@ -1,15 +1,13 @@
 import java.time.LocalDate;
 import java.util.ArrayList;
 
-public class HotelDatabase {
+public class Database {
     // Static lists acting as our in-memory tables
     public static ArrayList<Guest> guests = new ArrayList<>();
+    public static ArrayList<Staff> staffMembers = new ArrayList<>();
     public static ArrayList<Room> rooms = new ArrayList<>();
     public static ArrayList<Reservation> reservations = new ArrayList<>();
     public static ArrayList<Invoice> invoices = new ArrayList<>();
-
-    // Optional: A list to hold staff if you want to test staff logins
-    public static ArrayList<Staff> staffMembers = new ArrayList<>();
 
     // Method to pre-populate dummy data
     public static void initializeDummyData() {
@@ -57,4 +55,55 @@ public class HotelDatabase {
 
         System.out.println("System initialized with dummy data successfully.");
     }
+
+    static User authenticate(String username, String password, boolean isGuest) throws InvalidCredentialsException {
+        User user = findUser(username);
+        if (user != null) {
+            boolean matchtype = isGuest ? (user instanceof Guest) : (user instanceof Staff);
+            if (matchtype) {
+                if (user.getPassword().equals(password)) {
+                    return user;
+                }
+                throw new InvalidPasswordException();
+            }
+            
+        }
+        throw new UserNotFoundException();
+    }
+
+    static void register(User user, boolean isGuest) throws InvalidCredentialsException {
+        if (findUser(user.getUsername()) != null) {
+            throw new UsernameAlreadyTakenException();
+        }
+        validatePasswordStrength(user.getPassword());
+        addUser(user);
+    }
+    
+    public static void addUser(User user) {
+        if (user instanceof Guest) {
+            guests.add((Guest)user);
+        } else {
+            staffMembers.add((Staff)user);
+        }
+    }
+
+    public static User findUser(String username) {
+        for (Guest guest : guests) {
+            if (guest.getUsername().equalsIgnoreCase(username)) 
+                return guest;
+        }
+        for (Staff staff : staffMembers) {
+            if (staff.getUsername().equalsIgnoreCase(username)) 
+                return staff;
+        }
+        return null;
+    }
+
+    private static void validatePasswordStrength(String password) throws WeakPasswordException {
+        String regex = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,}$";
+        if (password == null || !password.matches(regex)) {
+            throw new WeakPasswordException();
+        }
+    }
+
 }

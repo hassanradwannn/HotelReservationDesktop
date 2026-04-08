@@ -1,0 +1,50 @@
+import java.time.LocalDate;
+
+public abstract class User {
+    private String username;
+    private String password;
+    private LocalDate dateOfBirth;
+
+    User(String username, String password, LocalDate dateOfBirth) {
+        this.username = username;
+        this.password = password;
+        this.dateOfBirth = dateOfBirth;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public LocalDate getDateOfBirth() {
+        return dateOfBirth;
+    }
+
+    public void setDateOfBirth(LocalDate dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
+    }
+
+    /*
+     * public void setPassword(String password) {
+     * if(password == null || password.length() < 6 ||
+     * !password.matches(".*\\d.*") || !password.matches(".*[a-zA-Z].*")) {
+     * throw new IllegalArgumentException(
+     * "Password must be at least 6 characters long and contain letters and digits."
+     * );
+     * }
+     * this.password = password;
+     * }
+     */
+    
+}
