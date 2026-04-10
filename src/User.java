@@ -31,11 +31,11 @@ public abstract class User {
     }
 
     public void register() throws InvalidCredentialsException {
-        Database.register(this);
+        Authentication.register(this);
     }
 
     protected static User userLogin(String username, String password, boolean isGuest) throws InvalidCredentialsException {
-        return Database.authenticate(username, password, isGuest);
+        return Authentication.login(username, password, isGuest);
     }
 
     
