@@ -55,29 +55,6 @@ public class Database {
 
         System.out.println("System initialized with dummy data successfully.");
     }
-
-    public static User authenticate(String username, String password, boolean isGuest) throws InvalidCredentialsException {
-        User user = findUser(username);
-        if (user != null) {
-            boolean matchtype = isGuest ? (user instanceof Guest) : (user instanceof Staff);
-            if (matchtype) {
-                if (user.getPassword().equals(password)) {
-                    return user;
-                }
-                throw new InvalidPasswordException();
-            }
-            
-        }
-        throw new UserNotFoundException();
-    }
-
-    public static void register(User user) throws InvalidCredentialsException {
-        if (findUser(user.getUsername()) != null) {
-            throw new UsernameAlreadyTakenException();
-        }
-        validatePasswordStrength(user.getPassword());
-        addUser(user);
-    }
     
     public static void addUser(User user) {
         if (user instanceof Guest) {
@@ -97,13 +74,6 @@ public class Database {
                 return staff;
         }
         return null;
-    }
-
-    private static void validatePasswordStrength(String password) throws WeakPasswordException {
-        String regex = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,}$";
-        if (password == null || !password.matches(regex)) {
-            throw new WeakPasswordException();
-        }
     }
 
 }
