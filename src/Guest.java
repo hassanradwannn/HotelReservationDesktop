@@ -30,8 +30,10 @@ public class Guest extends User {
     public String getRoomPreferences() { return roomPreferences; }
     public void setRoomPreferences(String roomPreferences) { this.roomPreferences = roomPreferences; }
 
-    public Guest login(String username, String password) throws InvalidCredentialsException {
-        return (Guest)userLogin(username, password, false);
+    public boolean login(String inputUsername, String inputPassword) throws InvalidCredentialsException {
+        Authentication.login(inputUsername, inputPassword, true);
+
+        return true;
     }
 
 }

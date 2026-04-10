@@ -5,28 +5,34 @@ public class Invoice implements Payable {
     private PaymentMethod paymentMethod;
     private LocalDate paymentDate;
 
-    public Invoice(double total, PaymentMethod paymentMethod, LocalDate paymentDate) {
-        this.totalAmount = total;
+
+    public Invoice(double totalAmount, PaymentMethod paymentMethod) throws InvalidPaymentException {
+        setTotalAmount(totalAmount);
         this.paymentMethod = paymentMethod;
-        this.paymentDate = paymentDate;
+        this.paymentDate = LocalDate.now();
+        Database.invoices.add(this);
     }
 
-    public double getTotalAmount() {
-        return totalAmount;
+    public double getTotalAmount() { return totalAmount; }
+
+    public void setTotalAmount(double totalAmount) throws InvalidPaymentException {
+        if (totalAmount < 0) {
+            throw new InvalidPaymentException("Invoice amount cannot be negative.");
+        }
+        this.totalAmount = totalAmount;
     }
-    public void setTotalAmount(double total) {
-        this.totalAmount = total;
-    }
-    public PaymentMethod getPaymentMethod() {
-        return paymentMethod;
-    }
-    public void setPaymentMethod(PaymentMethod paymentMethod) {
-        this.paymentMethod = paymentMethod;
-    }
-    public LocalDate getPaymentDate() {
-        return paymentDate;
-    }
-    public void setPaymentDate(LocalDate paymentDate) {
-        this.paymentDate = paymentDate;
+
+    public PaymentMethod getPaymentMethod() { return paymentMethod; }
+    public void setPaymentMethod(PaymentMethod paymentMethod) { this.paymentMethod = paymentMethod; }
+
+    public LocalDate getPaymentDate() { return paymentDate; }
+
+    @Override
+    public boolean processPayment() {
+        if (this.totalAmount > 0 && this.paymentMethod != null) {
+            System.out.println("Payment of $" + this.totalAmount + " processed via " + this.paymentMethod);
+            return true;
+        }
+        return false;
     }
 }
