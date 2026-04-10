@@ -12,6 +12,7 @@ public class Database {
 
     // Method to pre-populate dummy data
     // Method to pre-populate dummy data
+    // Method to pre-populate dummy data
     public static void initializeDummyData() {
         // 1. Create Dummy Guests
         Guest guest1 = new Guest("Radwan", "pass123", LocalDate.of(1990, 5, 15), 120.0, "123 main", Gender.MALE, "High Floor");
@@ -21,76 +22,77 @@ public class Database {
         Guest guest2 = new Guest("Zein", "pass", LocalDate.of(1992, 8, 20), 4200.0, "Zayed", Gender.FEMALE, "Near Elevator");
         guests.add(guest2);
 
-        // 2. Create Dummy Room Types & Amenities
-        RoomType singleType = new RoomType(1, "Single", 150.00, 1);
-        RoomType doubleType = new RoomType(2, "Double", 250.00, 2);
-        RoomType suiteType = new RoomType(3, "Suite", 500.00, 4);
+        // 2. Create Dummy Room Types (Standard vs Luxury)
+        RoomType singleStandard = new RoomType(1, "Single Standard", 150.00, 1);
+        RoomType singleLuxury = new RoomType(2, "Single Luxury", 200.00, 1);
 
-        Amenity wifi = new Amenity(1, "WiFi", "High-speed wireless internet");
+        RoomType doubleStandard = new RoomType(3, "Double Standard", 250.00, 2);
+        RoomType doubleLuxury = new RoomType(4, "Double Luxury", 320.00, 2);
+
+        RoomType suiteStandard = new RoomType(5, "Suite Standard", 500.00, 4);
+        RoomType suiteLuxury = new RoomType(6, "Suite Luxury", 650.00, 4);
+
+        // 3. Define All Amenities
+        Amenity wifi = new Amenity(1, "WiFi", "Standard wireless internet");
         Amenity tv = new Amenity(2, "Smart TV", "Smart TV with streaming services");
         Amenity minibar = new Amenity(3, "Mini-bar", "Mini-bar with drinks and snacks");
         Amenity jacuzzi = new Amenity(4, "Jacuzzi", "Private indoor jacuzzi");
-
-        // Extra random amenities
         Amenity safe = new Amenity(5, "Safe", "In-room digital safe");
         Amenity coffeeMaker = new Amenity(6, "Coffee Maker", "Espresso machine");
-        Amenity[] randomExtras = {safe, coffeeMaker};
 
-        // 3. Generate 100 Rooms (Floors 2 to 6, assuming Floor 1 is the Lobby)
-        // - Floor 6: 20 Suites (601 - 620)
-        // - Floor 5: 20 Singles (501 - 520)
-        // - Floor 4: 10 Singles (411 - 420), 10 Doubles (401 - 410)
-        // - Floors 2, 3: 40 Doubles (201-220, 301-320)
+        // New Tiered Amenities
+        Amenity highSpeedWifi = new Amenity(7, "High-Speed WiFi", "Premium high-speed wireless internet");
+        Amenity widescreenTv = new Amenity(8, "Widescreen TV", "75-inch Widescreen Smart TV");
 
-        Random rand = new Random();
+        // 4. Generate 100 Rooms (Floors 2 to 6, assuming Floor 1 is the Lobby)
         int roomIdCounter = 1;
 
         for (int floor = 2; floor <= 6; floor++) {
             for (int roomNum = 1; roomNum <= 20; roomNum++) {
-                // Generate room string, e.g., 201, 614
                 String formattedRoomNumber = String.format("%d%02d", floor, roomNum);
                 RoomType typeToAssign;
 
-                // NEW DISTRIBUTION LOGIC
+                // Even-numbered rooms will be Luxury, Odd-numbered will be Standard
+                boolean isLuxury = (roomNum % 2 == 0);
+
+                // Determine Base Room Type
                 if (floor == 6) {
-                    typeToAssign = suiteType; // 20 Suites on the top floor
+                    typeToAssign = isLuxury ? suiteLuxury : suiteStandard;
                 } else if (floor == 5 || (floor == 4 && roomNum > 10)) {
-                    typeToAssign = singleType; // 30 Singles
+                    typeToAssign = isLuxury ? singleLuxury : singleStandard;
                 } else {
-                    typeToAssign = doubleType; // 50 Doubles
+                    typeToAssign = isLuxury ? doubleLuxury : doubleStandard;
                 }
 
                 Room currentRoom = new Room(roomIdCounter++, formattedRoomNumber, typeToAssign);
-
-                // Add standard amenities to all rooms
-                currentRoom.addAmenity(wifi);
-                currentRoom.addAmenity(tv);
                 currentRoom.addAmenity(minibar);
+                currentRoom.addAmenity(isLuxury ? highSpeedWifi : wifi);
+                currentRoom.addAmenity(typeToAssign == suiteLuxury ? widescreenTv : tv);
 
-                // Add Jacuzzi specifically to suites
-                if (typeToAssign == suiteType) {
+                if (isLuxury) {
+                    currentRoom.addAmenity(safe);
+                }
+
+                if (floor == 6) {
                     currentRoom.addAmenity(jacuzzi);
                 }
 
-                // Randomly assign extra amenities
-                for (Amenity extra : randomExtras) {
-                    if (rand.nextBoolean()) { // 50% chance to get the safe, 50% chance for coffee maker
-                        currentRoom.addAmenity(extra);
-                    }
+                if (typeToAssign == suiteLuxury) {
+                    currentRoom.addAmenity(coffeeMaker);
                 }
 
                 rooms.add(currentRoom);
             }
         }
 
-        // 4. Create Dummy Staff
+        // 5. Create Dummy Staff
         Admin admin1 = new Admin("admin", "adminPass123", LocalDate.of(1985, 10, 10), 8);
         staffMembers.add(admin1);
 
         Receptionist rec1 = new Receptionist("frontdesk", "deskPass456", LocalDate.of(1995, 2, 25), 8);
         staffMembers.add(rec1);
 
-        System.out.println("System initialized with dummy data successfully. 100 rooms generated.");
+        System.out.println("System initialized with dummy data successfully. 100 structured rooms generated with tiered amenities.");
     }
 
     public static void addUser(User user) {
