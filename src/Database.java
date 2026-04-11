@@ -65,13 +65,13 @@ public class Database {
     }
 
     public static User findUser(String username) {
-        for (Guest guest : guests) {
-            if (guest.getUsername().equalsIgnoreCase(username)) 
-                return guest;
-        }
         for (Staff staff : staffMembers) {
             if (staff.getUsername().equalsIgnoreCase(username)) 
                 return staff;
+        }
+        for (Guest guest : guests) {
+            if (guest.getUsername().equalsIgnoreCase(username)) 
+                return guest;
         }
         return null;
     }
