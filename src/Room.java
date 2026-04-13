@@ -1,22 +1,15 @@
 import java.util.ArrayList;
-public class Room implements Manageable{
+public class Room {
     private int roomNumber;
     private RoomType roomType;
     private ArrayList<Amenity> amenities = new ArrayList<>();
     private boolean available;
-    private double pricePerNight;
-
-    public Room() {
-        amenities = new ArrayList<>();
-        available = true;
-    }
 
     public Room(int roomNumber, RoomType roomType) {
         this.roomNumber = roomNumber;
         this.roomType = roomType;
-        this.amenities = new ArrayList<>();
         this.available = true;
-        setPricePerNight();
+        addAmenity(Database.getAmenities().get(0), getAmenities().get(1));
     }
 
     public int getRoomNumber() {
@@ -43,12 +36,8 @@ public class Room implements Manageable{
         this.amenities = amenities;
     }
 
-    public boolean isAvailable() {
-        return available;
-    }
-
-    public void setAvailable(boolean available) {
-        this.available = available;
+    public double getPricePerNight() {
+        return roomType.getPricePerNight();
     }
 
     public void addAmenity(Amenity... amenities) {
@@ -57,46 +46,28 @@ public class Room implements Manageable{
         }
     }
 
-    public void removeAmenityById(int amenityId) {
-        for (int i = 0; i < amenities.size(); i++) {
-            if (amenities.get(i).getAmenityId() == amenityId) {
-                amenities.remove(i);
-                break;
-            }
-        }
+    public void update(int roomNumber, RoomType roomType, boolean available) {
+        this.roomNumber = roomNumber;
+        this.roomType = roomType;
+        this.available = available;
     }
 
-    public boolean checkAvailability() {
-        return available;
+    public void udpate(int roomNumber) {
+        this.roomNumber = roomNumber;
     }
 
-    public boolean reserveRoom() {
-        if (available) {
-            available = false;
-            return true;
-        }
-        return false;
+    public void update(RoomType roomType) {
+        this.roomType = roomType;
     }
 
-    public void freeRoom() {
-        available = true;
-    }
-
-    public double getPricePerNight() {
-        return pricePerNight;
-    }
-
-    private void setPricePerNight() {
-        pricePerNight = roomType.getPricePerNight();
-        for (Amenity amenity : getAmenities()) {
-            pricePerNight += amenity.getPrice();
-        }
+    public void update(boolean available) {
+        this.available = available;
     }
 
     @Override
     public String toString() {
         return "Room Number: " + roomNumber +
-               ", Type: " + roomType.getTypeName() +
+               ", Type: " + roomType.getName() +
                ", Available: " + available;
     }
 }

@@ -1,43 +1,20 @@
 public class RoomType {
-   private int typeId;
-    private String typeName;
+    private String name;
     private int capacity;
-    private double standardPrice;
     private double pricePerNight;
 
-    public RoomType() {
-    }
-
-    public RoomType(int typeId, String typeName, double standardPrice, int capacity) {
-        this.typeId = typeId;
-        this.typeName = typeName;
-        this.standardPrice = standardPrice;
+    public RoomType(String name, double pricePerNight, int capacity) {
+        this.name = name;
         this.capacity = capacity;
-        this.pricePerNight = pricePerNight * capacity * 0.8;
+        this.pricePerNight = pricePerNight;
     }
 
-    public int getTypeId() {
-        return typeId;
+    public String getName() {
+        return name;
     }
 
-    public void setTypeId(int typeId) {
-        this.typeId = typeId;
-    }
-
-    public String getTypeName() {
-        return typeName;
-    }
-
-    public void setTypeName(String typeName) {
-        this.typeName = typeName;
-    }
-
-    public double getStandardPrice() {
-        return standardPrice;
-    }
-
-    public void setStandardPrice(double pricePerNight) {
-        this.standardPrice = pricePerNight;
+    public void setName(String typeName) {
+        this.name = typeName;
     }
 
     public int getCapacity() {
@@ -52,11 +29,24 @@ public class RoomType {
         return this.pricePerNight;
     }
 
+    void update(String name, int capacity, double pricePerNight) {
+        this.name = name;
+        this.capacity = capacity;
+        this.pricePerNight = pricePerNight;
+    }
+
+    void update(int capacity) {
+        this.capacity = capacity;
+    }
+
+    void update(double pricePerNight) {
+        this.pricePerNight = pricePerNight;
+    }
+
     @Override
     public String toString() {
-        return "RoomType ID: " + typeId +
-               ", Name: " + typeName +
-               ", Price/Night: " + standardPrice +
+        return "Name: " + name +
+               ", Price/Night: " + pricePerNight +
                ", Capacity: " + capacity;
     }
 }

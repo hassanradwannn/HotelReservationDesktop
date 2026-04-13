@@ -6,13 +6,13 @@ import exceptions.InvalidCredentialsException;
 
 public class Database {
     // Static lists acting as our in-memory tables
-    public static ArrayList<Guest> guests = new ArrayList<>();
-    public static ArrayList<Staff> staffMembers = new ArrayList<>();
-    public static ArrayList<Room> rooms = new ArrayList<>();
-    public static ArrayList<RoomType> roomTypes = new ArrayList<>();
-    public static ArrayList<Amenity> amenities = new ArrayList<>();
-    public static ArrayList<Reservation> reservations = new ArrayList<>();
-    public static ArrayList<Invoice> invoices = new ArrayList<>();
+    private static ArrayList<Guest> guests = new ArrayList<>();
+    private static ArrayList<Staff> staffMembers = new ArrayList<>();
+    private static ArrayList<Room> rooms = new ArrayList<>();
+    private static ArrayList<RoomType> roomTypes = new ArrayList<>();
+    private static ArrayList<Amenity> amenities = new ArrayList<>();
+    private static ArrayList<Reservation> reservations = new ArrayList<>();
+    private static ArrayList<Invoice> invoices = new ArrayList<>();
 
     public static ArrayList<Guest> getGuests() {
         return guests;
@@ -54,16 +54,16 @@ public class Database {
         }
         
 
-        Amenity wifi = new Amenity(1, "WiFi", "High-speed wireless internet", 10);
-        Amenity tv = new Amenity(2, "Smart TV", "Smart TV with streaming services", 35);
-        Amenity minibar = new Amenity(3, "Mini-bar", "Mini-bar with drinks and snacks", 75);
-        Amenity jacuzzi = new Amenity(4, "Jacuzzi", "Jacuzzi", 75);
+        Amenity wifi = new Amenity("WiFi", 10);
+        Amenity tv = new Amenity("Smart TV", 35);
+        Amenity minibar = new Amenity("Mini-bar", 75);
+        Amenity jacuzzi = new Amenity("Jacuzzi", 100);
         addAmenity(wifi, tv, minibar, jacuzzi);
 
-        RoomType standard = new RoomType(1, "Standard", 150, 1);
-        RoomType standardDouble = new RoomType(2, "Standard", 150, 2);
-        RoomType suite = new RoomType(3, "Suite", 250, 4);
-        addRoomType(standard, standardDouble, suite);
+        RoomType standard = new RoomType("Standard", 150, 1);
+        RoomType deluxe = new RoomType("Deluxe", 275, 2);
+        RoomType suite = new RoomType("Suite", 500, 4);
+        addRoomType(standard, deluxe, suite);
 
          for (int i = 100; i < 200; i++) {
             int typeIndex = (i < 130) ? 0 : (i < 170) ? 1 : 2;
@@ -95,6 +95,10 @@ public class Database {
                 return guest;
         }
         return null;
+    }
+
+    public static void addAmenity(String name, double price) {
+        addAmenity(new Amenity(name, price));
     }
 
     public static void addAmenity(Amenity... items) {
