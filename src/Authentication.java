@@ -1,3 +1,9 @@
+import exceptions.InvalidCredentialsException;
+import exceptions.InvalidPasswordException;
+import exceptions.UserNotFoundException;
+import exceptions.UsernameAlreadyTakenException;
+import exceptions.WeakPasswordException;
+
 public class Authentication {
     public static User login(String username, String password)
             throws InvalidCredentialsException {

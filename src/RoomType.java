@@ -1,17 +1,19 @@
 public class RoomType {
    private int typeId;
     private String typeName;
-    private double pricePerNight;
     private int capacity;
+    private double standardPrice;
+    private double pricePerNight;
 
     public RoomType() {
     }
 
-    public RoomType(int typeId, String typeName, double pricePerNight, int capacity) {
+    public RoomType(int typeId, String typeName, double standardPrice, int capacity) {
         this.typeId = typeId;
         this.typeName = typeName;
-        this.pricePerNight = pricePerNight;
+        this.standardPrice = standardPrice;
         this.capacity = capacity;
+        this.pricePerNight = pricePerNight * capacity * 0.8;
     }
 
     public int getTypeId() {
@@ -30,12 +32,12 @@ public class RoomType {
         this.typeName = typeName;
     }
 
-    public double getPricePerNight() {
-        return pricePerNight;
+    public double getStandardPrice() {
+        return standardPrice;
     }
 
-    public void setPricePerNight(double pricePerNight) {
-        this.pricePerNight = pricePerNight;
+    public void setStandardPrice(double pricePerNight) {
+        this.standardPrice = pricePerNight;
     }
 
     public int getCapacity() {
@@ -46,11 +48,15 @@ public class RoomType {
         this.capacity = capacity;
     }
 
+    public double getPricePerNight() {
+        return this.pricePerNight;
+    }
+
     @Override
     public String toString() {
         return "RoomType ID: " + typeId +
                ", Name: " + typeName +
-               ", Price/Night: " + pricePerNight +
+               ", Price/Night: " + standardPrice +
                ", Capacity: " + capacity;
     }
 }

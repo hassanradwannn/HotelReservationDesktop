@@ -2,14 +2,16 @@ public class Amenity {
   private int amenityId;
     private String name;
     private String description;
+    private double price;
 
     public Amenity() {
     }
 
-    public Amenity(int amenityId, String name, String description) {
+    public Amenity(int amenityId, String name, String description, double price) {
         this.amenityId = amenityId;
         this.name = name;
         this.description = description;
+        this.price = price;
     }
 
     public int getAmenityId() {
@@ -34,6 +36,14 @@ public class Amenity {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
     }
 
     @Override

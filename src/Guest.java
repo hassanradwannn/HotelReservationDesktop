@@ -1,5 +1,7 @@
 import java.time.LocalDate;
 
+import exceptions.InvalidCredentialsException;
+
 public class Guest extends User {
     private double balance;
     private String address;

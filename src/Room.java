@@ -1,45 +1,29 @@
 import java.util.ArrayList;
 public class Room implements Manageable{
-  private int roomId;
-    private String roomNumber;
+    private int roomNumber;
     private RoomType roomType;
-    private ArrayList<Amenity> amenities;
+    private ArrayList<Amenity> amenities = new ArrayList<>();
     private boolean available;
+    private double pricePerNight;
 
     public Room() {
         amenities = new ArrayList<>();
         available = true;
     }
 
-    public Room(int roomId, String roomNumber, RoomType roomType) {
-        this.roomId = roomId;
+    public Room(int roomNumber, RoomType roomType) {
         this.roomNumber = roomNumber;
         this.roomType = roomType;
         this.amenities = new ArrayList<>();
         this.available = true;
+        setPricePerNight();
     }
 
-    public Room(int roomId, String roomNumber, RoomType roomType, boolean available) {
-        this.roomId = roomId;
-        this.roomNumber = roomNumber;
-        this.roomType = roomType;
-        this.amenities = new ArrayList<>();
-        this.available = available;
-    }
-
-    public int getRoomId() {
-        return roomId;
-    }
-
-    public void setRoomId(int roomId) {
-        this.roomId = roomId;
-    }
-
-    public String getRoomNumber() {
+    public int getRoomNumber() {
         return roomNumber;
     }
 
-    public void setRoomNumber(String roomNumber) {
+    public void setRoomNumber(int roomNumber) {
         this.roomNumber = roomNumber;
     }
 
@@ -67,9 +51,9 @@ public class Room implements Manageable{
         this.available = available;
     }
 
-    public void addAmenity(Amenity amenity) {
-        if (amenity != null) {
-            amenities.add(amenity);
+    public void addAmenity(Amenity... amenities) {
+        for (Amenity amenity : amenities) {
+            this.amenities.add(amenity);
         }
     }
 
@@ -98,10 +82,20 @@ public class Room implements Manageable{
         available = true;
     }
 
+    public double getPricePerNight() {
+        return pricePerNight;
+    }
+
+    private void setPricePerNight() {
+        pricePerNight = roomType.getPricePerNight();
+        for (Amenity amenity : getAmenities()) {
+            pricePerNight += amenity.getPrice();
+        }
+    }
+
     @Override
     public String toString() {
-        return "Room ID: " + roomId +
-               ", Room Number: " + roomNumber +
+        return "Room Number: " + roomNumber +
                ", Type: " + roomType.getTypeName() +
                ", Available: " + available;
     }

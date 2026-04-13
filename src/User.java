@@ -1,5 +1,7 @@
 import java.time.LocalDate;
 
+import exceptions.InvalidCredentialsException;
+
 public abstract class User {
     private String username;
     private String password;

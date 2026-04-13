@@ -1,26 +1,21 @@
 import java.util.ArrayList;
 
 public class RoomManager {
-    private ArrayList<Room> rooms;
-    private ArrayList<RoomType> roomTypes;
-    private ArrayList<Amenity> amenities;
 
-    public RoomManager() {
-        rooms = new ArrayList<>();
-        roomTypes = new ArrayList<>();
-        amenities = new ArrayList<>();
-    }
+    ArrayList<Room> rooms = Database.rooms;
+    ArrayList<RoomType> roomTypes = Database.roomTypes;
+    ArrayList<Amenity> amenities = Database.amenities;
 
     public ArrayList<Room> getRooms() {
         return rooms;
     }
 
     public ArrayList<RoomType> getRoomTypes() {
-        return roomTypes;
+        return Database.roomTypes;
     }
 
     public ArrayList<Amenity> getAmenities() {
-        return amenities;
+        return Database.amenities;
     }
 
     // ---------------- ROOM METHODS ----------------
@@ -31,10 +26,9 @@ public class RoomManager {
         }
     }
 
-    public boolean updateRoom(int roomId, String newRoomNumber, RoomType newRoomType, boolean newAvailability) {
-        Room room = findRoomById(roomId);
+    public boolean updateRoom(int roomNumber, RoomType newRoomType, boolean newAvailability) {
+        Room room = findRoomByNumber(roomNumber);
         if (room != null) {
-            room.setRoomNumber(newRoomNumber);
             room.setRoomType(newRoomType);
             room.setAvailable(newAvailability);
             return true;
@@ -43,7 +37,7 @@ public class RoomManager {
     }
 
     public boolean deleteRoom(int roomId) {
-        Room room = findRoomById(roomId);
+        Room room = findRoomByNumber(roomId);
         if (room != null) {
             rooms.remove(room);
             return true;
@@ -51,9 +45,9 @@ public class RoomManager {
         return false;
     }
 
-    public Room findRoomById(int roomId) {
+    public Room findRoomByNumber(int roomNumber) {
         for (Room room : rooms) {
-            if (room.getRoomId() == roomId) {
+            if (room.getRoomNumber() == roomNumber) {
                 return room;
             }
         }
@@ -71,7 +65,7 @@ public class RoomManager {
     }
 
     public boolean useRoom(int roomId) {
-        Room room = findRoomById(roomId);
+        Room room = findRoomByNumber(roomId);
         if (room != null && room.isAvailable()) {
             room.setAvailable(false);
             return true;
@@ -80,7 +74,7 @@ public class RoomManager {
     }
 
     public void releaseRoom(int roomId) {
-        Room room = findRoomById(roomId);
+        Room room = findRoomByNumber(roomId);
         if (room != null) {
             room.setAvailable(true);
         }
@@ -98,7 +92,7 @@ public class RoomManager {
         RoomType roomType = findRoomTypeById(typeId);
         if (roomType != null) {
             roomType.setTypeName(newName);
-            roomType.setPricePerNight(newPrice);
+            roomType.setStandardPrice(newPrice);
             roomType.setCapacity(newCapacity);
             return true;
         }
@@ -162,7 +156,7 @@ public class RoomManager {
     // ---------------- ROOM + AMENITY LINK ----------------
 
     public boolean addAmenityToRoom(int roomId, int amenityId) {
-        Room room = findRoomById(roomId);
+        Room room = findRoomByNumber(roomId);
         Amenity amenity = findAmenityById(amenityId);
 
         if (room != null && amenity != null) {
@@ -173,7 +167,7 @@ public class RoomManager {
     }
 
     public boolean removeAmenityFromRoom(int roomId, int amenityId) {
-        Room room = findRoomById(roomId);
+        Room room = findRoomByNumber(roomId);
         if (room != null) {
             room.removeAmenityById(amenityId);
             return true;
