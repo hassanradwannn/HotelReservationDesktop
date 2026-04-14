@@ -1,23 +1,10 @@
 public class Amenity {
-  private int amenityId;
     private String name;
-    private String description;
+    private double price;
 
-    public Amenity() {
-    }
-
-    public Amenity(int amenityId, String name, String description) {
-        this.amenityId = amenityId;
+    public Amenity(String name, double price) {
         this.name = name;
-        this.description = description;
-    }
-
-    public int getAmenityId() {
-        return amenityId;
-    }
-
-    public void setAmenityId(int amenityId) {
-        this.amenityId = amenityId;
+        this.price = price;
     }
 
     public String getName() {
@@ -28,17 +15,30 @@ public class Amenity {
         this.name = name;
     }
 
-    public String getDescription() {
-        return description;
+    public double getPrice() {
+        return price;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    void update(String name, double price) {
+        this.name = name;
+        this.price = price;
+    }
+
+    void update(String name) {
+        this.name = name;
+    }
+
+    void update(double price) {
+        this.price = price;
     }
 
     @Override
     public String toString() {
-        return "Amenity ID: " + amenityId + ", Name: " + name + ", Description: " + description;
+        return "Name: " + name + ", Price: " + price;
     }
 }
 

@@ -1,41 +1,20 @@
 public class RoomType {
-   private int typeId;
-    private String typeName;
-    private double pricePerNight;
+    private String name;
     private int capacity;
+    private double pricePerNight;
 
-    public RoomType() {
-    }
-
-    public RoomType(int typeId, String typeName, double pricePerNight, int capacity) {
-        this.typeId = typeId;
-        this.typeName = typeName;
-        this.pricePerNight = pricePerNight;
+    public RoomType(String name, double pricePerNight, int capacity) {
+        this.name = name;
         this.capacity = capacity;
-    }
-
-    public int getTypeId() {
-        return typeId;
-    }
-
-    public void setTypeId(int typeId) {
-        this.typeId = typeId;
-    }
-
-    public String getTypeName() {
-        return typeName;
-    }
-
-    public void setTypeName(String typeName) {
-        this.typeName = typeName;
-    }
-
-    public double getPricePerNight() {
-        return pricePerNight;
-    }
-
-    public void setPricePerNight(double pricePerNight) {
         this.pricePerNight = pricePerNight;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String typeName) {
+        this.name = typeName;
     }
 
     public int getCapacity() {
@@ -46,10 +25,27 @@ public class RoomType {
         this.capacity = capacity;
     }
 
+    public double getPricePerNight() {
+        return this.pricePerNight;
+    }
+
+    void update(String name, int capacity, double pricePerNight) {
+        this.name = name;
+        this.capacity = capacity;
+        this.pricePerNight = pricePerNight;
+    }
+
+    void update(int capacity) {
+        this.capacity = capacity;
+    }
+
+    void update(double pricePerNight) {
+        this.pricePerNight = pricePerNight;
+    }
+
     @Override
     public String toString() {
-        return "RoomType ID: " + typeId +
-               ", Name: " + typeName +
+        return "Name: " + name +
                ", Price/Night: " + pricePerNight +
                ", Capacity: " + capacity;
     }
