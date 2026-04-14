@@ -1,6 +1,5 @@
-package exceptions;
 public class InvalidPasswordException extends InvalidCredentialsException {
-    public InvalidPasswordException() {
+    InvalidPasswordException() {
         super("Invalid password");
     }
 }

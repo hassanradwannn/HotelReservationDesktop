@@ -1,18 +1,16 @@
-import exceptions.InvalidCredentialsException;
-import exceptions.InvalidPasswordException;
-import exceptions.UserNotFoundException;
-import exceptions.UsernameAlreadyTakenException;
-import exceptions.WeakPasswordException;
-
 public class Authentication {
-    public static User login(String username, String password)
+    public static User login(String username, String password, boolean isGuest)
             throws InvalidCredentialsException {
         User user = Database.findUser(username);
         if (user != null) {
-            if (user.getPassword().equals(password)) {
-                return user;
+            boolean matchtype = isGuest ? (user instanceof Guest) : (user instanceof Staff);
+            if (matchtype) {
+                if (user.getPassword().equals(password)) {
+                    return user;
+                }
+                throw new InvalidPasswordException();
             }
-            throw new InvalidPasswordException();
+
         }
         throw new UserNotFoundException();
     }

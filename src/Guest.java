@@ -1,7 +1,5 @@
 import java.time.LocalDate;
 
-import exceptions.InvalidCredentialsException;
-
 public class Guest extends User {
     private double balance;
     private String address;
@@ -32,8 +30,6 @@ public class Guest extends User {
     public String getRoomPreferences() { return roomPreferences; }
     public void setRoomPreferences(String roomPreferences) { this.roomPreferences = roomPreferences; }
 
-    public void register() throws InvalidCredentialsException {
-        Authentication.register(this);
     public boolean login(String inputUsername, String inputPassword) throws InvalidCredentialsException {
         Authentication.login(inputUsername, inputPassword, true);
 

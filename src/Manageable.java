@@ -1,2 +1,2 @@
-public interface Manageable {   
+public interface Manageable {
 }
