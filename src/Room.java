@@ -1,22 +1,45 @@
 import java.util.ArrayList;
-public class Room {
-    private int roomNumber;
+public class Room implements Manageable{
+  private int roomId;
+    private String roomNumber;
     private RoomType roomType;
-    private ArrayList<Amenity> amenities = new ArrayList<>();
+    private ArrayList<Amenity> amenities;
     private boolean available;
 
-    public Room(int roomNumber, RoomType roomType) {
-        this.roomNumber = roomNumber;
-        this.roomType = roomType;
-        this.available = true;
-        addAmenity(Database.getAmenities().get(0), getAmenities().get(1));
+    public Room() {
+        amenities = new ArrayList<>();
+        available = true;
     }
 
-    public int getRoomNumber() {
+    public Room(int roomId, String roomNumber, RoomType roomType) {
+        this.roomId = roomId;
+        this.roomNumber = roomNumber;
+        this.roomType = roomType;
+        this.amenities = new ArrayList<>();
+        this.available = true;
+    }
+
+    public Room(int roomId, String roomNumber, RoomType roomType, boolean available) {
+        this.roomId = roomId;
+        this.roomNumber = roomNumber;
+        this.roomType = roomType;
+        this.amenities = new ArrayList<>();
+        this.available = available;
+    }
+
+    public int getRoomId() {
+        return roomId;
+    }
+
+    public void setRoomId(int roomId) {
+        this.roomId = roomId;
+    }
+
+    public String getRoomNumber() {
         return roomNumber;
     }
 
-    public void setRoomNumber(int roomNumber) {
+    public void setRoomNumber(String roomNumber) {
         this.roomNumber = roomNumber;
     }
 
@@ -36,38 +59,50 @@ public class Room {
         this.amenities = amenities;
     }
 
-    public double getPricePerNight() {
-        return roomType.getPricePerNight();
+    public boolean isAvailable() {
+        return available;
     }
 
-    public void addAmenity(Amenity... amenities) {
-        for (Amenity amenity : amenities) {
-            this.amenities.add(amenity);
+    public void setAvailable(boolean available) {
+        this.available = available;
+    }
+
+    public void addAmenity(Amenity amenity) {
+        if (amenity != null) {
+            amenities.add(amenity);
         }
     }
 
-    public void update(int roomNumber, RoomType roomType, boolean available) {
-        this.roomNumber = roomNumber;
-        this.roomType = roomType;
-        this.available = available;
+    public void removeAmenityById(int amenityId) {
+        for (int i = 0; i < amenities.size(); i++) {
+            if (amenities.get(i).getAmenityId() == amenityId) {
+                amenities.remove(i);
+                break;
+            }
+        }
     }
 
-    public void udpate(int roomNumber) {
-        this.roomNumber = roomNumber;
+    public boolean checkAvailability() {
+        return available;
     }
 
-    public void update(RoomType roomType) {
-        this.roomType = roomType;
+    public boolean reserveRoom() {
+        if (available) {
+            available = false;
+            return true;
+        }
+        return false;
     }
 
-    public void update(boolean available) {
-        this.available = available;
+    public void freeRoom() {
+        available = true;
     }
 
     @Override
     public String toString() {
-        return "Room Number: " + roomNumber +
-               ", Type: " + roomType.getName() +
+        return "Room ID: " + roomId +
+               ", Room Number: " + roomNumber +
+               ", Type: " + roomType.getTypeName() +
                ", Available: " + available;
     }
 }

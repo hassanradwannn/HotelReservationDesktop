@@ -1,6 +1,5 @@
-package exceptions;
 public class UsernameAlreadyTakenException extends InvalidCredentialsException {
-    public UsernameAlreadyTakenException() {
+    UsernameAlreadyTakenException() {
         super("Username is already taken");
     }
 }

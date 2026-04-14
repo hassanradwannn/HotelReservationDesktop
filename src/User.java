@@ -1,7 +1,5 @@
 import java.time.LocalDate;
 
-import exceptions.InvalidCredentialsException;
-
 public abstract class User {
     private String username;
     private String password;
@@ -32,8 +30,13 @@ public abstract class User {
         this.dateOfBirth = dateOfBirth;
     }
 
-    protected static User login(String username, String password) throws InvalidCredentialsException {
-        return Authentication.login(username, password);
+    public void register() throws InvalidCredentialsException {
+        Authentication.register(this);
     }
 
+    protected static User userLogin(String username, String password, boolean isGuest) throws InvalidCredentialsException {
+        return Authentication.login(username, password, isGuest);
+    }
+
+    
 }
