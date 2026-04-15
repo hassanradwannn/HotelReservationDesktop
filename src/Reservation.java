@@ -1,61 +1,54 @@
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-
 
 public class Reservation {
-
+    private String reservationId;
     private Guest guest;
     private Room room;
-    private LocalDate checkinDate;
-    private LocalDate checkoutDate;
-    private ReservationStatus reservationStatus;
+    private LocalDate checkInDate;
+    private LocalDate checkOutDate;
+    private ReservationStatus status;
 
-    public Reservation(Guest guest, Room room, LocalDate checkinDate, LocalDate checkoutDate) {
+    public Reservation(String reservationId, Guest guest, Room room,
+            LocalDate checkInDate, LocalDate checkOutDate,
+            ReservationStatus status) {
+        this.reservationId = reservationId;
         this.guest = guest;
         this.room = room;
-        this.checkinDate = checkinDate;
-        this.checkoutDate = checkoutDate;
-        this.reservationStatus = ReservationStatus.PENDING;
+        this.checkInDate = checkInDate;
+        this.checkOutDate = checkOutDate;
+        this.status = status;
+    }
+
+    public String getReservationId() {
+        return reservationId;
     }
 
     public Guest getGuest() {
         return guest;
     }
 
-    public void setGuest(Guest guest) {
-        this.guest = guest;
-    }
-
     public Room getRoom() {
         return room;
     }
 
-    public void setRoom(Room room) {
-        this.room = room;
+    public LocalDate getCheckInDate() {
+        return checkInDate;
     }
 
-    public LocalDate getCheckinDate() {
-        return checkinDate;
+    public LocalDate getCheckOutDate() {
+        return checkOutDate;
     }
 
-    public void setCheckinDate(LocalDate checkinDate) {
-        this.checkinDate = checkinDate;
+    public ReservationStatus getStatus() {
+        return status;
     }
 
-    public LocalDate getCheckoutDate() {
-        return checkoutDate;
+    public void setStatus(ReservationStatus status) {
+        this.status = status;
     }
 
-    public void setCheckoutDate(LocalDate checkoutDate) {
-        this.checkoutDate = checkoutDate;
+    public boolean overlaps(LocalDate newCheckIn, LocalDate newCheckOut) {
+        return newCheckIn.isBefore(this.checkOutDate) &&
+                newCheckOut.isAfter(this.checkInDate);
     }
-
-    public ReservationStatus getReservationStatus() {
-        return reservationStatus;
-    }
-
-    public void setReservationStatus(ReservationStatus status) {
-        this.reservationStatus = status;
-    }    
-
 }
