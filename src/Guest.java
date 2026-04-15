@@ -34,10 +34,5 @@ public class Guest extends User {
 
     public void register() throws InvalidCredentialsException {
         Authentication.register(this);
-    public boolean login(String inputUsername, String inputPassword) throws InvalidCredentialsException {
-        Authentication.login(inputUsername, inputPassword, true);
-
-        return true;
     }
-
 }
