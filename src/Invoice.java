@@ -1,4 +1,5 @@
 import java.time.LocalDate;
+import exceptions.*;
 
 public class Invoice implements Payable {
     private double totalAmount;
@@ -10,7 +11,7 @@ public class Invoice implements Payable {
         setTotalAmount(totalAmount);
         this.paymentMethod = paymentMethod;
         this.paymentDate = LocalDate.now();
-        Database.invoices.add(this);
+        Database.getInvoices().add(this);
     }
 
     public double getTotalAmount() { return totalAmount; }

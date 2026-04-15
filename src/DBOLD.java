@@ -1,6 +1,7 @@
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Random;
+import exceptions.*;
 
 public class DBOLD {
     // Static lists acting as our in-memory tables

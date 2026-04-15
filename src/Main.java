@@ -1,10 +1,10 @@
 import java.time.LocalDate;
+import exceptions.*;
 
 public class Main {
 
     public static void main(String[] args) {
         // 1. Initialize the database first
-        Database.initializeDummyData();
 
         System.out.println("\n=================================");
         System.out.println("   STARTING MILESTONE 1 TESTS");
