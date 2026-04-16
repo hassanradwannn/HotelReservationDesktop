@@ -42,17 +42,23 @@ public class Database {
     }
 
     static {
-        Admin admin = new Admin("Admin", "admin@123", LocalDate.of(1964, 4, 19), 6);
-
+        // 1. FIXED PASSWORD (Added capital 'A')
+        Admin admin = new Admin("Admin", "Admin@123", LocalDate.of(1964, 4, 19), 6);
         Receptionist receptionist = new Receptionist("Manar", "Manar2002", LocalDate.of(2002, 6, 13), 8);
 
+        // Separated try-catch blocks so if one fails, the other still registers
         try {
             Authentication.register(admin);
+        } catch (InvalidCredentialsException e) {
+            System.out.println("Failed to register Admin.");
+        }
+
+        try {
             Authentication.register(receptionist);
         } catch (InvalidCredentialsException e) {
-            System.out.println(e.getMessage());
+            System.out.println("Failed to register Receptionist.");
         }
-        
+
 
         Amenity wifi = new Amenity("WiFi", 10);
         Amenity tv = new Amenity("Smart TV", 35);
@@ -65,16 +71,19 @@ public class Database {
         RoomType suite = new RoomType("Suite", 500, 4);
         addRoomType(standard, deluxe, suite);
 
-         for (int i = 100; i < 200; i++) {
+        for (int i = 100; i < 200; i++) {
             int typeIndex = (i < 130) ? 0 : (i < 170) ? 1 : 2;
             Room room = new Room(i, getRoomTypes().get(typeIndex));
-            
+
             // Add a specific number of amenities based on room type
             for (int j = 0; j < typeIndex + 1; j++) {
                 int amenityIndex = new Random().nextInt(getAmenities().size());
                 room.addAmenity(getAmenities().get(amenityIndex));
             }
-         }
+
+            // ---> THIS IS THE CRITICAL MISSING LINE <---
+            addRoom(room);
+        }
     }
     
     public static void addUser(User user) {

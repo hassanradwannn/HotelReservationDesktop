@@ -9,7 +9,7 @@ public class Room {
         this.roomNumber = roomNumber;
         this.roomType = roomType;
         this.available = true;
-        addAmenity(Database.getAmenities().get(0), getAmenities().get(1));
+        addAmenity(Database.getAmenities().get(0), Database.getAmenities().get(1));
     }
 
     public int getRoomNumber() {
@@ -52,15 +52,7 @@ public class Room {
         this.available = available;
     }
 
-    public void udpate(int roomNumber) {
-        this.roomNumber = roomNumber;
-    }
-
-    public void update(RoomType roomType) {
-        this.roomType = roomType;
-    }
-
-    public void update(boolean available) {
+    public void setAvailable(boolean available) {
         this.available = available;
     }
 
@@ -69,5 +61,9 @@ public class Room {
         return "Room Number: " + roomNumber +
                ", Type: " + roomType.getName() +
                ", Available: " + available;
+    }
+
+    public boolean isAvailable() {
+        return available;
     }
 }
