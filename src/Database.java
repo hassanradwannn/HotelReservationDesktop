@@ -1,6 +1,5 @@
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Random;
 
 import exceptions.InvalidCredentialsException;
 
@@ -14,78 +13,74 @@ public class Database {
     private static ArrayList<Reservation> reservations = new ArrayList<>();
     private static ArrayList<Invoice> invoices = new ArrayList<>();
 
-    public static ArrayList<Guest> getGuests() {
-        return guests;
-    }
-    public static ArrayList<Staff> getStaffMembers() {
-        return staffMembers;
-    }
-
-    public static ArrayList<Room> getRooms() {
-        return rooms;
-    }
-
-    public static ArrayList<RoomType> getRoomTypes() {
-        return roomTypes;
-    }
-
-    public static ArrayList<Amenity> getAmenities() {
-        return amenities;
-    }
-
-    public static ArrayList<Reservation> getReservations() {
-        return reservations;
-    }
-
-    public static ArrayList<Invoice> getInvoices() {
-        return invoices;
-    }
+    public static ArrayList<Guest> getGuests() { return guests; }
+    public static ArrayList<Staff> getStaffMembers() { return staffMembers; }
+    public static ArrayList<Room> getRooms() { return rooms; }
+    public static ArrayList<RoomType> getRoomTypes() { return roomTypes; }
+    public static ArrayList<Amenity> getAmenities() { return amenities; }
+    public static ArrayList<Reservation> getReservations() { return reservations; }
+    public static ArrayList<Invoice> getInvoices() { return invoices; }
 
     static {
-        // 1. FIXED PASSWORD (Added capital 'A')
+        // 1. Staff Registration
         Admin admin = new Admin("Admin", "Admin@123", LocalDate.of(1964, 4, 19), 6);
         Receptionist receptionist = new Receptionist("Manar", "Manar2002", LocalDate.of(2002, 6, 13), 8);
 
-        // Separated try-catch blocks so if one fails, the other still registers
         try {
             Authentication.register(admin);
-        } catch (InvalidCredentialsException e) {
-            System.out.println("Failed to register Admin.");
-        }
-
-        try {
             Authentication.register(receptionist);
         } catch (InvalidCredentialsException e) {
-            System.out.println("Failed to register Receptionist.");
+            System.out.println("Error: Could not initialize staff.");
         }
 
-
+        // 2. Amenities (Indices: 0=WiFi, 1=TV, 2=Mini-bar, 3=Jacuzzi, 4=Gym)
         Amenity wifi = new Amenity("WiFi", 10);
         Amenity tv = new Amenity("Smart TV", 35);
         Amenity minibar = new Amenity("Mini-bar", 75);
         Amenity jacuzzi = new Amenity("Jacuzzi", 100);
-        addAmenity(wifi, tv, minibar, jacuzzi);
+        Amenity gym = new Amenity("Gym", 200);
+        addAmenity(wifi, tv, minibar, jacuzzi, gym);
 
+        // 3. Room Types
         RoomType standard = new RoomType("Standard", 150, 1);
         RoomType deluxe = new RoomType("Deluxe", 275, 2);
         RoomType suite = new RoomType("Suite", 500, 4);
-        addRoomType(standard, deluxe, suite);
+        RoomType penthouse = new RoomType("Penthouse", 1000, 8);
+        addRoomType(standard, deluxe, suite, penthouse);
 
-        for (int i = 100; i < 200; i++) {
-            int typeIndex = (i < 130) ? 0 : (i < 170) ? 1 : 2;
-            Room room = new Room(i, getRoomTypes().get(typeIndex));
+        // 4. Generate Room Ranges
+        generateRoomRange(100, 120, standard);
+        generateRoomRange(200, 220, standard);
+        generateRoomRange(300, 320, deluxe);
+        generateRoomRange(400, 420, deluxe);
+        generateRoomRange(500, 520, suite);
+        generateRoomRange(600, 620, penthouse);
+    }
 
-            // Add a specific number of amenities based on room type
-            for (int j = 0; j < typeIndex + 1; j++) {
-                int amenityIndex = new Random().nextInt(getAmenities().size());
-                room.addAmenity(getAmenities().get(amenityIndex));
+    private static void generateRoomRange(int start, int end, RoomType type) {
+        for (int i = start; i <= end; i++) {
+            Room room = new Room(String.valueOf(i), type);
+            String typeName = type.getName();
+
+            // 1. Standard in ALL rooms
+            room.addAmenity(getAmenities().get(0)); // WiFi
+            room.addAmenity(getAmenities().get(1)); // TV
+            room.addAmenity(getAmenities().get(2)); // Mini-bar
+
+            // 2. Jacuzzi is exclusive to Suite and Penthouse
+            if (typeName.equalsIgnoreCase("Suite") || typeName.equalsIgnoreCase("Penthouse")) {
+                room.addAmenity(getAmenities().get(3)); // Jacuzzi
             }
 
-            // ---> THIS IS THE CRITICAL MISSING LINE <---
+            // 3. Gym is included for free/by default ONLY in Penthouse
+            if (typeName.equalsIgnoreCase("Penthouse")) {
+                room.addAmenity(getAmenities().get(4)); // Gym
+            }
+
             addRoom(room);
         }
     }
-    
+
     public static void addUser(User user) {
         if (user instanceof Guest) {
             getGuests().add((Guest)user);
@@ -96,12 +91,10 @@ public class Database {
 
     public static User findUser(String username) {
         for (Staff staff : getStaffMembers()) {
-            if (staff.getUsername().equalsIgnoreCase(username)) 
-                return staff;
+            if (staff.getUsername().equalsIgnoreCase(username)) return staff;
         }
         for (Guest guest : getGuests()) {
-            if (guest.getUsername().equalsIgnoreCase(username)) 
-                return guest;
+            if (guest.getUsername().equalsIgnoreCase(username)) return guest;
         }
         return null;
     }
@@ -125,5 +118,4 @@ public class Database {
     public static void addRoom(Room room) {
         getRooms().add(room);
     }
-
 }

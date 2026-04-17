@@ -72,9 +72,8 @@ public class Main {
             System.out.print("Password (min 8 chars, 1 uppercase, 1 digit): ");
             password = scanner.nextLine().trim();
             try {
-                // We call the static validation method directly
                 Authentication.validatePasswordStrength(password);
-                validPass = true; // If no exception, we break the loop
+                validPass = true;
             } catch (WeakPasswordException e) {
                 System.out.println("Error: " + e.getMessage() + ", Please try again.");
             }
@@ -183,7 +182,7 @@ public class Main {
         for (int i = 0; i < types.size(); i++) {
             System.out.println((i + 1) + ". " + types.get(i));
         }
-        System.out.println("Select room type (number): ");
+        System.out.print("Select room type (number): ");
         int typeChoice;
         try {
             typeChoice = Integer.parseInt(scanner.nextLine().trim()) - 1;
@@ -213,7 +212,8 @@ public class Main {
                 System.out.println("Invalid input. Please enter a number.");
             }
         }
-        // 2. Date Input Loop (Added Validation)
+
+        // 2. Date Input Loop
         LocalDate checkIn = null;
         LocalDate checkOut = null;
         ReservationService service = new ReservationService(Database.getRooms(), Database.getReservations());
@@ -244,23 +244,18 @@ public class Main {
             System.out.println("No rooms available for the selected criteria or dates overlap with existing bookings.");
             return;
         }
+
         System.out.println("\nAvailable rooms:");
         for (Room r : available) {
             System.out.println("- Room Number: " + r.getRoomNumber() + " | Type: " + r.getRoomType().getName());
         }
 
+        // 4. Select room by string
         System.out.print("\nSelect room (Enter Room Number): ");
-        int selectedRoomNumber;
-        try {
-            selectedRoomNumber = Integer.parseInt(scanner.nextLine().trim());
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid input. Please enter a numeric room number.");
-            return;
-        }
+        String selectedRoomNumber = scanner.nextLine().trim();
 
-// Find the room object that matches the entered room number from the available list
         Room selectedRoom = available.stream()
-                .filter(r -> r.getRoomNumber() == selectedRoomNumber)
+                .filter(r -> r.getRoomNumber().equalsIgnoreCase(selectedRoomNumber))
                 .findFirst()
                 .orElse(null);
 
@@ -269,7 +264,7 @@ public class Main {
             return;
         }
 
-// Now create the reservation using the room object we found
+        // 5. Finalize Reservation
         try {
             Reservation res = service.createReservation(guest, selectedRoom, checkIn, checkOut);
             System.out.println("Reservation created! ID: " + res.getReservationId());
@@ -296,7 +291,6 @@ public class Main {
         System.out.print("Enter Reservation ID to cancel: ");
         String id = scanner.nextLine().trim();
 
-        // Verify reservation belongs to this guest
         boolean owned = Database.getReservations().stream()
                 .anyMatch(r -> r.getReservationId().equals(id)
                         && r.getGuest().getUsername().equalsIgnoreCase(guest.getUsername())
@@ -314,28 +308,26 @@ public class Main {
             System.out.println("Error: " + e.getMessage());
         }
     }
-    //print receipt method
+
     private static void printReceipt(Guest guest, Reservation res, long nights, PaymentMethod method, double total) {
-    System.out.println("\n===========================================");
-    System.out.println("             HOTEL RECEIPT");
-    System.out.println("===========================================");
-    System.out.println("Guest Name   : " + guest.getUsername());
-    System.out.println("Room Number  : " + res.getRoom().getRoomNumber());
-    System.out.println("Check-in     : " + res.getCheckInDate());
-    System.out.println("Check-out    : " + res.getCheckOutDate());
-    System.out.println("Nights       : " + nights);
-    System.out.println("Payment Type : " + method);
-    System.out.println("-------------------------------------------");
-    System.out.println("TOTAL PAID   : $" + total);
-    System.out.println("===========================================");
-    System.out.println("      Thank you for staying with us!");
-    System.out.println("===========================================\n");
-    //
-}
+        System.out.println("\n===========================================");
+        System.out.println("             HOTEL RECEIPT");
+        System.out.println("===========================================");
+        System.out.println("Guest Name   : " + guest.getUsername());
+        System.out.println("Room Number  : " + res.getRoom().getRoomNumber());
+        System.out.println("Check-in     : " + res.getCheckInDate());
+        System.out.println("Check-out    : " + res.getCheckOutDate());
+        System.out.println("Nights       : " + nights);
+        System.out.println("Payment Type : " + method);
+        System.out.println("-------------------------------------------");
+        System.out.println("TOTAL PAID   : $" + total);
+        System.out.println("===========================================");
+        System.out.println("      Thank you for staying with us!");
+        System.out.println("===========================================\n");
+    }
 
     private static void checkoutAndPay(Guest guest) {
         System.out.println("\n--- Checkout & Pay ---");
-        // Show confirmed reservations only
         List<Reservation> confirmed = Database.getReservations().stream()
                 .filter(r -> r.getGuest().getUsername().equalsIgnoreCase(guest.getUsername())
                         && r.getStatus() == ReservationStatus.CONFIRMED)
@@ -363,10 +355,22 @@ public class Main {
         }
 
         Reservation res = confirmed.get(choice);
+        // Inside checkoutAndPay(Guest guest) in Main.java:
         long nights = res.getCheckInDate().until(res.getCheckOutDate()).getDays();
         double total = nights * res.getRoom().getPricePerNight();
 
-        System.out.println("\nTotal amount due: $" + total + " (" + nights + " night(s) × $" + res.getRoom().getPricePerNight() + ")");
+        if (!res.getRoom().getRoomType().getName().equalsIgnoreCase("Penthouse")) {
+            System.out.print("Would you like to add a Gym Pass for your stay? ($200 flat fee) (Y/N): ");
+            String gymChoice = scanner.nextLine().trim();
+            if (gymChoice.equalsIgnoreCase("Y")) {
+                // Find the gym price dynamically from the Database
+                Amenity gym = Database.getAmenities().get(4);
+                total += gym.getPrice();
+                System.out.println("Gym pass added to your invoice.");
+            }
+        }
+
+        System.out.println("\nTotal amount due: $" + total);
 
         if (guest.getBalance() < total) {
             System.out.println("Insufficient balance ($" + guest.getBalance() + "). Please top up.");
@@ -441,9 +445,7 @@ public class Main {
         switch (scanner.nextLine().trim()) {
             case "1" -> {
                 System.out.print("Room number: ");
-                int num;
-                try { num = Integer.parseInt(scanner.nextLine().trim()); }
-                catch (NumberFormatException e) { System.out.println("Invalid number."); return; }
+                String num = scanner.nextLine().trim();
 
                 System.out.println("Select Room Type:");
                 List<RoomType> types = Database.getRoomTypes();
@@ -459,17 +461,13 @@ public class Main {
             }
             case "2" -> {
                 System.out.print("Room number to update: ");
-                int num;
-                try { num = Integer.parseInt(scanner.nextLine().trim()); }
-                catch (NumberFormatException e) { System.out.println("Invalid."); return; }
+                String num = scanner.nextLine().trim();
 
                 Room room = findRoom(num);
                 if (room == null) { System.out.println("Room not found."); return; }
 
                 System.out.print("New room number (or same): ");
-                int newNum;
-                try { newNum = Integer.parseInt(scanner.nextLine().trim()); }
-                catch (NumberFormatException e) { System.out.println("Invalid."); return; }
+                String newNum = scanner.nextLine().trim();
 
                 System.out.println("Select new Room Type:");
                 List<RoomType> types = Database.getRoomTypes();
@@ -484,9 +482,7 @@ public class Main {
             }
             case "3" -> {
                 System.out.print("Room number to delete: ");
-                int num;
-                try { num = Integer.parseInt(scanner.nextLine().trim()); }
-                catch (NumberFormatException e) { System.out.println("Invalid."); return; }
+                String num = scanner.nextLine().trim();
 
                 Room room = findRoom(num);
                 if (room == null) { System.out.println("Room not found."); return; }
@@ -659,9 +655,9 @@ public class Main {
                 + " | Status: " + r.getStatus();
     }
 
-    private static Room findRoom(int number) {
+    private static Room findRoom(String number) {
         return Database.getRooms().stream()
-                .filter(r -> r.getRoomNumber() == number)
+                .filter(r -> r.getRoomNumber().equalsIgnoreCase(number))
                 .findFirst().orElse(null);
     }
 
