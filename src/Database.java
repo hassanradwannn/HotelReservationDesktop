@@ -44,10 +44,10 @@ public class Database {
         addAmenity(wifi, tv, minibar, jacuzzi, gym);
 
         // 3. Room Types
-        RoomType standard = new RoomType("Standard", 150, 1);
-        RoomType deluxe = new RoomType("Deluxe", 275, 2);
-        RoomType suite = new RoomType("Suite", 500, 4);
-        RoomType penthouse = new RoomType("Penthouse", 1000, 8);
+        RoomType standard = new RoomType("Standard", 500, 1);
+        RoomType deluxe = new RoomType("Deluxe", 700, 2);
+        RoomType suite = new RoomType("Suite", 1000, 4);
+        RoomType penthouse = new RoomType("Penthouse", 2000, 8);
         addRoomType(standard, deluxe, suite, penthouse);
 
         // 4. Generate Room Ranges
@@ -120,4 +120,5 @@ public class Database {
     public static void addRoom(Room room) {
         getRooms().add(room);
     }
+
 }
