@@ -14,10 +14,20 @@ public class ReservationService {
     }
 
     public boolean isDateRangeValid(LocalDate checkIn, LocalDate checkOut) {
-        return checkIn != null &&
-                checkOut != null &&
-                !checkIn.isBefore(LocalDate.now()) &&
-                checkOut.isAfter(checkIn);
+        if (checkIn == null || checkOut == null) {
+            return false;
+        }
+
+        LocalDate today = LocalDate.now();
+
+        if (checkIn.isBefore(today)) {
+            return false;
+        }
+        if (!checkOut.isAfter(checkIn)) {
+            return false;
+        }
+
+        return true;
     }
 
     public List<Room> searchAvailableRooms(LocalDate checkIn, LocalDate checkOut,

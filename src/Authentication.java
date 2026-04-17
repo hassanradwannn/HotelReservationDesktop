@@ -25,7 +25,7 @@ public class Authentication {
         Database.addUser(user);
     }
 
-    private static void validatePasswordStrength(String password) throws WeakPasswordException {
+    public static void validatePasswordStrength(String password) throws WeakPasswordException {
         String regex = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,}$";
         if (password == null || !password.matches(regex)) {
             throw new WeakPasswordException();
