@@ -133,6 +133,12 @@ public class Main {
                 case "0" -> { System.out.println("Logged out."); active = false; }
                 default  -> System.out.println("Invalid option.");
             }
+
+            System.out.println("Login successful! Welcome, " + user.getUsername() + ".");
+            runGuestFlow((Guest) user);
+
+        } catch (InvalidCredentialsException e) {
+            System.out.println("Login failed: " + e.getClass().getSimpleName());
         }
     }
 
