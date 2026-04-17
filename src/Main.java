@@ -1,5 +1,5 @@
-﻿import exceptions.InvalidCredentialsException;
-import exceptions.InvalidPaymentException;
+import exceptions.InvalidCredentialsException;
+import exceptions.*;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -66,8 +66,20 @@ public class Main {
         System.out.println("\n--- Guest Registration ---");
         System.out.print("Username: ");
         String username = scanner.nextLine().trim();
-        System.out.print("Password (min 8 chars, 1 uppercase, 1 digit): ");
-        String password = scanner.nextLine().trim();
+        String password = "";
+        boolean validPass = false;
+        while (!validPass) {
+            System.out.print("Password (min 8 chars, 1 uppercase, 1 digit): ");
+            password = scanner.nextLine().trim();
+            try {
+                // We call the static validation method directly
+                Authentication.validatePasswordStrength(password);
+                validPass = true; // If no exception, we break the loop
+            } catch (WeakPasswordException e) {
+                System.out.println("Error: " + e.getMessage() + ", Please try again.");
+            }
+        }
+
         System.out.print("Date of Birth (YYYY-MM-DD): ");
         LocalDate dob;
         try {
@@ -76,6 +88,7 @@ public class Main {
             System.out.println("Invalid date format.");
             return;
         }
+
         System.out.print("Balance: ");
         double balance;
         try {
@@ -84,8 +97,10 @@ public class Main {
             System.out.println("Invalid balance.");
             return;
         }
+
         System.out.print("Address: ");
         String address = scanner.nextLine().trim();
+
         System.out.print("Gender (MALE / FEMALE): ");
         Gender gender;
         try {
@@ -94,7 +109,8 @@ public class Main {
             System.out.println("Invalid gender.");
             return;
         }
-        System.out.print("Room Preferences (e.g. Suite, high floor): ");
+
+        System.out.print("Room Preferences: ");
         String prefs = scanner.nextLine().trim();
 
         Guest guest = new Guest(username, password, dob, balance, address, gender, prefs);
@@ -161,12 +177,13 @@ public class Main {
 
     private static void makeReservation(Guest guest) {
         System.out.println("\n--- Make a Reservation ---");
-        System.out.println("Available Room Types:");
+
+        // 1. Select Room Type
         List<RoomType> types = Database.getRoomTypes();
         for (int i = 0; i < types.size(); i++) {
             System.out.println((i + 1) + ". " + types.get(i));
         }
-        System.out.print("Select room type (number): ");
+        System.out.println("Select room type (number): ");
         int typeChoice;
         try {
             typeChoice = Integer.parseInt(scanner.nextLine().trim()) - 1;
@@ -177,53 +194,85 @@ public class Main {
         }
         RoomType selectedType = types.get(typeChoice);
 
-        System.out.print("Number of guests: ");
-        int numGuests;
-        try {
-            numGuests = Integer.parseInt(scanner.nextLine().trim());
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid number.");
-            return;
+        int numGuests = 0;
+        boolean validGuests = false;
+        while (!validGuests) {
+            System.out.print("Number of guests: ");
+            try {
+                numGuests = Integer.parseInt(scanner.nextLine().trim());
+                if (numGuests <= 0) {
+                    System.out.println("Number of guests must be at least 1.");
+                } else if (numGuests > selectedType.getCapacity()) {
+                    System.out.println("Error: The selected " + selectedType.getName() +
+                            " only has a capacity of " + selectedType.getCapacity() + " guests.");
+                    System.out.println("Please enter a smaller number or restart to choose a larger room type.");
+                } else {
+                    validGuests = true;
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a number.");
+            }
         }
-
-        System.out.print("Check-in date (YYYY-MM-DD): ");
-        LocalDate checkIn;
-        System.out.print("Check-out date (YYYY-MM-DD): ");
-        LocalDate checkOut;
-        try {
-            checkIn  = LocalDate.parse(scanner.nextLine().trim());
-            checkOut = LocalDate.parse(scanner.nextLine().trim());
-        } catch (DateTimeParseException e) {
-            System.out.println("Invalid date format.");
-            return;
-        }
-
+        // 2. Date Input Loop (Added Validation)
+        LocalDate checkIn = null;
+        LocalDate checkOut = null;
         ReservationService service = new ReservationService(Database.getRooms(), Database.getReservations());
+        boolean datesValid = false;
+
+        while (!datesValid) {
+            try {
+                System.out.print("Check-in date (YYYY-MM-DD): ");
+                checkIn = LocalDate.parse(scanner.nextLine().trim());
+                System.out.print("Check-out date (YYYY-MM-DD): ");
+                checkOut = LocalDate.parse(scanner.nextLine().trim());
+
+                if (!service.isDateRangeValid(checkIn, checkOut)) {
+                    System.out.println("Error: Dates cannot be in the past, and Check-out must be after Check-in.");
+                    System.out.println("Please enter the dates again.");
+                } else {
+                    datesValid = true;
+                }
+            } catch (DateTimeParseException e) {
+                System.out.println("Invalid date format. Please use YYYY-MM-DD.");
+            }
+        }
+
+        // 3. Search for available rooms
         List<Room> available = service.searchAvailableRooms(checkIn, checkOut, selectedType, numGuests);
 
         if (available.isEmpty()) {
-            System.out.println("No rooms available for the selected criteria.");
+            System.out.println("No rooms available for the selected criteria or dates overlap with existing bookings.");
             return;
         }
-
         System.out.println("\nAvailable rooms:");
-        for (int i = 0; i < available.size(); i++) {
-            System.out.println((i + 1) + ". " + available.get(i));
+        for (Room r : available) {
+            System.out.println("- Room Number: " + r.getRoomNumber() + " | Type: " + r.getRoomType().getName());
         }
-        System.out.print("Select room (number): ");
-        int roomChoice;
+
+        System.out.print("\nSelect room (Enter Room Number): ");
+        int selectedRoomNumber;
         try {
-            roomChoice = Integer.parseInt(scanner.nextLine().trim()) - 1;
-            if (roomChoice < 0 || roomChoice >= available.size()) throw new NumberFormatException();
+            selectedRoomNumber = Integer.parseInt(scanner.nextLine().trim());
         } catch (NumberFormatException e) {
-            System.out.println("Invalid selection.");
+            System.out.println("Invalid input. Please enter a numeric room number.");
             return;
         }
 
+// Find the room object that matches the entered room number from the available list
+        Room selectedRoom = available.stream()
+                .filter(r -> r.getRoomNumber() == selectedRoomNumber)
+                .findFirst()
+                .orElse(null);
+
+        if (selectedRoom == null) {
+            System.out.println("Invalid selection. That room is not in the available list.");
+            return;
+        }
+
+// Now create the reservation using the room object we found
         try {
-            Reservation res = service.createReservation(guest, available.get(roomChoice), checkIn, checkOut);
+            Reservation res = service.createReservation(guest, selectedRoom, checkIn, checkOut);
             System.out.println("Reservation created! ID: " + res.getReservationId());
-            System.out.println("Status: " + res.getStatus());
         } catch (IllegalArgumentException e) {
             System.out.println("Reservation failed: " + e.getMessage());
         }
