@@ -25,10 +25,12 @@ public class Database {
         // 1. Staff Registration
         Admin admin = new Admin("Admin", "Admin@123", LocalDate.of(1964, 4, 19), 6);
         Receptionist receptionist = new Receptionist("Manar", "Manar2002", LocalDate.of(2002, 6, 13), 8);
+        Guest defaultGuest = new Guest("Hassan", "Hassan123", LocalDate.of(2007, 4, 10), 10000, "2 haram",Gender.MALE, "");
 
         try {
             Authentication.register(admin);
             Authentication.register(receptionist);
+            Authentication.register(defaultGuest);
         } catch (InvalidCredentialsException e) {
             System.out.println("Error: Could not initialize staff.");
         }
