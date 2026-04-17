@@ -1,22 +1,22 @@
 import java.util.ArrayList;
 public class Room {
-    private int roomNumber;
+    private String roomNumber;
     private RoomType roomType;
     private ArrayList<Amenity> amenities = new ArrayList<>();
     private boolean available;
 
-    public Room(int roomNumber, RoomType roomType) {
+    public Room(String roomNumber, RoomType roomType) {
         this.roomNumber = roomNumber;
         this.roomType = roomType;
         this.available = true;
         addAmenity(Database.getAmenities().get(0), Database.getAmenities().get(1));
     }
 
-    public int getRoomNumber() {
+    public String getRoomNumber() {
         return roomNumber;
     }
 
-    public void setRoomNumber(int roomNumber) {
+    public void setRoomNumber(String roomNumber) {
         this.roomNumber = roomNumber;
     }
 
@@ -46,7 +46,7 @@ public class Room {
         }
     }
 
-    public void update(int roomNumber, RoomType roomType, boolean available) {
+    public void update(String roomNumber, RoomType roomType, boolean available) {
         this.roomNumber = roomNumber;
         this.roomType = roomType;
         this.available = available;
