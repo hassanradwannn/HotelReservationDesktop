@@ -1,4 +1,4 @@
-import exceptions.InvalidCredentialsException;
+﻿import exceptions.InvalidCredentialsException;
 import exceptions.*;
 
 import java.time.LocalDate;
@@ -145,8 +145,11 @@ public class Main {
                 case "4" -> viewGuestReservations(guest);
                 case "5" -> cancelReservation(guest);
                 case "6" -> checkoutAndPay(guest);
-                case "0" -> { System.out.println("Logged out."); active = false; }
-                default  -> System.out.println("Invalid option.");
+                case "0" -> {
+                    System.out.println("Logged out.");
+                    active = false;
+                }
+                default -> System.out.println("Invalid option.");
             }
         }
     }
@@ -171,7 +174,8 @@ public class Main {
                 found = true;
             }
         }
-        if (!found) System.out.println("No rooms available.");
+        if (!found)
+            System.out.println("No rooms available.");
     }
 
     private static void makeReservation(Guest guest) {
@@ -186,7 +190,8 @@ public class Main {
         int typeChoice;
         try {
             typeChoice = Integer.parseInt(scanner.nextLine().trim()) - 1;
-            if (typeChoice < 0 || typeChoice >= types.size()) throw new NumberFormatException();
+            if (typeChoice < 0 || typeChoice >= types.size())
+                throw new NumberFormatException();
         } catch (NumberFormatException e) {
             System.out.println("Invalid selection.");
             return;
@@ -282,7 +287,8 @@ public class Main {
                 found = true;
             }
         }
-        if (!found) System.out.println("You have no reservations.");
+        if (!found)
+            System.out.println("You have no reservations.");
     }
 
     private static void cancelReservation(Guest guest) {
@@ -348,7 +354,8 @@ public class Main {
         int choice;
         try {
             choice = Integer.parseInt(scanner.nextLine().trim()) - 1;
-            if (choice < 0 || choice >= confirmed.size()) throw new NumberFormatException();
+            if (choice < 0 || choice >= confirmed.size())
+                throw new NumberFormatException();
         } catch (NumberFormatException e) {
             System.out.println("Invalid selection.");
             return;
@@ -386,7 +393,8 @@ public class Main {
         int pm;
         try {
             pm = Integer.parseInt(scanner.nextLine().trim()) - 1;
-            if (pm < 0 || pm >= methods.length) throw new NumberFormatException();
+            if (pm < 0 || pm >= methods.length)
+                throw new NumberFormatException();
         } catch (NumberFormatException e) {
             System.out.println("Invalid selection.");
             return;
@@ -425,12 +433,16 @@ public class Main {
             switch (scanner.nextLine().trim()) {
                 case "1" -> admin.viewGuests(Database.getGuests());
                 case "2" -> admin.viewRooms(Database.getRooms().stream().map(Room::toString).toList());
-                case "3" -> admin.viewReservations(Database.getReservations().stream().map(Main::reservationSummary).toList());
+                case "3" ->
+                    admin.viewReservations(Database.getReservations().stream().map(Main::reservationSummary).toList());
                 case "4" -> manageRooms();
                 case "5" -> manageRoomTypes();
                 case "6" -> manageAmenities();
-                case "0" -> { System.out.println("Logged out."); active = false; }
-                default  -> System.out.println("Invalid option.");
+                case "0" -> {
+                    System.out.println("Logged out.");
+                    active = false;
+                }
+                default -> System.out.println("Invalid option.");
             }
         }
     }
@@ -449,11 +461,16 @@ public class Main {
 
                 System.out.println("Select Room Type:");
                 List<RoomType> types = Database.getRoomTypes();
-                for (int i = 0; i < types.size(); i++) System.out.println((i+1) + ". " + types.get(i).getName());
+                for (int i = 0; i < types.size(); i++)
+                    System.out.println((i + 1) + ". " + types.get(i).getName());
                 System.out.print("Choice: ");
                 int t;
-                try { t = Integer.parseInt(scanner.nextLine().trim()) - 1; }
-                catch (NumberFormatException e) { System.out.println("Invalid."); return; }
+                try {
+                    t = Integer.parseInt(scanner.nextLine().trim()) - 1;
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid.");
+                    return;
+                }
 
                 Room newRoom = new Room(num, types.get(t));
                 Database.addRoom(newRoom);
@@ -464,18 +481,26 @@ public class Main {
                 String num = scanner.nextLine().trim();
 
                 Room room = findRoom(num);
-                if (room == null) { System.out.println("Room not found."); return; }
+                if (room == null) {
+                    System.out.println("Room not found.");
+                    return;
+                }
 
                 System.out.print("New room number (or same): ");
                 String newNum = scanner.nextLine().trim();
 
                 System.out.println("Select new Room Type:");
                 List<RoomType> types = Database.getRoomTypes();
-                for (int i = 0; i < types.size(); i++) System.out.println((i+1) + ". " + types.get(i).getName());
+                for (int i = 0; i < types.size(); i++)
+                    System.out.println((i + 1) + ". " + types.get(i).getName());
                 System.out.print("Choice: ");
                 int t;
-                try { t = Integer.parseInt(scanner.nextLine().trim()) - 1; }
-                catch (NumberFormatException e) { System.out.println("Invalid."); return; }
+                try {
+                    t = Integer.parseInt(scanner.nextLine().trim()) - 1;
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid.");
+                    return;
+                }
 
                 room.update(newNum, types.get(t), room.isAvailable());
                 System.out.println("Room updated.");
@@ -485,7 +510,10 @@ public class Main {
                 String num = scanner.nextLine().trim();
 
                 Room room = findRoom(num);
-                if (room == null) { System.out.println("Room not found."); return; }
+                if (room == null) {
+                    System.out.println("Room not found.");
+                    return;
+                }
                 Database.getRooms().remove(room);
                 System.out.println("Room " + num + " deleted.");
             }
@@ -506,12 +534,20 @@ public class Main {
                 String name = scanner.nextLine().trim();
                 System.out.print("Price per night: ");
                 double price;
-                try { price = Double.parseDouble(scanner.nextLine().trim()); }
-                catch (NumberFormatException e) { System.out.println("Invalid price."); return; }
+                try {
+                    price = Double.parseDouble(scanner.nextLine().trim());
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid price.");
+                    return;
+                }
                 System.out.print("Capacity: ");
                 int cap;
-                try { cap = Integer.parseInt(scanner.nextLine().trim()); }
-                catch (NumberFormatException e) { System.out.println("Invalid capacity."); return; }
+                try {
+                    cap = Integer.parseInt(scanner.nextLine().trim());
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid capacity.");
+                    return;
+                }
 
                 Database.addRoomType(new RoomType(name, price, cap));
                 System.out.println("Room type '" + name + "' added.");
@@ -520,18 +556,29 @@ public class Main {
                 System.out.print("Current room type name: ");
                 String name = scanner.nextLine().trim();
                 RoomType rt = findRoomType(name);
-                if (rt == null) { System.out.println("Room type not found."); return; }
+                if (rt == null) {
+                    System.out.println("Room type not found.");
+                    return;
+                }
 
                 System.out.print("New name: ");
                 String newName = scanner.nextLine().trim();
                 System.out.print("New price per night: ");
                 double price;
-                try { price = Double.parseDouble(scanner.nextLine().trim()); }
-                catch (NumberFormatException e) { System.out.println("Invalid price."); return; }
+                try {
+                    price = Double.parseDouble(scanner.nextLine().trim());
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid price.");
+                    return;
+                }
                 System.out.print("New capacity: ");
                 int cap;
-                try { cap = Integer.parseInt(scanner.nextLine().trim()); }
-                catch (NumberFormatException e) { System.out.println("Invalid capacity."); return; }
+                try {
+                    cap = Integer.parseInt(scanner.nextLine().trim());
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid capacity.");
+                    return;
+                }
 
                 rt.update(newName, cap, price);
                 System.out.println("Room type updated.");
@@ -540,7 +587,10 @@ public class Main {
                 System.out.print("Room type name to delete: ");
                 String name = scanner.nextLine().trim();
                 RoomType rt = findRoomType(name);
-                if (rt == null) { System.out.println("Room type not found."); return; }
+                if (rt == null) {
+                    System.out.println("Room type not found.");
+                    return;
+                }
                 Database.getRoomTypes().remove(rt);
                 System.out.println("Room type '" + name + "' deleted.");
             }
@@ -561,8 +611,12 @@ public class Main {
                 String name = scanner.nextLine().trim();
                 System.out.print("Price: ");
                 double price;
-                try { price = Double.parseDouble(scanner.nextLine().trim()); }
-                catch (NumberFormatException e) { System.out.println("Invalid price."); return; }
+                try {
+                    price = Double.parseDouble(scanner.nextLine().trim());
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid price.");
+                    return;
+                }
                 Database.addAmenity(name, price);
                 System.out.println("Amenity '" + name + "' added.");
             }
@@ -570,13 +624,20 @@ public class Main {
                 System.out.print("Current amenity name: ");
                 String name = scanner.nextLine().trim();
                 Amenity a = findAmenity(name);
-                if (a == null) { System.out.println("Amenity not found."); return; }
+                if (a == null) {
+                    System.out.println("Amenity not found.");
+                    return;
+                }
                 System.out.print("New name: ");
                 String newName = scanner.nextLine().trim();
                 System.out.print("New price: ");
                 double price;
-                try { price = Double.parseDouble(scanner.nextLine().trim()); }
-                catch (NumberFormatException e) { System.out.println("Invalid price."); return; }
+                try {
+                    price = Double.parseDouble(scanner.nextLine().trim());
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid price.");
+                    return;
+                }
                 a.update(newName, price);
                 System.out.println("Amenity updated.");
             }
@@ -584,7 +645,10 @@ public class Main {
                 System.out.print("Amenity name to delete: ");
                 String name = scanner.nextLine().trim();
                 Amenity a = findAmenity(name);
-                if (a == null) { System.out.println("Amenity not found."); return; }
+                if (a == null) {
+                    System.out.println("Amenity not found.");
+                    return;
+                }
                 Database.getAmenities().remove(a);
                 System.out.println("Amenity '" + name + "' deleted.");
             }
@@ -611,12 +675,16 @@ public class Main {
             switch (scanner.nextLine().trim()) {
                 case "1" -> rec.viewGuests(Database.getGuests());
                 case "2" -> rec.viewRooms(Database.getRooms().stream().map(Room::toString).toList());
-                case "3" -> rec.viewReservations(Database.getReservations().stream().map(Main::reservationSummary).toList());
+                case "3" ->
+                    rec.viewReservations(Database.getReservations().stream().map(Main::reservationSummary).toList());
                 case "4" -> {
                     System.out.print("Guest username: ");
                     String uname = scanner.nextLine().trim();
                     Guest g = findGuest(uname);
-                    if (g == null) { System.out.println("Guest not found."); break; }
+                    if (g == null) {
+                        System.out.println("Guest not found.");
+                        break;
+                    }
                     System.out.print("Room number: ");
                     String room = scanner.nextLine().trim();
                     rec.checkInGuest(g, room);
@@ -625,13 +693,19 @@ public class Main {
                     System.out.print("Guest username: ");
                     String uname = scanner.nextLine().trim();
                     Guest g = findGuest(uname);
-                    if (g == null) { System.out.println("Guest not found."); break; }
+                    if (g == null) {
+                        System.out.println("Guest not found.");
+                        break;
+                    }
                     System.out.print("Room number: ");
                     String room = scanner.nextLine().trim();
                     rec.checkOutGuest(g, room);
                 }
-                case "0" -> { System.out.println("Logged out."); active = false; }
-                default  -> System.out.println("Invalid option.");
+                case "0" -> {
+                    System.out.println("Logged out.");
+                    active = false;
+                }
+                default -> System.out.println("Invalid option.");
             }
         }
     }
