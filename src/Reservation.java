@@ -7,16 +7,23 @@ public class Reservation {
     private LocalDate checkInDate;
     private LocalDate checkOutDate;
     private ReservationStatus status;
+    private boolean hasGymPass; // <-- ADD THIS
 
+    // Update your constructor
     public Reservation(String reservationId, Guest guest, Room room,
-            LocalDate checkInDate, LocalDate checkOutDate,
-            ReservationStatus status) {
+                       LocalDate checkInDate, LocalDate checkOutDate,
+                       ReservationStatus status, boolean hasGymPass) {
         this.reservationId = reservationId;
         this.guest = guest;
         this.room = room;
         this.checkInDate = checkInDate;
         this.checkOutDate = checkOutDate;
         this.status = status;
+        this.hasGymPass = hasGymPass;
+    }
+
+    public boolean hasGymPass() {
+        return hasGymPass;
     }
 
     public String getReservationId() {

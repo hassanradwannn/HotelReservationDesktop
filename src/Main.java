@@ -259,6 +259,7 @@ public class Main {
         System.out.print("\nSelect room (Enter Room Number): ");
         String selectedRoomNumber = scanner.nextLine().trim();
 
+        // ... previous code ...
         Room selectedRoom = available.stream()
                 .filter(r -> r.getRoomNumber().equalsIgnoreCase(selectedRoomNumber))
                 .findFirst()
@@ -269,9 +270,19 @@ public class Main {
             return;
         }
 
+        boolean addGym = false;
+        if (!selectedRoom.getRoomType().getName().equalsIgnoreCase("Penthouse")) {
+            System.out.print("Would you like to add a Gym Pass for your stay? ($200 flat fee) (Y/N): ");
+            String gymChoice = scanner.nextLine().trim();
+            if (gymChoice.equalsIgnoreCase("Y")) {
+                addGym = true;
+            }
+        }
+
         // 5. Finalize Reservation
         try {
-            Reservation res = service.createReservation(guest, selectedRoom, checkIn, checkOut);
+            // Pass addGym to the service
+            Reservation res = service.createReservation(guest, selectedRoom, checkIn, checkOut, addGym);
             System.out.println("Reservation created! ID: " + res.getReservationId());
         } catch (IllegalArgumentException e) {
             System.out.println("Reservation failed: " + e.getMessage());
@@ -321,10 +332,18 @@ public class Main {
         System.out.println("===========================================");
         System.out.println("Guest Name   : " + guest.getUsername());
         System.out.println("Room Number  : " + res.getRoom().getRoomNumber());
+        System.out.println("Room Type    : " + res.getRoom().getRoomType().getName());
+        System.out.println("Rate         : $" + res.getRoom().getPricePerNight() + " / night");
         System.out.println("Check-in     : " + res.getCheckInDate());
         System.out.println("Check-out    : " + res.getCheckOutDate());
         System.out.println("Nights       : " + nights);
         System.out.println("Payment Type : " + method);
+
+        // Gym Pass breakdown on the receipt
+        if (res.hasGymPass()) {
+            System.out.println("Add-ons      : Gym Pass ($200.0)");
+        }
+
         System.out.println("-------------------------------------------");
         System.out.println("TOTAL PAID   : $" + total);
         System.out.println("===========================================");
@@ -362,22 +381,21 @@ public class Main {
         }
 
         Reservation res = confirmed.get(choice);
-        // Inside checkoutAndPay(Guest guest) in Main.java:
         long nights = res.getCheckInDate().until(res.getCheckOutDate()).getDays();
-        double total = nights * res.getRoom().getPricePerNight();
+        double roomTotal = nights * res.getRoom().getPricePerNight();
+        double total = roomTotal;
 
-        if (!res.getRoom().getRoomType().getName().equalsIgnoreCase("Penthouse")) {
-            System.out.print("Would you like to add a Gym Pass for your stay? ($200 flat fee) (Y/N): ");
-            String gymChoice = scanner.nextLine().trim();
-            if (gymChoice.equalsIgnoreCase("Y")) {
-                // Find the gym price dynamically from the Database
-                Amenity gym = Database.getAmenities().get(4);
-                total += gym.getPrice();
-                System.out.println("Gym pass added to your invoice.");
-            }
+        // Modified Logic: Detailed Total Display
+        String totalBreakdown = nights + " night(s) × $" + res.getRoom().getPricePerNight();
+
+        if (res.hasGymPass()) {
+            Amenity gym = Database.getAmenities().get(4); // Assuming Gym is index 4
+            total += gym.getPrice();
+            totalBreakdown += " + $" + gym.getPrice() + " Gym Pass";
+            System.out.println("Includes $" + gym.getPrice() + " flat fee for Gym Pass.");
         }
 
-        System.out.println("\nTotal amount due: $" + total);
+        System.out.println("\nTotal amount due: $" + total + " (" + totalBreakdown + ")");
 
         if (guest.getBalance() < total) {
             System.out.println("Insufficient balance ($" + guest.getBalance() + "). Please top up.");
@@ -407,6 +425,8 @@ public class Main {
             res.setStatus(ReservationStatus.COMPLETED);
             res.getRoom().setAvailable(true);
             System.out.println("Checkout complete! New balance: $" + guest.getBalance());
+
+            // Call the updated printReceipt
             printReceipt(guest, res, nights, methods[pm], total);
         } catch (InvalidPaymentException e) {
             System.out.println("Payment error: " + e.getMessage());

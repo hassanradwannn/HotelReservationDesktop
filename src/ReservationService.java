@@ -66,8 +66,10 @@ public class ReservationService {
         return true;
     }
 
+    // Update the method signature to include the boolean
     public Reservation createReservation(Guest guest, Room room,
-            LocalDate checkIn, LocalDate checkOut) {
+                                         LocalDate checkIn, LocalDate checkOut, boolean addGym) {
+
         if (!isDateRangeValid(checkIn, checkOut)) {
             throw new IllegalArgumentException("Invalid reservation dates.");
         }
@@ -84,7 +86,8 @@ public class ReservationService {
                 room,
                 checkIn,
                 checkOut,
-                ReservationStatus.CONFIRMED);
+                ReservationStatus.CONFIRMED,
+                addGym);
 
         reservations.add(reservation);
         return reservation;
