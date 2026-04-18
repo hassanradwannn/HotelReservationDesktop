@@ -1,5 +1,4 @@
 import java.time.LocalDate;
-import java.util.List;
 
 public abstract class Staff extends User {
     private Role role;
@@ -11,10 +10,15 @@ public abstract class Staff extends User {
         this.workingHours = workingHours;
     }
 
-    public abstract void viewGuests(List<Guest> guests);
-    public abstract void viewRooms(List<String> rooms);
-    public abstract void viewReservations(List<String> reservations);
-
+    public void viewGuests() {
+        Database.getGuests().forEach(System.out::println);
+    }
+    public void viewRooms() {
+        Database.getRooms().forEach(System.out::println);
+    }
+    public void viewReservations() {
+        Database.getReservations().forEach(System.out::println);
+    }
     
     public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }
