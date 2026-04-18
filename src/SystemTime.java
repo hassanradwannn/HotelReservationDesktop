@@ -17,5 +17,10 @@ public abstract class SystemTime {
         today = today.plusDays(days);
         System.out.println("FAST FORWARD: The date is now " + getDate());
     }
+    
+    public static void setDate(int year, int month, int day) {
+        today = LocalDate.of(year, month, day);
+        System.out.println("Date reset to: " + getDate());
+    }
 
 }

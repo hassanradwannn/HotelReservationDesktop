@@ -1,5 +1,4 @@
 import java.time.LocalDate;
-import java.util.ArrayList;
 
 public class Reservation implements Payable, Manageable {
     private String reservationId;
@@ -15,26 +14,45 @@ public class Reservation implements Payable, Manageable {
     private LocalDate fullPaymentDeadline;  // At check-in
     private boolean depositPaid;
     private boolean fullPaid;
+    private double paidAmount;  // Track actual amount paid (for calculating outstanding after extension)
+    private LocalDate originalCheckOutDate;  // Track original check-out date before extension
+    private double lateFeePercentage = 0.05; // 5% late fee
+    private boolean lateFeeApplied = false;
+    private boolean isSameDayBooking; // Flag for same-day bookings
 
     public Reservation(String reservationId, Guest guest, Room room,
                        LocalDate checkInDate, LocalDate checkOutDate,
                        ReservationStatus status, boolean hasGymPass) {
+        this(reservationId, guest, room, checkInDate, checkOutDate, status, hasGymPass, false);
+    }
+    
+    public Reservation(String reservationId, Guest guest, Room room,
+                       LocalDate checkInDate, LocalDate checkOutDate,
+                       ReservationStatus status, boolean hasGymPass, boolean isSameDayBooking) {
         this.reservationId = reservationId;
         this.guest = guest;
         this.room = room;
         this.checkInDate = checkInDate;
         this.checkOutDate = checkOutDate;
         this.status = status;
-        this.hasGymPass = hasGymPass;
+        
+        // Check if room already has gym (penthouse rooms include gym by default)
+        boolean roomHasGym = room.getAmenities().stream()
+            .anyMatch(a -> a.getName().equalsIgnoreCase("Gym"));
+        // Gym is included if room has it OR if guest explicitly requested it
+        this.hasGymPass = roomHasGym || hasGymPass;
         
         // Deposit due 48 hours before check-in
-        this.depositDeadline = checkInDate.minusHours(48);
+        this.depositDeadline = checkInDate.minusDays(2);
         // Full payment due at check-in
         this.fullPaymentDeadline = checkInDate;
         
         this.depositPaid = false;
         this.fullPaid = false;
         this.hasRestaurant = false;
+        this.paidAmount = 0; // Initialize paid amount
+        // Don't set originalCheckOutDate here - only when actually extending
+        this.isSameDayBooking = isSameDayBooking; // Initialize same-day booking flag
     }
     
     public boolean hasRestaurant() {
@@ -78,6 +96,31 @@ public class Reservation implements Payable, Manageable {
     public void setFullPaid(boolean paid) {
         this.fullPaid = paid;
     }
+    
+    public double getPaidAmount() {
+        return paidAmount;
+    }
+    
+    public void setPaidAmount(double amount) {
+        this.paidAmount = amount;
+    }
+    
+    /**
+     * Get the actual outstanding amount (total - amount actually paid)
+     * This is different from isFullPaid which may be stale after stay extension
+     * @return amount still owed
+     */
+    public double getActualOutstanding() {
+        return totalPrice - paidAmount;
+    }
+    
+    public LocalDate getOriginalCheckOutDate() {
+        return originalCheckOutDate;
+    }
+    
+    public void setOriginalCheckOutDate(LocalDate originalCheckOutDate) {
+        this.originalCheckOutDate = originalCheckOutDate;
+    }
 
     public boolean isDepositOverdue() {
         return SystemTime.getToday().isAfter(depositDeadline) && !depositPaid;
@@ -107,8 +150,8 @@ public class Reservation implements Payable, Manageable {
 
     public void setCheckInDate(LocalDate checkInDate) {
         this.checkInDate = checkInDate;
-        // Update deadlines when check-in changes
-        this.depositDeadline = checkInDate.minusHours(48);
+        // Update deadlines when check-in changes (2 days before for deposit)
+        this.depositDeadline = checkInDate.minusDays(2);
         this.fullPaymentDeadline = checkInDate;
     }
 
@@ -117,6 +160,8 @@ public class Reservation implements Payable, Manageable {
     }
 
     public void setCheckOutDate(LocalDate checkOutDate) {
+        // Only track original check-out date when actually extending an existing reservation
+        // Don't set it during initial reservation creation
         this.checkOutDate = checkOutDate;
     }
 
@@ -166,10 +211,34 @@ public class Reservation implements Payable, Manageable {
 
     /**
      * Get the remaining amount to be paid before check-in (total - first night)
+     * Includes 5% late fee if payment is overdue
      * @return remaining balance before check-in
      */
     public double getRemainingBalance() {
-        return totalPrice - getFirstNightPrice();
+        double remaining = totalPrice - getFirstNightPrice();
+        // Add 5% late fee if deposit was overdue
+        if (isDepositOverdue() && !lateFeeApplied) {
+            remaining += remaining * lateFeePercentage;
+        }
+        return remaining;
+    }
+    
+    /**
+     * Apply the late fee to the reservation
+     */
+    public void applyLateFee() {
+        if (!lateFeeApplied) {
+            totalPrice += totalPrice * lateFeePercentage;
+            lateFeeApplied = true;
+        }
+    }
+    
+    public boolean isLateFeeApplied() {
+        return lateFeeApplied;
+    }
+    
+    public double getLateFeeAmount() {
+        return totalPrice * lateFeePercentage;
     }
     
     /**
@@ -228,10 +297,31 @@ public class Reservation implements Payable, Manageable {
 
     /**
      * Check if only stay extension is allowed
-     * @return true if only extension is allowed (within 48 hours)
+     * @return true if only extension is allowed (within 48 hours before check-in, not paid)
      */
     public boolean canOnlyExtend() {
         return isWithin48Hours() && !depositPaid && !fullPaid;
+    }
+    
+    /**
+     * Check if reservation can be extended (more flexible than canManage)
+     * Allows extension for: ongoing reservations, or within 48hrs with deposit paid
+     * @return true if extension is allowed
+     */
+    public boolean canExtend() {
+        // Ongoing reservations can always be extended
+        if (status == ReservationStatus.ONGOING) {
+            return true;
+        }
+        // Confirmed reservations can be extended if not cancelled
+        if (status == ReservationStatus.CONFIRMED && !isWithin48Hours()) {
+            return true;
+        }
+        // Within 48 hours but deposit paid - can still extend
+        if (status == ReservationStatus.CONFIRMED && isWithin48Hours() && depositPaid) {
+            return true;
+        }
+        return false;
     }
 
     // ==================== PAYABLE INTERFACE IMPLEMENTATION ====================
@@ -342,9 +432,11 @@ public class Reservation implements Payable, Manageable {
 
     @Override
     public boolean update() {
-        // Check if update is allowed
-        if (!canManage() && !canOnlyExtend()) {
-            return false;
+        // Check if update is allowed - but allow ONGOING reservations to update (for stay extension)
+        if (status != ReservationStatus.ONGOING) {
+            if (!canManage() && !canOnlyExtend()) {
+                return false;
+            }
         }
         
         if (status == ReservationStatus.CANCELLED) {
@@ -357,7 +449,7 @@ public class Reservation implements Payable, Manageable {
     }
 
     @Override
-    public String getStatus() {
+    public String getStatusString() {
         return status.toString();
     }
 

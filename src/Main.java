@@ -1,6 +1,4 @@
-import exceptions.InvalidCredentialsException;
 import exceptions.*;
-
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -50,7 +48,16 @@ public class Main {
                 System.out.println("Please enter a positive number.");
                 return;
             }
+            
+            LocalDate todayBefore = SystemTime.getToday();
             SystemTime.advanceDays(days);
+            LocalDate todayAfter = SystemTime.getToday();
+            
+            // Also check for auto-cancellation of overdue reservations
+            ReservationService.cancelOverdueReservations();
+            
+            // Check for no-shows - reservations where check-in date has passed and guest never checked in
+            ReservationService.processNoShows();
         } catch (NumberFormatException e) {
             System.out.println("Invalid input.");
         }
@@ -202,7 +209,7 @@ public class Main {
                 System.out.println("Cancelling: " + toCancel.getId());
                 if (toCancel.cancel()) {
                     System.out.println("✓ Cancelled successfully!");
-                    System.out.println("Status: " + toCancel.getStatus());
+                    System.out.println("Status: " + toCancel.getStatusString());
                 } else {
                     System.out.println("✗ Could not cancel (check canManage())");
                 }
@@ -408,7 +415,7 @@ public class Main {
             System.out.println("2. View Available Rooms");
             System.out.println("3. Make a Reservation");
             System.out.println("4. View My Reservations");
-            System.out.println("5. Pay Deposit (for PENDING reservations)");
+            System.out.println("5. Payments");
             System.out.println("6. Manage Reservation (Cancel/Extend/Add-ons)");
             System.out.println("0. Logout");
             System.out.print("Choose: ");
@@ -557,12 +564,61 @@ public class Main {
         try {
             // Pass addGym to the service
             Reservation res = ReservationService.createReservation(guest, selectedRoom, checkIn, checkOut, addGym);
+            
+            LocalDate today = SystemTime.getToday();
+            long daysUntilCheckIn = today.until(checkIn).getDays();
+            
             System.out.println("Reservation created! ID: " + res.getReservationId());
             System.out.println("  Status: PENDING");
             System.out.println("  Total Price: $" + String.format("%.2f", res.getTotalPrice()));
-            System.out.println("  Deposit Due (25%): $" + String.format("%.2f", ReservationService.getDepositAmount(res)));
-            System.out.println("  Deposit Deadline: " + res.getDepositDeadline());
-            System.out.println("  Please pay the deposit to confirm your reservation.");
+            
+            // Determine payment requirement based on days until check-in
+            if (daysUntilCheckIn == 0) {
+                // Same day booking - must pay full amount immediately
+                System.out.println("  Payment: FULL AMOUNT REQUIRED (same-day booking)");
+                System.out.println("  Pay now? (Y/N): ");
+                String payNow = scanner.nextLine().trim();
+                if (payNow.equalsIgnoreCase("Y")) {
+                    try {
+                        ReservationService.payInFull(res, guest);
+                        System.out.println("✓ Full amount paid! Reservation is CONFIRMED.");
+                        System.out.println("New balance: $" + String.format("%.2f", guest.getBalance()));
+                        // Print receipt
+                        Receipt receipt = Receipt.createFullPaymentReceipt(res);
+                        receipt.print();
+                    } catch (IllegalArgumentException e) {
+                        System.out.println("Payment failed: " + e.getMessage());
+                    }
+                } else {
+                    System.out.println("Please pay the full amount to confirm your reservation.");
+                }
+            } else if (daysUntilCheckIn == 1) {
+                // Tomorrow booking - pay deposit immediately
+                double deposit = ReservationService.getDepositAmount(res);
+                System.out.println("  Deposit Due (First Night): $" + String.format("%.2f", deposit));
+                System.out.println("  Deposit Deadline: " + res.getDepositDeadline());
+                System.out.println("  Pay deposit now? (Y/N): ");
+                String payNow = scanner.nextLine().trim();
+                if (payNow.equalsIgnoreCase("Y")) {
+                    try {
+                        ReservationService.payDeposit(res, guest);
+                        System.out.println("✓ Deposit paid! Reservation is CONFIRMED.");
+                        System.out.println("New balance: $" + String.format("%.2f", guest.getBalance()));
+                        // Print receipt
+                        Receipt receipt = Receipt.createDepositReceipt(res);
+                        receipt.print();
+                    } catch (IllegalArgumentException e) {
+                        System.out.println("Payment failed: " + e.getMessage());
+                    }
+                } else {
+                    System.out.println("Please pay the deposit to confirm your reservation.");
+                }
+            } else {
+                // 2+ days booking - pay deposit now, remainder at check-in
+                System.out.println("  Deposit Due (First Night): $" + String.format("%.2f", ReservationService.getDepositAmount(res)));
+                System.out.println("  Deposit Deadline: " + res.getDepositDeadline());
+                System.out.println("  Please pay the deposit to confirm your reservation.");
+            }
         } catch (IllegalArgumentException e) {
             System.out.println("Reservation failed: " + e.getMessage());
         }
@@ -606,7 +662,7 @@ public class Main {
                     + " | Gym: " + (r.hasGymPass() ? "Yes" : "No")
                     + " | Restaurant: " + (r.hasRestaurant() ? "Yes" : "No")
                     + " | canManage: " + r.canManage()
-                    + " | canExtend: " + (r.canManage() || r.canOnlyExtend()));
+                    + " | canExtend: " + (r.canManage() || r.canOnlyExtend() || r.canExtend()));
         }
 
         System.out.print("Select reservation number: ");
@@ -652,27 +708,32 @@ public class Main {
                     }
                 }
                 case "2" -> {
-                    // Extend stay
-                    if (!selected.canManage() && !selected.canOnlyExtend()) {
-                        System.out.println("Cannot extend: reservation is paid.");
+                    // Extend stay - guest can extend if ongoing, or manageable
+                    if (!selected.canManage() && !selected.canOnlyExtend() && !selected.canExtend()) {
+                        System.out.println("Cannot extend: reservation cannot be modified at this time.");
                     } else {
                         System.out.println("Current check-out: " + selected.getCheckOutDate());
-                        System.out.print("Enter new check-out date (YYYY-MM-DD): ");
+                        System.out.print("Enter number of days to extend: ");
+                        int daysToAdd;
                         try {
-                            LocalDate newCheckOut = LocalDate.parse(scanner.nextLine().trim());
-                            if (!newCheckOut.isAfter(selected.getCheckOutDate())) {
-                                System.out.println("New check-out must be after current check-out.");
+                            daysToAdd = Integer.parseInt(scanner.nextLine().trim());
+                            if (daysToAdd <= 0) {
+                                System.out.println("Please enter a positive number of days.");
                             } else {
+                                LocalDate oldCheckOut = selected.getCheckOutDate();
+                                LocalDate newCheckOut = oldCheckOut.plusDays(daysToAdd);
                                 double oldPrice = selected.getTotalPrice();
                                 ReservationService.extendStay(selected.getReservationId(), newCheckOut);
                                 double newPrice = selected.getTotalPrice();
                                 double additionalCost = newPrice - oldPrice;
-                                System.out.println("✓ Stay extended!");
+                                System.out.println("✓ Stay extended by " + daysToAdd + " days!");
+                                System.out.println("  Old check-out: " + oldCheckOut);
+                                System.out.println("  New check-out: " + newCheckOut);
                                 System.out.println("  Additional cost: $" + String.format("%.2f", additionalCost));
                                 System.out.println("  (Will be paid at checkout)");
                             }
-                        } catch (DateTimeParseException e) {
-                            System.out.println("Invalid date format.");
+                        } catch (NumberFormatException e) {
+                            System.out.println("Invalid input. Please enter a number.");
                         } catch (IllegalArgumentException e) {
                             System.out.println("Error: " + e.getMessage());
                         }
@@ -743,18 +804,71 @@ public class Main {
     }
 
     private static void payDepositForReservation(Guest guest) {
-        System.out.println("\n--- Pay Deposit ---");
-        java.util.List<Reservation> pending = Database.getReservations().stream()
+        // First show all active reservations with payment status
+        List<Reservation> activeReservations = Database.getReservations().stream()
                 .filter(r -> r.getGuest().getUsername().equalsIgnoreCase(guest.getUsername())
-                        && r.getStatus() == ReservationStatus.PENDING)
+                        && r.getStatus() != ReservationStatus.COMPLETED
+                        && r.getStatus() != ReservationStatus.CANCELLED)
                 .toList();
 
-        if (pending.isEmpty()) {
-            System.out.println("No pending reservations requiring deposit payment.");
+        if (activeReservations.isEmpty()) {
+            System.out.println("You have no active reservations.");
             return;
         }
 
-        System.out.println("Your pending reservations:");
+        // Sub-menu for payment options
+        boolean inPaymentMenu = true;
+        while (inPaymentMenu) {
+            System.out.println("\n--- Payment & Status ---");
+            System.out.println("Your Reservations:");
+            for (int i = 0; i < activeReservations.size(); i++) {
+                Reservation r = activeReservations.get(i);
+                // Calculate payment status based on actual outstanding amount (handles stay extensions)
+                String paidStatus;
+                double outstanding = r.getActualOutstanding();
+                if (outstanding <= 0) {
+                    paidStatus = "Full";
+                } else if (r.isDepositPaid()) {
+                    paidStatus = "Deposit";
+                } else {
+                    paidStatus = "None";
+                }
+                System.out.println((i + 1) + ". " + r.getReservationId()
+                        + " | Room " + r.getRoom().getRoomNumber()
+                        + " | " + r.getCheckInDate() + " → " + r.getCheckOutDate()
+                        + " | Status: " + r.getStatus()
+                        + " | Paid: " + paidStatus);
+            }
+
+            System.out.println("\n1. Pay Deposit (for PENDING reservations)");
+            System.out.println("2. Pay Full Amount");
+            System.out.println("3. View Outstanding Fees & Add-ons");
+            System.out.println("0. Back");
+            System.out.print("Choose: ");
+
+            String choice = scanner.nextLine().trim();
+            switch (choice) {
+                case "1" -> payDeposit(guest, activeReservations);
+                case "2" -> payFullAmount(guest, activeReservations);
+                case "3" -> viewOutstandingFees(guest, activeReservations);
+                case "0" -> inPaymentMenu = false;
+                default -> System.out.println("Invalid option.");
+            }
+        }
+    }
+    
+    private static void payDeposit(Guest guest, List<Reservation> reservations) {
+        // Filter for pending reservations (need deposit)
+        List<Reservation> pending = reservations.stream()
+                .filter(r -> r.getStatus() == ReservationStatus.PENDING && !r.isDepositPaid())
+                .toList();
+
+        if (pending.isEmpty()) {
+            System.out.println("No pending reservations requiring deposit.");
+            return;
+        }
+
+        System.out.println("\n--- Pay Deposit ---");
         for (int i = 0; i < pending.size(); i++) {
             Reservation r = pending.get(i);
             double deposit = ReservationService.getDepositAmount(r);
@@ -764,7 +878,7 @@ public class Main {
                     + " | Deposit: $" + String.format("%.2f", deposit)
                     + " | Deadline: " + r.getDepositDeadline());
             if (r.isDepositOverdue()) {
-                System.out.println("OVERDUE!");
+                System.out.println("   ⚠️ OVERDUE!");
             }
         }
 
@@ -782,13 +896,11 @@ public class Main {
         Reservation res = pending.get(choice);
         double deposit = ReservationService.getDepositAmount(res);
 
-        System.out.println("\nDeposit Payment Details:");
-        System.out.println("Total Price: $" + String.format("%.2f", res.getTotalPrice()));
-        System.out.println("Deposit (25%): $" + String.format("%.2f", deposit));
+        System.out.println("\nDeposit: $" + String.format("%.2f", deposit));
         System.out.println("Your Balance: $" + String.format("%.2f", guest.getBalance()));
 
         if (guest.getBalance() < deposit) {
-            System.out.println("Insufficient balance. You need $" + String.format("%.2f", deposit - guest.getBalance()) + " more.");
+            System.out.println("Insufficient balance.");
             return;
         }
 
@@ -800,11 +912,144 @@ public class Main {
 
         try {
             ReservationService.payDeposit(res, guest);
-            System.out.println("Deposit payment successful!");
-            System.out.println("Reservation is now CONFIRMED.");
-            System.out.println("Your new balance: $" + String.format("%.2f", guest.getBalance()));
+            System.out.println("✓ Deposit paid! Reservation is now CONFIRMED.");
+            System.out.println("New balance: $" + String.format("%.2f", guest.getBalance()));
+            
+            // Print deposit receipt
+            Receipt depositReceipt = Receipt.createDepositReceipt(res);
+            depositReceipt.print();
         } catch (IllegalArgumentException e) {
-            System.out.println("Payment failed: " + e.getMessage());
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+    
+    private static void payFullAmount(Guest guest, List<Reservation> reservations) {
+        // Filter for confirmed but not fully paid reservations
+        List<Reservation> confirmed = reservations.stream()
+                .filter(r -> r.getStatus() == ReservationStatus.CONFIRMED && !r.isFullPaid())
+                .toList();
+
+        if (confirmed.isEmpty()) {
+            System.out.println("No reservations requiring full payment.");
+            return;
+        }
+
+        System.out.println("\n--- Pay Full Amount ---");
+        for (int i = 0; i < confirmed.size(); i++) {
+            Reservation r = confirmed.get(i);
+            double remaining = r.getRemainingBalance();
+            System.out.println((i + 1) + ". " + r.getReservationId()
+                    + " | Room " + r.getRoom().getRoomNumber()
+                    + " | Check-in: " + r.getCheckInDate()
+                    + " | Due: $" + String.format("%.2f", remaining));
+        }
+
+        System.out.print("Select reservation (number): ");
+        int choice;
+        try {
+            choice = Integer.parseInt(scanner.nextLine().trim()) - 1;
+            if (choice < 0 || choice >= confirmed.size())
+                throw new NumberFormatException();
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid selection.");
+            return;
+        }
+
+        Reservation res = confirmed.get(choice);
+        double remaining = res.getRemainingBalance();
+
+        System.out.println("\nAmount Due: $" + String.format("%.2f", remaining));
+        System.out.println("Your Balance: $" + String.format("%.2f", guest.getBalance()));
+
+        if (guest.getBalance() < remaining) {
+            System.out.println("Insufficient balance.");
+            return;
+        }
+
+        System.out.print("Confirm payment? (Y/N): ");
+        if (!scanner.nextLine().trim().equalsIgnoreCase("Y")) {
+            System.out.println("Payment cancelled.");
+            return;
+        }
+
+        try {
+            ReservationService.payFullAmount(res, guest);
+            System.out.println("✓ Full amount paid!");
+            System.out.println("New balance: $" + String.format("%.2f", guest.getBalance()));
+            
+            // Print full payment receipt
+            Receipt fullReceipt = Receipt.createFullPaymentReceipt(res);
+            fullReceipt.print();
+        } catch (IllegalArgumentException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+    
+    private static void viewOutstandingFees(Guest guest, List<Reservation> reservations) {
+        System.out.println("\n=== Outstanding Fees & Add-ons ===");
+        System.out.println("Your Balance: $" + String.format("%.2f", guest.getBalance()));
+        System.out.println();
+        
+        boolean hasAnything = false;
+        
+        for (Reservation r : reservations) {
+            System.out.println("Reservation: " + r.getReservationId() + " | Room " + r.getRoom().getRoomNumber());
+            
+            // Calculate actual outstanding (considers stay extensions)
+            double actualOutstanding = r.getActualOutstanding();
+            double totalPrice = r.getTotalPrice();
+            double paidAmount = r.getPaidAmount();
+            
+            // Deposit status
+            if (r.isDepositPaid()) {
+                System.out.println("  ✓ Deposit Paid");
+            } else if (r.getStatus() == ReservationStatus.PENDING) {
+                double deposit = ReservationService.getDepositAmount(r);
+                System.out.println("  ⚠️ Deposit Due: $" + String.format("%.2f", deposit) + " (Deadline: " + r.getDepositDeadline() + ")");
+                hasAnything = true;
+            }
+            
+            // Full payment status - use actual outstanding to handle stay extensions
+            if (actualOutstanding <= 0) {
+                System.out.println("  ✓ Fully Paid");
+            } else if (r.getStatus() == ReservationStatus.ONGOING) {
+                // Ongoing reservation with extended stay - show extended stay outstanding
+                System.out.println("  ⚠️ Extended Stay Balance Due: $" + String.format("%.2f", actualOutstanding));
+                hasAnything = true;
+            } else if (r.getStatus() == ReservationStatus.CONFIRMED) {
+                double remaining = r.getRemainingBalance();
+                System.out.println("  ⚠️ Balance Due (at check-in): $" + String.format("%.2f", remaining));
+                hasAnything = true;
+            }
+            
+            // Show stay extension info only if stay was actually extended
+            if (r.getOriginalCheckOutDate() != null && !r.getOriginalCheckOutDate().equals(r.getCheckOutDate())) {
+                System.out.println("  ℹ️ Stay Extended: Original $" + String.format("%.2f", paidAmount) 
+                    + " paid, Total $" + String.format("%.2f", totalPrice) + ", Outstanding $" + String.format("%.2f", actualOutstanding));
+            }
+            
+            // Add-ons
+            System.out.println("  Add-ons:");
+            if (r.hasGymPass()) {
+                System.out.println("    ✓ Gym Pass (included in total)");
+            }
+            if (r.hasRestaurant()) {
+                System.out.println("  ⚠️ Restaurant (due at checkout): $150.00");
+                hasAnything = true;
+            }
+            
+            // Room amenities
+            System.out.println("  Room Amenities:");
+            for (Amenity a : r.getRoom().getAmenities()) {
+                System.out.println("    - " + a.getName() + " ($" + a.getPrice() + ")");
+            }
+            
+            System.out.println("  Total Price: $" + String.format("%.2f", r.getTotalPrice()));
+            System.out.println();
+        }
+        
+        if (!hasAnything) {
+            System.out.println("No outstanding fees. All payments up to date!");
         }
     }
 
@@ -1133,8 +1378,7 @@ public class Main {
         System.out.println("\n--- Extend Guest Stay ---");
         List<Reservation> eligible = Database.getReservations().stream()
                 .filter(r -> r.getStatus() == ReservationStatus.ONGOING
-                        || (r.getStatus() == ReservationStatus.CONFIRMED 
-                            && (r.canManage() || r.canOnlyExtend())))
+                        || (r.getStatus() == ReservationStatus.CONFIRMED && r.canManage()))
                 .toList();
 
         if (eligible.isEmpty()) {
@@ -1149,7 +1393,7 @@ public class Main {
                     + " | Guest: " + r.getGuest().getUsername()
                     + " | Room " + r.getRoom().getRoomNumber()
                     + " | Check-out: " + r.getCheckOutDate()
-                    + " | canExtend: " + (r.canManage() || r.canOnlyExtend()));
+                    + " | Status: " + r.getStatus());
         }
 
         int index;
@@ -1167,29 +1411,30 @@ public class Main {
 
         Reservation selected = eligible.get(index);
         
-        System.out.print("Enter new check-out date (YYYY-MM-DD): ");
-        LocalDate newCheckOut;
+        System.out.print("Enter number of days to extend: ");
+        int daysToAdd;
         try {
-            newCheckOut = LocalDate.parse(scanner.nextLine().trim());
-        } catch (DateTimeParseException e) {
-            System.out.println("Invalid date format.");
+            daysToAdd = Integer.parseInt(scanner.nextLine().trim());
+            if (daysToAdd <= 0) {
+                System.out.println("Please enter a positive number of days.");
+                return;
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid input.");
             return;
         }
-
-        // Check new date is after current check-out
-        if (!newCheckOut.isAfter(selected.getCheckOutDate())) {
-            System.out.println("New check-out must be after current check-out date.");
-            return;
-        }
-
+        
+        LocalDate oldCheckOut = selected.getCheckOutDate();
+        LocalDate newCheckOut = oldCheckOut.plusDays(daysToAdd);
         double oldPrice = selected.getTotalPrice();
+        
         try {
             ReservationService.extendStay(selected.getReservationId(), newCheckOut);
             double newPrice = selected.getTotalPrice();
             double additionalCost = newPrice - oldPrice;
             
-            System.out.println("✓ Stay extended!");
-            System.out.println("  Old check-out: " + selected.getCheckOutDate());
+            System.out.println("✓ Stay extended by " + daysToAdd + " days!");
+            System.out.println("  Old check-out: " + oldCheckOut);
             System.out.println("  New check-out: " + newCheckOut);
             System.out.println("  Additional cost: $" + String.format("%.2f", additionalCost));
             System.out.println("  (Will be paid at checkout)");
@@ -1216,7 +1461,8 @@ public class Main {
             System.out.println((i + 1) + ". " + r.getReservationId()
                     + " | Guest: " + r.getGuest().getUsername()
                     + " | Room " + r.getRoom().getRoomNumber()
-                    + " | " + r.getCheckInDate() + " → " + r.getCheckOutDate());
+                    + " | " + r.getCheckInDate() + " → " + r.getCheckOutDate()
+                    + " | Full Paid: " + (r.isFullPaid() ? "Yes" : "No"));
         }
 
         int index;
@@ -1233,7 +1479,26 @@ public class Main {
         }
 
         Reservation selected = eligible.get(index);
-        rec.checkInGuest(selected.getReservationId(), selected.getGuest());
+        
+        // Ask receptionist if guest has already paid
+        System.out.println("\nPayment Status: " + (selected.isFullPaid() ? "Already paid" : "Not yet paid"));
+        System.out.print("Has the guest already paid the remaining balance? (Y/N): ");
+        String paymentConfirm = scanner.nextLine().trim();
+        
+        try {
+            if (paymentConfirm.equalsIgnoreCase("Y")) {
+                // Guest already paid - use manual check-in
+                ReservationService.checkInGuestManual(selected);
+                System.out.println("✓ Check-in successful! Payment confirmed.");
+            } else {
+                // Guest needs to pay now - auto-deduct from account
+                ReservationService.checkInGuest(selected, selected.getGuest());
+                System.out.println("✓ Check-in successful! Remaining balance paid from guest account.");
+            }
+            System.out.println("Guest new balance: $" + String.format("%.2f", selected.getGuest().getBalance()));
+        } catch (IllegalArgumentException e) {
+            System.out.println("Check-in failed: " + e.getMessage());
+        }
     }
 
     private static void receptionistCheckOut(Receptionist rec) {
@@ -1271,13 +1536,79 @@ public class Main {
             return;
         }
 
+        Reservation selected = eligible.get(index);
+        
+        // Show outstanding fees summary before checkout
+        double totalPrice = selected.getTotalPrice();
+        double paidAmount = selected.getPaidAmount(); // Use tracked paid amount (includes extensions)
+        double addOns = selected.getAddOnsTotal();
+        
+        // Check if stay was actually extended
+        LocalDate originalCheckOut = selected.getOriginalCheckOutDate();
+        boolean stayExtended = originalCheckOut != null && !originalCheckOut.equals(selected.getCheckOutDate());
+        
+        // Calculate extension amount (only the additional days cost, not the entire remaining balance)
+        double extensionAmount = 0;
+        if (stayExtended) {
+            // Get price per night and calculate extension cost
+            double pricePerNight = selected.getRoom().getPricePerNight();
+            long additionalDays = originalCheckOut.until(selected.getCheckOutDate()).getDays();
+            extensionAmount = pricePerNight * additionalDays;
+        }
+        
+        // Outstanding is total - paid (everything still owed)
+        double outstanding = (totalPrice - paidAmount) + addOns;
+        
+        System.out.println("\n=== Checkout Summary ===");
+        System.out.println("Reservation: " + selected.getReservationId());
+        System.out.println("Guest: " + selected.getGuest().getUsername());
+        System.out.println("Room: " + selected.getRoom().getRoomNumber());
+        System.out.println("Check-in: " + selected.getCheckInDate());
+        System.out.println("Check-out: " + selected.getCheckOutDate());
+        System.out.println("---");
+        System.out.println("Total Price: $" + String.format("%.2f", totalPrice));
+        System.out.println("Amount Previously Paid: $" + String.format("%.2f", paidAmount));
+        
+        if (outstanding > 0) {
+            System.out.println("OUTSTANDING (Due Now): $" + String.format("%.2f", outstanding));
+            // Only show extension info if stay was actually extended
+            if (stayExtended && extensionAmount > 0) {
+                System.out.println("  (Extended stay: additional $" + String.format("%.2f", extensionAmount) + ")");
+            }
+            if (addOns > 0) {
+                System.out.println("  (Add-ons: $" + String.format("%.2f", addOns) + ")");
+            }
+        } else {
+            System.out.println("Status: FULLY PAID");
+        }
+        
+        // Show add-ons breakdown (separate for details)
+        if (addOns > 0) {
+            System.out.println("Add-ons Details: Restaurant, Gym");
+        }
+        System.out.println();
+        
+        // If fully paid, just complete checkout without payment
+        if (outstanding <= 0) {
+            // Complete checkout - just mark as completed
+            selected.setStatus(ReservationStatus.COMPLETED);
+            selected.getRoom().setAvailable(true);
+            System.out.println("Guest " + selected.getGuest().getUsername() + " checked out from room " + selected.getRoom().getRoomNumber());
+            System.out.println("  Guest balance: $" + String.format("%.2f", selected.getGuest().getBalance()));
+            
+            // Print checkout receipt
+            Receipt checkoutReceipt = Receipt.createCheckoutReceipt(selected, 0);
+            checkoutReceipt.print();
+            return;
+        }
+        
+        // Otherwise, need to collect payment
         PaymentMethod paymentMethod = selectPaymentMethod();
         if (paymentMethod == null) {
             System.out.println("Checkout cancelled.");
             return;
         }
-
-        Reservation selected = eligible.get(index);
+        
         rec.checkOutGuest(selected.getReservationId(), paymentMethod);
     }
 

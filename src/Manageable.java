@@ -22,7 +22,7 @@ public interface Manageable {
      * Get the current status of this entity
      * @return the status as a string
      */
-    String getStatus();
+    String getStatusString();
     
     /**
      * Check if this entity is active

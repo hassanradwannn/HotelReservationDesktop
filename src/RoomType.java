@@ -2,11 +2,17 @@ public class RoomType {
     private String name;
     private int capacity;
     private double pricePerNight;
+    private boolean isPenthouse;
 
     public RoomType(String name, double pricePerNight, int capacity) {
+        this(name, pricePerNight, capacity, false);
+    }
+    
+    public RoomType(String name, double pricePerNight, int capacity, boolean isPenthouse) {
         this.name = name;
         this.capacity = capacity;
         this.pricePerNight = pricePerNight;
+        this.isPenthouse = isPenthouse;
     }
 
     public String getName() {
@@ -27,6 +33,14 @@ public class RoomType {
 
     public double getPricePerNight() {
         return this.pricePerNight;
+    }
+    
+    public boolean isPenthouse() {
+        return isPenthouse;
+    }
+    
+    public void setPenthouse(boolean penthouse) {
+        this.isPenthouse = penthouse;
     }
 
     void update(String name, int capacity, double pricePerNight) {

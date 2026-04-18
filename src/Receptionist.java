@@ -85,12 +85,20 @@ public class Receptionist extends Staff {
         }
 
         try {
-            double remaining = ReservationService.getRemainingAmount(reservation);
+            // Use actual outstanding including any stay extensions
+            double actualOutstanding = reservation.getActualOutstanding();
+            double addOns = reservation.getAddOnsTotal();
+            double totalDueNow = actualOutstanding + addOns;
+            
             ReservationService.checkOutGuest(reservation, paymentMethod);
             System.out.println("Guest " + reservation.getGuest().getUsername() +
                              " checked out from room " + reservation.getRoom().getRoomNumber());
-            System.out.println("  Collected payment: $" + String.format("%.2f", remaining));
+            System.out.println("  Collected payment: $" + String.format("%.2f", totalDueNow));
             System.out.println("  Guest balance: $" + String.format("%.2f", reservation.getGuest().getBalance()));
+            
+            // Print checkout receipt
+            Receipt checkoutReceipt = Receipt.createCheckoutReceipt(reservation, totalDueNow);
+            checkoutReceipt.print();
         } catch (IllegalArgumentException e) {
             System.out.println("Check-out failed: " + e.getMessage());
         }

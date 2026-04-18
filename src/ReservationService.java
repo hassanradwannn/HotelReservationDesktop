@@ -1,8 +1,8 @@
+import exceptions.InvalidPaymentException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import exceptions.InvalidPaymentException;
 
 public abstract class ReservationService {
 
@@ -46,8 +46,16 @@ public abstract class ReservationService {
 
         LocalDate today = SystemTime.getToday();
         LocalDate tomorrow = today.plusDays(1);
-        if (checkIn.isBefore(tomorrow) || checkIn.isEqual(today)) {
-            throw new IllegalArgumentException("Check-in must be at least tomorrow. Deposit payment deadline is 48 hours before check-in.");
+        
+        // Check if booking is for today (same-day booking)
+        boolean isSameDayBooking = checkIn.isEqual(today);
+        boolean isTomorrowBooking = checkIn.isEqual(tomorrow);
+        
+        // For same-day bookings, require full payment immediately
+        // For tomorrow bookings, allow with deposit
+        // For 2+ days out, require deposit with 48hr deadline
+        if (checkIn.isBefore(today)) {
+            throw new IllegalArgumentException("Check-in date cannot be in the past.");
         }
 
         if (!isRoomAvailable(room, checkIn, checkOut)) {
@@ -63,11 +71,105 @@ public abstract class ReservationService {
                 checkIn,
                 checkOut,
                 ReservationStatus.PENDING,
-                addGym);
+                addGym,
+                isSameDayBooking); // Pass same-day booking flag
 
         reservation.setTotalPrice();
         reservations.add(reservation);
+        
+        // Check for any overdue deposits and cancel those reservations
+        cancelOverdueReservations();
+        
         return reservation;
+    }
+    
+    /**
+     * Cancel all reservations with overdue deposits (not paid 1 day before check-in)
+     */
+    public static void cancelOverdueReservations() {
+        List<Reservation> toCancel = new ArrayList<>();
+        LocalDate today = SystemTime.getToday();
+        
+        for (Reservation r : reservations) {
+            // Calculate days until check-in
+            long daysUntilCheckIn = today.until(r.getCheckInDate()).getDays();
+            
+            // Don't auto-cancel same-day bookings (check-in is today or already passed)
+            // These require full payment at booking, but if PENDING, let them be
+            if (daysUntilCheckIn <= 0) {
+                continue;
+            }
+            
+            // Cancel if deposit deadline passed and not paid
+            LocalDate cancelDeadline = r.getDepositDeadline().plusDays(1); // 1 day before check-in
+            if (r.getStatus() == ReservationStatus.PENDING 
+                    && !r.isDepositPaid() 
+                    && (today.equals(cancelDeadline) || today.isAfter(cancelDeadline))) {
+                toCancel.add(r);
+            }
+        }
+        
+        for (Reservation r : toCancel) {
+            r.setStatus(ReservationStatus.CANCELLED);
+            System.out.println("⚠️ Reservation " + r.getReservationId() + " has been AUTOMATICALLY CANCELLED (deposit not paid 1 day before check-in)");
+        }
+    }
+    
+    /**
+     * Get count of cancelled overdue reservations
+     */
+    public static int getCancelledOverdueCount() {
+        int count = 0;
+        LocalDate today = SystemTime.getToday();
+        for (Reservation r : reservations) {
+            LocalDate cancelDeadline = r.getDepositDeadline().plusDays(1);
+            if (r.getStatus() == ReservationStatus.CANCELLED
+                    && !r.isDepositPaid()
+                    && (today.equals(cancelDeadline) || today.isAfter(cancelDeadline))) {
+                count++;
+            }
+        }
+        return count;
+    }
+    
+    /**
+     * Process no-shows - cancel reservations where check-in date has passed and guest never checked in
+     * Refund the guest (minus 10% no-show fee)
+     */
+    public static void processNoShows() {
+        LocalDate today = SystemTime.getToday();
+        double noShowFeePercentage = 0.10; // 10% no-show fee
+        
+        for (Reservation r : reservations) {
+            // Only process CONFIRMED reservations where check-in date has passed
+            if (r.getStatus() == ReservationStatus.CONFIRMED
+                    && today.isAfter(r.getCheckInDate())) {
+                
+                double refundAmount = 0;
+                
+                // If guest paid deposit, refund them minus 10% no-show fee
+                if (r.isDepositPaid()) {
+                    double depositAmount = r.getFirstNightPrice();
+                    double noShowFee = depositAmount * noShowFeePercentage;
+                    refundAmount = depositAmount - noShowFee;
+                    
+                    // Refund to guest account
+                    r.getGuest().setBalance(r.getGuest().getBalance() + refundAmount);
+                    
+                    System.out.println("⚠️ NO-SHOW: Reservation " + r.getReservationId() + " cancelled.");
+                    System.out.println("  Original deposit: $" + String.format("%.2f", depositAmount));
+                    System.out.println("  No-show fee (10%): $" + String.format("%.2f", noShowFee));
+                    System.out.println("  Refund to guest: $" + String.format("%.2f", refundAmount));
+                } else {
+                    System.out.println("⚠️ NO-SHOW: Reservation " + r.getReservationId() + " cancelled (no deposit paid).");
+                }
+                
+                // Cancel the reservation
+                r.setStatus(ReservationStatus.CANCELLED);
+                // Make room available again
+                r.getRoom().setAvailable(true);
+            }
+        }
     }
 
     public static void cancelReservation(String reservationId) {
@@ -134,6 +236,7 @@ public abstract class ReservationService {
         guest.setBalance(guest.getBalance() - deposit);
         reservation.setDepositPaid(true);
         reservation.setStatus(ReservationStatus.CONFIRMED);
+        reservation.setPaidAmount(deposit);
         return true;
     }
     
@@ -152,6 +255,7 @@ public abstract class ReservationService {
 
         guest.setBalance(guest.getBalance() - remaining);
         reservation.setFullPaid(true);
+        reservation.setPaidAmount(reservation.getTotalPrice());
         return true;
     }
     
@@ -168,6 +272,7 @@ public abstract class ReservationService {
         guest.setBalance(guest.getBalance() - totalNeeded);
         reservation.setDepositPaid(true);
         reservation.setFullPaid(true);
+        reservation.setPaidAmount(totalNeeded); // Track full payment
         reservation.setStatus(ReservationStatus.CONFIRMED);
         return true;
     }
@@ -181,17 +286,47 @@ public abstract class ReservationService {
             throw new IllegalArgumentException("Check-in date has not arrived yet.");
         }
 
-        // Pay remaining amount before check-in if not already paid
-        if (!reservation.isFullPaid()) {
-            double remaining = reservation.getRemainingBalance();
-            if (guest.getBalance() < remaining) {
-                cancelReservation(reservation.getReservationId());
-                throw new IllegalArgumentException("Insufficient balance, you need $" + (remaining - guest.getBalance()) + " more to check in.");
-            }
-            guest.setBalance(guest.getBalance() - remaining);
-            reservation.setFullPaid(true);
+        // Check if already fully paid
+        if (reservation.isFullPaid()) {
+            // Already paid, just check in
+            reservation.setStatus(ReservationStatus.ONGOING);
+            reservation.getRoom().setAvailable(false);
+            return true;
+        }
+        
+        // If not fully paid, require confirmation that guest already paid
+        // (receptionist would have collected payment manually beforehand)
+        // For now, auto-charge remaining balance from guest's account
+        double remaining = reservation.getRemainingBalance();
+        if (guest.getBalance() < remaining) {
+            throw new IllegalArgumentException("Insufficient balance. Guest needs $" + remaining + " but has only $" + guest.getBalance() + ". Payment required before check-in.");
+        }
+        
+        // Process remaining payment
+        guest.setBalance(guest.getBalance() - remaining);
+        reservation.setFullPaid(true);
+        reservation.setPaidAmount(reservation.getTotalPrice()); // Mark fully paid
+
+        reservation.setStatus(ReservationStatus.ONGOING);
+        reservation.getRoom().setAvailable(false);
+        return true;
+    }
+    
+    /**
+     * Confirm check-in with manual payment verification (receptionist confirms payment received)
+     */
+    public static boolean checkInGuestManual(Reservation reservation) {
+        if (reservation.getStatus() != ReservationStatus.CONFIRMED) {
+            throw new IllegalArgumentException("Reservation must be CONFIRMED to check in.");
         }
 
+        if (!SystemTime.getToday().isEqual(reservation.getCheckInDate())) {
+            throw new IllegalArgumentException("Check-in date has not arrived yet.");
+        }
+        
+        // Mark as fully paid (receptionist confirmed payment received)
+        reservation.setFullPaid(true);
+        reservation.setPaidAmount(reservation.getTotalPrice()); // Track full payment
         reservation.setStatus(ReservationStatus.ONGOING);
         reservation.getRoom().setAvailable(false);
         return true;
@@ -206,24 +341,34 @@ public abstract class ReservationService {
             throw new IllegalArgumentException("Payment method must be provided.");
         }
 
-        // Pay add-ons at checkout (e.g., gym pass)
-        double addOns = reservation.getAddOnsTotal();
-        if (addOns > 0) {
-            Guest guest = reservation.getGuest();
-            if (guest.getBalance() < addOns) {
-                throw new IllegalArgumentException("Insufficient balance for add-ons. Need $" + addOns + ", have $" + guest.getBalance());
+        Guest guest = reservation.getGuest();
+        
+        // Get the total amount still owed (stay extension + add-ons)
+        // This is calculated from totalPrice - paidAmount in the checkout summary
+        // So we just need to pay the remaining balance once
+        double totalDue = reservation.getTotalPrice() - reservation.getPaidAmount();
+        
+        if (totalDue > 0) {
+            if (guest.getBalance() < totalDue) {
+                throw new IllegalArgumentException("Insufficient balance. Need $" + totalDue + ", have $" + guest.getBalance());
             }
             
+            // Process single payment for total amount due (stay extension + add-ons combined)
             try {
-                Invoice invoice = new Invoice(addOns, paymentMethod);
+                Invoice invoice = new Invoice(totalDue, paymentMethod);
                 if (invoice.processPayment()) {
-                    guest.setBalance(guest.getBalance() - addOns);
+                    guest.setBalance(guest.getBalance() - totalDue);
+                    // Update paid amount
+                    reservation.setPaidAmount(reservation.getPaidAmount() + totalDue);
                 }
             } catch (InvalidPaymentException e) {
-                throw new IllegalArgumentException("Add-ons payment failed: " + e.getMessage());
+                throw new IllegalArgumentException("Payment failed: " + e.getMessage());
             }
         }
-
+        
+        // Mark as fully paid after all payments processed
+        reservation.setFullPaid(true);
+        
         reservation.setStatus(ReservationStatus.COMPLETED);
         reservation.getRoom().setAvailable(true);
         return true;
@@ -295,7 +440,7 @@ public abstract class ReservationService {
             if (reservation.getReservationId().equals(reservationId)) {
                 
                 // Must be within manageable timeframe OR allow extension
-                if (!reservation.canManage() && !reservation.canOnlyExtend()) {
+                if (!reservation.canManage() && !reservation.canOnlyExtend() && !reservation.canExtend()) {
                     throw new IllegalArgumentException("Cannot extend this reservation.");
                 }
                 
@@ -308,11 +453,22 @@ public abstract class ReservationService {
                     throw new IllegalArgumentException("New check-out date must be after the current check-out date.");
                 }
                 
+                // Calculate additional cost for the extension BEFORE updating dates
+                // This ensures we track the original price correctly
+                double pricePerNight = reservation.getRoom().getPricePerNight();
+                long additionalDays = reservation.getCheckOutDate().until(newCheckOut).getDays();
+                double additionalCost = pricePerNight * additionalDays;
+                
+                // Store the original check-out date if not already stored
+                if (reservation.getOriginalCheckOutDate() == null) {
+                    reservation.setOriginalCheckOutDate(reservation.getCheckOutDate());
+                }
+                
                 // Set new check-out date
                 reservation.setCheckOutDate(newCheckOut);
                 
-                // Recalculate price
-                reservation.update();
+                // Recalculate total - this adds the extension cost to existing total
+                reservation.setTotalPrice();
                 
                 return true;
             }
@@ -370,7 +526,7 @@ public abstract class ReservationService {
     public static List<Manageable> getExtendableReservations() {
         List<Manageable> extendable = new ArrayList<>();
         for (Reservation r : reservations) {
-            if (r instanceof Manageable && (r.canManage() || r.canOnlyExtend())) {
+            if (r instanceof Manageable && (r.canManage() || r.canOnlyExtend() || r.canExtend())) {
                 extendable.add((Manageable) r);
             }
         }

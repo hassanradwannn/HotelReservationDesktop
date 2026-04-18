@@ -1,7 +1,6 @@
+import exceptions.InvalidCredentialsException;
 import java.time.LocalDate;
 import java.util.ArrayList;
-
-import exceptions.InvalidCredentialsException;
 
 public class Database {
     // Static lists acting as our in-memory tables
@@ -48,7 +47,7 @@ public class Database {
         RoomType standard = new RoomType("Standard", 500, 1);
         RoomType deluxe = new RoomType("Deluxe", 700, 2);
         RoomType suite = new RoomType("Suite", 1000, 4);
-        RoomType penthouse = new RoomType("Penthouse", 2000, 8);
+        RoomType penthouse = new RoomType("Penthouse", 2000, 8, true);
         addRoomType(standard, deluxe, suite, penthouse);
 
         // 4. Generate Room Ranges
@@ -65,10 +64,8 @@ public class Database {
             Room room = new Room(String.valueOf(i), type);
             String typeName = type.getName();
 
-            // 1. Standard in ALL rooms
-            room.addAmenity(getAmenities().get(0)); // WiFi
-            room.addAmenity(getAmenities().get(1)); // TV
-            room.addAmenity(getAmenities().get(2)); // Mini-bar
+            // Note: WiFi, TV, and Mini-bar are already added by Room constructor
+            // Only add additional amenities specific to room types
 
             // 2. Jacuzzi is exclusive to Suite and Penthouse
             if (typeName.equalsIgnoreCase("Suite") || typeName.equalsIgnoreCase("Penthouse")) {
