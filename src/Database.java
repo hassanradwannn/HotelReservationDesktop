@@ -35,13 +35,14 @@ public class Database {
             System.out.println("Error: Could not initialize staff.");
         }
 
-        // 2. Amenities (Indices: 0=WiFi, 1=TV, 2=Mini-bar, 3=Jacuzzi, 4=Gym)
+        // 2. Amenities (Indices: 0=WiFi, 1=TV, 2=Mini-bar, 3=Jacuzzi, 4=Gym, 5=Restaurant)
         Amenity wifi = new Amenity("WiFi", 10);
         Amenity tv = new Amenity("Smart TV", 35);
         Amenity minibar = new Amenity("Mini-bar", 75);
         Amenity jacuzzi = new Amenity("Jacuzzi", 100);
         Amenity gym = new Amenity("Gym", 200);
-        addAmenity(wifi, tv, minibar, jacuzzi, gym);
+        Amenity restaurant = new Amenity("Restaurant", 150); // Paid at checkout
+        addAmenity(wifi, tv, minibar, jacuzzi, gym, restaurant);
 
         // 3. Room Types
         RoomType standard = new RoomType("Standard", 500, 1);
