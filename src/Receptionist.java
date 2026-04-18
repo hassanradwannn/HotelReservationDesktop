@@ -63,14 +63,9 @@ public class Receptionist extends Staff {
             return;
         }
 
-        if (!reservation.getGuest().getUsername().equals(guest.getUsername())) {
-            System.out.println("Guest does not match reservation.");
-            return;
-        }
-
         try {
             ReservationService.checkInGuest(reservation, guest);
-            System.out.println("✓ Guest " + guest.getUsername() + " checked in to room " +
+            System.out.println("Guest " + guest.getUsername() + " checked in to room " +
                              reservation.getRoom().getRoomNumber());
             System.out.println("  Full payment will be collected at checkout.");
         } catch (IllegalArgumentException e) {
@@ -92,7 +87,7 @@ public class Receptionist extends Staff {
         try {
             double remaining = ReservationService.getRemainingAmount(reservation);
             ReservationService.checkOutGuest(reservation, paymentMethod);
-            System.out.println("✓ Guest " + reservation.getGuest().getUsername() +
+            System.out.println("Guest " + reservation.getGuest().getUsername() +
                              " checked out from room " + reservation.getRoom().getRoomNumber());
             System.out.println("  Collected payment: $" + String.format("%.2f", remaining));
             System.out.println("  Guest balance: $" + String.format("%.2f", reservation.getGuest().getBalance()));

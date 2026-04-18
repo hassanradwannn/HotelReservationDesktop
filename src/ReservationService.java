@@ -114,6 +114,11 @@ public abstract class ReservationService {
             throw new IllegalArgumentException("Check-in date has not arrived yet.");
         }
 
+        if (guest.getBalance() < reservation.getTotalPrice() * 0.75)  {
+            cancelReservation(reservation.getReservationId());
+            throw new IllegalArgumentException("Insufficient balance, you need $" + (reservation.getTotalPrice() - guest.getBalance()) + " more to check in.");
+        }
+
         reservation.setStatus(ReservationStatus.ONGOING);
         reservation.getRoom().setAvailable(false);
         return true;
