@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+
 public class Room {
     private String roomNumber;
     private RoomType roomType;
@@ -59,8 +60,8 @@ public class Room {
     @Override
     public String toString() {
         return "Room Number: " + roomNumber +
-               ", Type: " + roomType.getName() +
-               ", Available: " + available;
+                ", Type: " + roomType.getName() +
+                ", Available: " + available;
     }
 
     public boolean isAvailable() {

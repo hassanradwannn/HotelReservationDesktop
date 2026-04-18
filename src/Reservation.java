@@ -7,9 +7,12 @@ public class Reservation {
     private LocalDate checkInDate;
     private LocalDate checkOutDate;
     private ReservationStatus status;
-    private boolean hasGymPass; // <-- ADD THIS
+    private boolean hasGymPass;
+    private double totalPrice;
+    private LocalDate depositDeadline;
+    private boolean depositPaid;
+    private boolean fullPaid;
 
-    // Update your constructor
     public Reservation(String reservationId, Guest guest, Room room,
                        LocalDate checkInDate, LocalDate checkOutDate,
                        ReservationStatus status, boolean hasGymPass) {
@@ -20,10 +23,37 @@ public class Reservation {
         this.checkOutDate = checkOutDate;
         this.status = status;
         this.hasGymPass = hasGymPass;
+        this.depositDeadline = SystemTime.getToday().plusDays(1);
+        this.depositPaid = false;
+        this.fullPaid = false;
     }
 
     public boolean hasGymPass() {
         return hasGymPass;
+    }
+
+    public LocalDate getDepositDeadline() {
+        return depositDeadline;
+    }
+
+    public boolean isDepositPaid() {
+        return depositPaid;
+    }
+
+    public void setDepositPaid(boolean paid) {
+        this.depositPaid = paid;
+    }
+
+    public boolean isFullPaid() {
+        return fullPaid;
+    }
+
+    public void setFullPaid(boolean paid) {
+        this.fullPaid = paid;
+    }
+
+    public boolean isDepositOverdue() {
+        return SystemTime.getToday().isAfter(depositDeadline) && !depositPaid;
     }
 
     public String getReservationId() {
@@ -57,5 +87,26 @@ public class Reservation {
     public boolean overlaps(LocalDate newCheckIn, LocalDate newCheckOut) {
         return newCheckIn.isBefore(this.checkOutDate) &&
                 newCheckOut.isAfter(this.checkInDate);
+    }
+
+    public void setTotalPrice() {
+        double price = room.getPricePerNight() * checkInDate.until(checkOutDate).getDays();
+        for (Amenity a : room.getAmenities()) {
+            price += a.getPrice();
+        }
+        totalPrice = price;
+    }
+
+    public double getTotalPrice() {
+        return this.totalPrice;
+    }
+
+    @Override
+    public String toString() {
+        return "ID: " + getReservationId()
+                + " | Guest: " + getGuest().getUsername()
+                + " | Room: " + getRoom().getRoomNumber()
+                + " | " + getCheckInDate() + " → " + getCheckOutDate()
+                + " | Status: " + getStatus();
     }
 }

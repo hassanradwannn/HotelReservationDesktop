@@ -32,8 +32,13 @@ public abstract class User {
         this.dateOfBirth = dateOfBirth;
     }
 
-    protected static User login(String username, String password) throws InvalidCredentialsException {
+    public static User login(String username, String password) throws InvalidCredentialsException {
         return Authentication.login(username, password);
+    }
+
+    @Override
+    public String toString() {
+        return username;
     }
 
 }
