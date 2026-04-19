@@ -16,7 +16,7 @@ public class Reservation implements Payable, Manageable {
     private boolean fullPaid;
     private double paidAmount;  // Track actual amount paid (for calculating outstanding after extension)
     private LocalDate originalCheckOutDate;  // Track original check-out date before extension
-    private double lateFeePercentage = 0.05; // 5% late fee
+    private final double lateFeePercentage = 0.05; // 5% late fee
     private boolean lateFeeApplied = false;
     private boolean isSameDayBooking; // Flag for same-day bookings
 

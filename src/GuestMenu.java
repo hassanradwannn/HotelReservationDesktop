@@ -182,8 +182,13 @@ public class GuestMenu {
                         ReservationService.payInFull(res, guest);
                         System.out.println("✓ Full amount paid! Reservation is CONFIRMED.");
                         System.out.println("New balance: $" + String.format("%.2f", guest.getBalance()));
-                        Receipt receipt = Receipt.createFullPaymentReceipt(res);
-                        receipt.print();
+                        try {
+                            Invoice invoice = new Invoice(res, res.getTotalPrice(), PaymentMethod.ONLINE, "FULL PAYMENT RECEIPT");
+                            invoice.setPaid(true);
+                            invoice.printReceipt();
+                        } catch (exceptions.InvalidPaymentException ex) {
+                            System.out.println("Failed to generate receipt: " + ex.getMessage());
+                        }
                     } catch (IllegalArgumentException e) {
                         System.out.println("Payment failed: " + e.getMessage());
                     }
@@ -201,8 +206,13 @@ public class GuestMenu {
                         ReservationService.payDeposit(res, guest);
                         System.out.println("✓ Deposit paid! Reservation is CONFIRMED.");
                         System.out.println("New balance: $" + String.format("%.2f", guest.getBalance()));
-                        Receipt receipt = Receipt.createDepositReceipt(res);
-                        receipt.print();
+                        try {
+                            Invoice invoice = new Invoice(res, deposit, PaymentMethod.ONLINE, "DEPOSIT PAYMENT RECEIPT");
+                            invoice.setPaid(true);
+                            invoice.printReceipt();
+                        } catch (exceptions.InvalidPaymentException ex) {
+                            System.out.println("Failed to generate receipt: " + ex.getMessage());
+                        }
                     } catch (IllegalArgumentException e) {
                         System.out.println("Payment failed: " + e.getMessage());
                     }
@@ -497,8 +507,13 @@ public class GuestMenu {
             ReservationService.payDeposit(res, guest);
             System.out.println("✓ Deposit paid! Reservation is now CONFIRMED.");
             System.out.println("New balance: $" + String.format("%.2f", guest.getBalance()));
-            Receipt depositReceipt = Receipt.createDepositReceipt(res);
-            depositReceipt.print();
+            try {
+                Invoice invoice = new Invoice(res, deposit, PaymentMethod.ONLINE, "DEPOSIT PAYMENT RECEIPT");
+                invoice.setPaid(true);
+                invoice.printReceipt();
+            } catch (exceptions.InvalidPaymentException ex) {
+                System.out.println("Failed to generate receipt: " + ex.getMessage());
+            }
         } catch (IllegalArgumentException e) {
             System.out.println("Error: " + e.getMessage());
         }
@@ -556,8 +571,13 @@ public class GuestMenu {
             ReservationService.payFullAmount(res, guest);
             System.out.println("✓ Full amount paid!");
             System.out.println("New balance: $" + String.format("%.2f", guest.getBalance()));
-            Receipt fullReceipt = Receipt.createFullPaymentReceipt(res);
-            fullReceipt.print();
+            try {
+                Invoice invoice = new Invoice(res, remaining, PaymentMethod.ONLINE, "FULL PAYMENT RECEIPT");
+                invoice.setPaid(true);
+                invoice.printReceipt();
+            } catch (exceptions.InvalidPaymentException ex) {
+                System.out.println("Failed to generate receipt: " + ex.getMessage());
+            }
         } catch (IllegalArgumentException e) {
             System.out.println("Error: " + e.getMessage());
         }

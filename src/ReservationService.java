@@ -335,7 +335,7 @@ public final class ReservationService {
         return true;
     }
 
-    public static boolean checkOutGuest(Reservation reservation, PaymentMethod paymentMethod) {
+    public static Invoice checkOutGuest(Reservation reservation, PaymentMethod paymentMethod) {
         if (reservation.getStatus() != ReservationStatus.ONGOING) {
             throw new IllegalArgumentException("Reservation must be ONGOING to check out.");
         }
@@ -350,6 +350,7 @@ public final class ReservationService {
         // This is calculated from totalPrice - paidAmount in the checkout summary
         // So we just need to pay the remaining balance once
         double totalDue = reservation.getTotalPrice() - reservation.getPaidAmount();
+        Invoice invoice = null;
         
         if (totalDue > 0) {
             if (guest.getBalance() < totalDue) {
@@ -358,12 +359,19 @@ public final class ReservationService {
             
             // Process single payment for total amount due (stay extension + add-ons combined)
             try {
-                Invoice invoice = new Invoice(totalDue, paymentMethod);
+                invoice = new Invoice(reservation, totalDue, paymentMethod, "CHECKOUT RECEIPT");
                 if (invoice.processPayment()) {
                     guest.setBalance(guest.getBalance() - totalDue);
                     // Update paid amount
                     reservation.setPaidAmount(reservation.getPaidAmount() + totalDue);
                 }
+            } catch (InvalidPaymentException e) {
+                throw new IllegalArgumentException("Payment failed: " + e.getMessage());
+            }
+        } else {
+            try {
+                invoice = new Invoice(reservation, 0, paymentMethod, "CHECKOUT RECEIPT");
+                invoice.setPaid(true);
             } catch (InvalidPaymentException e) {
                 throw new IllegalArgumentException("Payment failed: " + e.getMessage());
             }
@@ -374,11 +382,11 @@ public final class ReservationService {
         
         reservation.setStatus(ReservationStatus.COMPLETED);
         reservation.getRoom().setAvailable(true);
-        return true;
+        return invoice;
     }
 
     // Updated checkout that accepts Payable for polymorphism
-    public static boolean checkOutGuest(Payable payable, PaymentMethod paymentMethod) {
+    public static Invoice checkOutGuest(Payable payable, PaymentMethod paymentMethod) {
         if (!(payable instanceof Reservation)) {
             throw new IllegalArgumentException("Can only checkout Reservation objects.");
         }
