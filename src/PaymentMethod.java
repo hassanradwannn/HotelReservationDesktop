@@ -1,5 +1,5 @@
 public enum PaymentMethod {
     CASH,
-    CREDITCARD,
+    CREDIT_CARD,
     ONLINE,
 }

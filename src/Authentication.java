@@ -4,7 +4,10 @@ import exceptions.UserNotFoundException;
 import exceptions.UsernameAlreadyTakenException;
 import exceptions.WeakPasswordException;
 
-public class Authentication {
+public final class Authentication {
+    
+    private Authentication() {} // Utility class
+
     public static User login(String username, String password)
             throws InvalidCredentialsException {
         User user = Database.findUser(username);

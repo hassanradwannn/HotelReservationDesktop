@@ -99,6 +99,15 @@ public class Database {
         return null;
     }
 
+    public static Amenity findAmenityByName(String name) {
+        for (Amenity a : getAmenities()) {
+            if (a.getName().equalsIgnoreCase(name)) {
+                return a;
+            }
+        }
+        return null;
+    }
+
     public static void addAmenity(String name, double price) {
         addAmenity(new Amenity(name, price));
     }

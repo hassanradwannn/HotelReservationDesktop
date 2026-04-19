@@ -10,7 +10,15 @@ public class Room {
         this.roomNumber = roomNumber;
         this.roomType = roomType;
         this.available = true;
-        addAmenity(Database.getAmenities().get(0), Database.getAmenities().get(1));
+        
+        Amenity wifi = Database.findAmenityByName("WiFi");
+        Amenity tv = Database.findAmenityByName("Smart TV");
+        if (wifi != null) {
+            addAmenity(wifi);
+        }
+        if (tv != null) {
+            addAmenity(tv);
+        }
     }
 
     public String getRoomNumber() {

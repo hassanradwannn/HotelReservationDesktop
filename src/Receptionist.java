@@ -8,13 +8,6 @@ public class Receptionist extends Staff {
         super(username, password, dateOfBirth, Role.RECEPTIONIST, workingHours);
     }
 
-    public void viewReservations(LocalDate checkIn) {
-        System.out.println("Viewing reservations for " + checkIn.toString());
-        Database.getReservations().stream().filter(
-                r -> r.getCheckInDate().isEqual(checkIn))
-                .forEach(System.out::println);
-    }
-
     public void viewReservations() {
         System.out.println("\n=== All Reservations ===");
         if (Database.getReservations().isEmpty()) {
@@ -50,27 +43,6 @@ public class Receptionist extends Staff {
                 .filter(r -> r.getCheckOutDate().isEqual(today) && r.getStatus() == ReservationStatus.ONGOING)
                 .forEach(r -> System.out.println("  - " + r.getReservationId() + " | " + r.getGuest().getUsername() +
                                                   " | Room " + r.getRoom().getRoomNumber()));
-    }
-
-    public void checkInGuest(String reservationId, Guest guest) {
-        Reservation reservation = Database.getReservations().stream()
-                .filter(r -> r.getReservationId().equals(reservationId))
-                .findFirst()
-                .orElse(null);
-
-        if (reservation == null) {
-            System.out.println("Reservation not found.");
-            return;
-        }
-
-        try {
-            ReservationService.checkInGuest(reservation, guest);
-            System.out.println("Guest " + guest.getUsername() + " checked in to room " +
-                             reservation.getRoom().getRoomNumber());
-            System.out.println("  Full payment will be collected at checkout.");
-        } catch (IllegalArgumentException e) {
-            System.out.println("Check-in failed: " + e.getMessage());
-        }
     }
 
     public void checkOutGuest(String reservationId, PaymentMethod paymentMethod) {

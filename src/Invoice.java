@@ -11,7 +11,7 @@ public class Invoice implements Payable {
     public Invoice(double totalAmount, PaymentMethod paymentMethod) throws InvalidPaymentException {
         setTotalAmount(totalAmount);
         this.paymentMethod = paymentMethod;
-        this.paymentDate = LocalDate.now();
+        this.paymentDate = SystemTime.getToday();
         this.paid = false;
         Database.getInvoices().add(this);
     }

@@ -215,12 +215,10 @@ public class Reservation implements Payable, Manageable {
      * @return remaining balance before check-in
      */
     public double getRemainingBalance() {
-        double remaining = totalPrice - getFirstNightPrice();
-        // Add 5% late fee if deposit was overdue
         if (isDepositOverdue() && !lateFeeApplied) {
-            remaining += remaining * lateFeePercentage;
+            applyLateFee();
         }
-        return remaining;
+        return totalPrice - getFirstNightPrice();
     }
     
     /**

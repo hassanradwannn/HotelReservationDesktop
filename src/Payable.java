@@ -34,6 +34,6 @@ public interface Payable {
     default boolean isOverdue() {
         LocalDate dueDate = getDueDate();
         if (dueDate == null) return false;
-        return LocalDate.now().isAfter(dueDate) && !isPaid();
+        return SystemTime.getToday().isAfter(dueDate) && !isPaid();
     }
 }

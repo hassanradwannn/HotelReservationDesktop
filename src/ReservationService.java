@@ -1,13 +1,16 @@
 import exceptions.InvalidPaymentException;
+import exceptions.RoomNotAvailableException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public abstract class ReservationService {
+public final class ReservationService {
 
     private static ArrayList<Room> rooms = Database.getRooms();
     private static ArrayList<Reservation> reservations = Database.getReservations();
+
+    private ReservationService() {} // Utility class
 
     public static boolean isDateRangeValid(LocalDate checkIn, LocalDate checkOut) {
         if (checkIn == null || checkOut == null) {
@@ -28,7 +31,7 @@ public abstract class ReservationService {
     
     public static boolean isRoomAvailable(Room room, LocalDate checkIn, LocalDate checkOut) {
         for (Reservation reservation : reservations) {
-            if (reservation.getRoom().getRoomNumber() == room.getRoomNumber()
+            if (reservation.getRoom().getRoomNumber().equals(room.getRoomNumber())
                     && reservation.getStatus() != ReservationStatus.CANCELLED
                     && reservation.overlaps(checkIn, checkOut)) {
                 return false;
@@ -38,7 +41,7 @@ public abstract class ReservationService {
     }
 
     public static Reservation createReservation(Guest guest, Room room,
-                                         LocalDate checkIn, LocalDate checkOut, boolean addGym) {
+                                         LocalDate checkIn, LocalDate checkOut, boolean addGym) throws RoomNotAvailableException {
 
         if (!isDateRangeValid(checkIn, checkOut)) {
             throw new IllegalArgumentException("Invalid reservation dates.");
@@ -59,7 +62,7 @@ public abstract class ReservationService {
         }
 
         if (!isRoomAvailable(room, checkIn, checkOut)) {
-            throw new IllegalArgumentException("Room is not available for the selected dates.");
+            throw new RoomNotAvailableException("Room is not available for the selected dates.");
         }
 
         String reservationId = "RES-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
