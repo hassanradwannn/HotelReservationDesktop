@@ -316,7 +316,7 @@ public class Main {
         boolean found = false;
         for (Reservation r : Database.getReservations()) {
             if (r.getGuest().getUsername().equalsIgnoreCase(guest.getUsername())) {
-                printReservation(r);
+                System.out.println(r);
                 found = true;
             }
         }
@@ -424,12 +424,12 @@ public class Main {
             System.out.println("1. View All Guests");
             System.out.println("2. View All Rooms");
             System.out.println("3. View All Reservations");
-            System.out.println("7. View All Room Types");
-            System.out.println("8. View All Amenities");
-            System.out.println("9. Register Receptionist");
             System.out.println("4. Manage Rooms (CRUD)");
             System.out.println("5. Manage Room Types (CRUD)");
             System.out.println("6. Manage Amenities (CRUD)");
+            System.out.println("7. View All Room Types");
+            System.out.println("8. View All Amenities");
+            System.out.println("9. Register Receptionist");
             System.out.println("0. Logout");
             System.out.print("Choose: ");
 
@@ -489,7 +489,7 @@ public class Main {
                 System.out.print("Room number to update: ");
                 String num = scanner.nextLine().trim();
 
-                Room room = findRoom(num);
+                Room room = Database.findRoom(num);
                 if (room == null) {
                     System.out.println("Room not found.");
                     return;
@@ -520,7 +520,7 @@ public class Main {
                     for (Amenity a : Database.getAmenities()) System.out.println("- " + a.getName());
                     System.out.print("Enter amenity name to add: ");
                     String an = scanner.nextLine().trim();
-                    Amenity aobj = findAmenity(an);
+                    Amenity aobj = Database.findAmenity(an);
                     if (aobj == null) {
                         System.out.println("Amenity not found.");
                     } else {
@@ -543,7 +543,7 @@ public class Main {
                 System.out.print("Room number to delete: ");
                 String num = scanner.nextLine().trim();
 
-                Room room = findRoom(num);
+                Room room = Database.findRoom(num);
                 if (room == null) {
                     System.out.println("Room not found.");
                     return;
@@ -597,7 +597,7 @@ public class Main {
             case "2" -> {
                 System.out.print("Current room type name: ");
                 String name = scanner.nextLine().trim();
-                RoomType rt = findRoomType(name);
+                RoomType rt =  Database.findRoomType(name);
                 if (rt == null) {
                     System.out.println("Room type not found.");
                     return;
@@ -627,7 +627,7 @@ public class Main {
             case "3" -> {
                 System.out.print("Room type name to delete: ");
                 String name = scanner.nextLine().trim();
-                RoomType rt = findRoomType(name);
+                RoomType rt = Database.findRoomType(name);
                 if (rt == null) {
                     System.out.println("Room type not found.");
                     return;
@@ -672,7 +672,7 @@ public class Main {
             case "2" -> {
                 System.out.print("Current amenity name: ");
                 String name = scanner.nextLine().trim();
-                Amenity a = findAmenity(name);
+                Amenity a = Database.findAmenity(name);
                 if (a == null) {
                     System.out.println("Amenity not found.");
                     return;
@@ -692,7 +692,7 @@ public class Main {
             case "3" -> {
                 System.out.print("Amenity name to delete: ");
                 String name = scanner.nextLine().trim();
-                Amenity a = findAmenity(name);
+                Amenity a = Database.findAmenity(name);
                 if (a == null) {
                     System.out.println("Amenity not found.");
                     return;
@@ -892,28 +892,9 @@ public class Main {
     // HELPERS
     // ─────────────────────────────────────────────
 
-    private static void printReservation(Reservation r) {
-        System.out.println("ID: " + r.getReservationId()
-                + " | Room: " + r.getRoom().getRoomNumber()
-                + " | " + r.getCheckInDate() + " → " + r.getCheckOutDate()
-                + " | Status: " + r.getStatus());
-    }
 
-    private static Room findRoom(String number) {
-        return Database.getRooms().stream()
-                .filter(r -> r.getRoomNumber().equalsIgnoreCase(number))
-                .findFirst().orElse(null);
-    }
 
-    private static RoomType findRoomType(String name) {
-        return Database.getRoomTypes().stream()
-                .filter(rt -> rt.getName().equalsIgnoreCase(name))
-                .findFirst().orElse(null);
-    }
 
-    private static Amenity findAmenity(String name) {
-        return Database.getAmenities().stream()
-                .filter(a -> a.getName().equalsIgnoreCase(name))
-                .findFirst().orElse(null);
-    }
+
+
 }

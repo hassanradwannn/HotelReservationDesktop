@@ -196,4 +196,22 @@ public class Database {
         getRooms().add(room);
     }
 
+    public static Room findRoom(String number) {
+        return getRooms().stream()
+                .filter(r -> r.getRoomNumber().equalsIgnoreCase(number))
+                .findFirst().orElse(null);
+    }
+
+    public static RoomType findRoomType(String name) {
+        return getRoomTypes().stream()
+                .filter(rt -> rt.getName().equalsIgnoreCase(name))
+                .findFirst().orElse(null);
+    }
+
+    public static Amenity findAmenity(String name) {
+        return getAmenities().stream()
+                .filter(a -> a.getName().equalsIgnoreCase(name))
+                .findFirst().orElse(null);
+    }
 }
+
