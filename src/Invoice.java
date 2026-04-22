@@ -29,11 +29,14 @@ public class Invoice implements Payable {
     public LocalDate getPaymentDate() { return paymentDate; }
 
     @Override
-    public boolean processPayment() {
-        if (this.totalAmount > 0 && this.paymentMethod != null) {
-            System.out.println("Payment of $" + this.totalAmount + " processed via " + this.paymentMethod);
-            return true;
+    public boolean processPayment() throws InvalidPaymentException {
+        if (this.totalAmount <= 0) {
+            throw new InvalidPaymentException("Invoice amount must be positive.");
         }
-        return false;
+        if (this.paymentMethod == null) {
+            throw new InvalidPaymentException("No payment method provided.");
+        }
+        System.out.println("Payment of $" + this.totalAmount + " processed via " + this.paymentMethod);
+        return true;
     }
 }

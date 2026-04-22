@@ -27,7 +27,36 @@ public class Admin extends Staff {
     }
 
     // CRUD
-    public void createRoom(String room) { System.out.println("Admin created room: " + room); }
-    public void updateRoom(String oldRoom, String newRoom) { System.out.println("Updated room " + oldRoom + " to " + newRoom); }
-    public void deleteRoom(String room) { System.out.println("Admin deleted room: " + room); }
+    public void viewRoomTypes() { Database.getRoomTypes().forEach(System.out::println); }
+    public void viewAmenities() { Database.getAmenities().forEach(System.out::println); }
+
+    public void createRoomType(String name, double pricePerNight, int capacity) {
+        Database.createRoomType(name, pricePerNight, capacity);
+        System.out.println("RoomType '" + name + "' created.");
+    }
+
+    public void createAmenity(String name, double price) {
+        Database.createAmenity(name, price);
+        System.out.println("Amenity '" + name + "' created.");
+    }
+
+    public void createRoom(String roomNumber, RoomType type) {
+        Database.createRoom(roomNumber, type);
+        System.out.println("Room '" + roomNumber + "' created.");
+    }
+
+    public void deleteRoom(Room room) {
+        Database.deleteRoom(room);
+        System.out.println("Room '" + room.getRoomNumber() + "' deleted.");
+    }
+
+    public void deleteRoomType(RoomType roomType) {
+        Database.deleteRoomType(roomType);
+        System.out.println("RoomType '" + roomType.getName() + "' deleted.");
+    }
+
+    public void deleteAmenity(Amenity amenity) {
+        Database.deleteAmenity(amenity);
+        System.out.println("Amenity '" + amenity.getName() + "' deleted.");
+    }
 }

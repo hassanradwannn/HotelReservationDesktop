@@ -1,5 +1,4 @@
-﻿import exceptions.InvalidCredentialsException;
-import exceptions.*;
+﻿import exceptions.*;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -178,7 +177,8 @@ public class Main {
         System.out.println("\n--- Available Rooms ---");
         boolean found = false;
         for (Room room : Database.getRooms()) {
-            if (room.isAvailable()) {
+            // consider room available for today if no overlapping reservation exists
+            if (ReservationService.isRoomAvailable(room, SystemTime.getToday(), SystemTime.getToday().plusDays(1))) {
                 System.out.println(room);
                 System.out.println("  Amenities: " + room.getAmenities());
                 found = true;
@@ -280,7 +280,10 @@ public class Main {
         }
 
         boolean addGym = false;
-        if (!selectedRoom.getRoomType().getName().equalsIgnoreCase("Penthouse")) {
+        if (selectedRoom.getRoomType().getName().equalsIgnoreCase("Penthouse")) {
+            // Penthouse includes gym pass by default
+            addGym = true;
+        } else {
             System.out.print("Would you like to add a Gym Pass for your stay? ($200 flat fee) (Y/N): ");
             String gymChoice = scanner.nextLine().trim();
             if (gymChoice.equalsIgnoreCase("Y")) {
@@ -293,11 +296,16 @@ public class Main {
             // Pass addGym to the service
             Reservation res = ReservationService.createReservation(guest, selectedRoom, checkIn, checkOut, addGym);
             System.out.println("Reservation created! ID: " + res.getReservationId());
-            System.out.println("  Status: PENDING");
+            System.out.println("  Status: " + res.getStatus());
             System.out.println("  Total Price: $" + String.format("%.2f", res.getTotalPrice()));
-            System.out.println("  Deposit Due (25%): $" + String.format("%.2f", ReservationService.getDepositAmount(res)));
-            System.out.println("  Deposit Deadline: " + res.getDepositDeadline());
-            System.out.println("  Please pay the deposit to confirm your reservation.");
+            // For same-day reservations there is no deposit
+            if (res.getCheckInDate() != null && res.getCheckInDate().isEqual(SystemTime.getToday())) {
+                System.out.println("  No deposit required for same-day reservations. Full payment is due at checkout.");
+            } else {
+                System.out.println("  Deposit Due (25%): $" + String.format("%.2f", ReservationService.getDepositAmount(res)));
+                System.out.println("  Deposit Deadline: " + res.getDepositDeadline());
+                System.out.println("  Please pay the deposit to confirm your reservation.");
+            }
         } catch (IllegalArgumentException e) {
             System.out.println("Reservation failed: " + e.getMessage());
         }
@@ -416,6 +424,9 @@ public class Main {
             System.out.println("1. View All Guests");
             System.out.println("2. View All Rooms");
             System.out.println("3. View All Reservations");
+            System.out.println("7. View All Room Types");
+            System.out.println("8. View All Amenities");
+            System.out.println("9. Register Receptionist");
             System.out.println("4. Manage Rooms (CRUD)");
             System.out.println("5. Manage Room Types (CRUD)");
             System.out.println("6. Manage Amenities (CRUD)");
@@ -427,6 +438,9 @@ public class Main {
                 case "2" -> admin.viewRooms();
                 case "3" ->
                     admin.viewReservations();
+                case "7" -> admin.viewRoomTypes();
+                case "8" -> admin.viewAmenities();
+                case "9" -> registerReceptionistFlow(admin);
                 case "4" -> manageRooms();
                 case "5" -> manageRoomTypes();
                 case "6" -> manageAmenities();
@@ -464,9 +478,12 @@ public class Main {
                     return;
                 }
 
-                Room newRoom = new Room(num, types.get(t));
-                Database.addRoom(newRoom);
-                System.out.println("Room " + num + " added.");
+                try {
+                    Database.createRoom(num, types.get(t));
+                    System.out.println("Room " + num + " added.");
+                } catch (IllegalArgumentException e) {
+                    System.out.println("Could not add room: " + e.getMessage());
+                }
             }
             case "2" -> {
                 System.out.print("Room number to update: ");
@@ -478,24 +495,49 @@ public class Main {
                     return;
                 }
 
-                System.out.print("New room number (or same): ");
-                String newNum = scanner.nextLine().trim();
-
-                System.out.println("Select new Room Type:");
-                List<RoomType> types = Database.getRoomTypes();
-                for (int i = 0; i < types.size(); i++)
-                    System.out.println((i + 1) + ". " + types.get(i).getName());
-                System.out.print("Choice: ");
-                int t;
-                try {
-                    t = Integer.parseInt(scanner.nextLine().trim()) - 1;
-                } catch (NumberFormatException e) {
-                    System.out.println("Invalid.");
-                    return;
+                // Change type and add or remove amenities
+                System.out.print("Change room type? (Y/N): ");
+                String changeType = scanner.nextLine().trim();
+                if (changeType.equalsIgnoreCase("Y")) {
+                    System.out.println("Select new Room Type:");
+                    List<RoomType> types = Database.getRoomTypes();
+                    for (int i = 0; i < types.size(); i++)
+                        System.out.println((i + 1) + ". " + types.get(i).getName());
+                    System.out.print("Choice: ");
+                    int t;
+                    try {
+                        t = Integer.parseInt(scanner.nextLine().trim()) - 1;
+                        room.update(types.get(t));
+                        System.out.println("Room type updated.");
+                    } catch (NumberFormatException e) {
+                        System.out.println("Invalid.");
+                    }
                 }
 
-                room.update(newNum, types.get(t), room.isAvailable());
-                System.out.println("Room updated.");
+                System.out.print("Add an amenity to room? (Y/N): ");
+                if (scanner.nextLine().trim().equalsIgnoreCase("Y")) {
+                    System.out.println("Available amenities:");
+                    for (Amenity a : Database.getAmenities()) System.out.println("- " + a.getName());
+                    System.out.print("Enter amenity name to add: ");
+                    String an = scanner.nextLine().trim();
+                    Amenity aobj = findAmenity(an);
+                    if (aobj == null) {
+                        System.out.println("Amenity not found.");
+                    } else {
+                        room.addAmenity(aobj);
+                        System.out.println("Amenity added.");
+                    }
+                }
+
+                System.out.print("Remove an amenity from room? (Y/N): ");
+                if (scanner.nextLine().trim().equalsIgnoreCase("Y")) {
+                    System.out.println("Current amenities:");
+                    for (Amenity a : room.getAmenities()) System.out.println("- " + a.getName());
+                    System.out.print("Enter amenity name to remove: ");
+                    String an = scanner.nextLine().trim();
+                    if (room.removeAmenityByName(an)) System.out.println("Amenity removed.");
+                    else System.out.println("Amenity not found on room.");
+                }
             }
             case "3" -> {
                 System.out.print("Room number to delete: ");
@@ -506,8 +548,12 @@ public class Main {
                     System.out.println("Room not found.");
                     return;
                 }
-                Database.getRooms().remove(room);
-                System.out.println("Room " + num + " deleted.");
+                try {
+                    Database.deleteRoom(room);
+                    System.out.println("Room " + num + " deleted.");
+                } catch (IllegalArgumentException e) {
+                    System.out.println("Could not delete room: " + e.getMessage());
+                }
             }
             default -> System.out.println("Invalid option.");
         }
@@ -541,8 +587,12 @@ public class Main {
                     return;
                 }
 
-                Database.addRoomType(new RoomType(name, price, cap));
-                System.out.println("Room type '" + name + "' added.");
+                try {
+                    Database.createRoomType(name, price, cap);
+                    System.out.println("Room type '" + name + "' added.");
+                } catch (IllegalArgumentException e) {
+                    System.out.println("Could not add RoomType: " + e.getMessage());
+                }
             }
             case "2" -> {
                 System.out.print("Current room type name: ");
@@ -552,9 +602,7 @@ public class Main {
                     System.out.println("Room type not found.");
                     return;
                 }
-
-                System.out.print("New name: ");
-                String newName = scanner.nextLine().trim();
+                // Update price and capacity (Can't change name because it's the identifier)
                 System.out.print("New price per night: ");
                 double price;
                 try {
@@ -572,7 +620,8 @@ public class Main {
                     return;
                 }
 
-                rt.update(newName, cap, price);
+                rt.update(cap);
+                rt.update(price);
                 System.out.println("Room type updated.");
             }
             case "3" -> {
@@ -583,8 +632,12 @@ public class Main {
                     System.out.println("Room type not found.");
                     return;
                 }
-                Database.getRoomTypes().remove(rt);
-                System.out.println("Room type '" + name + "' deleted.");
+                try {
+                    Database.deleteRoomType(rt);
+                    System.out.println("Room type '" + name + "' deleted.");
+                } catch (IllegalArgumentException e) {
+                    System.out.println("Could not delete RoomType: " + e.getMessage());
+                }
             }
             default -> System.out.println("Invalid option.");
         }
@@ -609,8 +662,12 @@ public class Main {
                     System.out.println("Invalid price.");
                     return;
                 }
-                Database.addAmenity(name, price);
-                System.out.println("Amenity '" + name + "' added.");
+                try {
+                    Database.createAmenity(name, price);
+                    System.out.println("Amenity '" + name + "' added.");
+                } catch (IllegalArgumentException e) {
+                    System.out.println("Could not add Amenity: " + e.getMessage());
+                }
             }
             case "2" -> {
                 System.out.print("Current amenity name: ");
@@ -620,8 +677,7 @@ public class Main {
                     System.out.println("Amenity not found.");
                     return;
                 }
-                System.out.print("New name: ");
-                String newName = scanner.nextLine().trim();
+                // Cannot change identifier (name) here. Allow updating price only.
                 System.out.print("New price: ");
                 double price;
                 try {
@@ -630,7 +686,7 @@ public class Main {
                     System.out.println("Invalid price.");
                     return;
                 }
-                a.update(newName, price);
+                a.update(price);
                 System.out.println("Amenity updated.");
             }
             case "3" -> {
@@ -641,8 +697,12 @@ public class Main {
                     System.out.println("Amenity not found.");
                     return;
                 }
-                Database.getAmenities().remove(a);
-                System.out.println("Amenity '" + name + "' deleted.");
+                try {
+                    Database.deleteAmenity(a);
+                    System.out.println("Amenity '" + name + "' deleted.");
+                } catch (IllegalArgumentException e) {
+                    System.out.println("Could not delete Amenity: " + e.getMessage());
+                }
             }
             default -> System.out.println("Invalid option.");
         }
@@ -781,6 +841,50 @@ public class Main {
         } catch (NumberFormatException e) {
             System.out.println("Invalid input.");
             return null;
+        }
+    }
+
+    private static void registerReceptionistFlow(Admin admin) {
+        System.out.println("\n--- Register Receptionist ---");
+        System.out.print("Username: ");
+        String username = scanner.nextLine().trim();
+
+        String password = "";
+        boolean validPass = false;
+        while (!validPass) {
+            System.out.print("Password (min 8 chars, 1 uppercase, 1 digit): ");
+            password = scanner.nextLine().trim();
+            try {
+                Authentication.validatePasswordStrength(password);
+                validPass = true;
+            } catch (WeakPasswordException e) {
+                System.out.println("Error: " + e.getMessage() + ", Please try again.");
+            }
+        }
+
+        System.out.print("Date of Birth (YYYY-MM-DD): ");
+        LocalDate dob;
+        try {
+            dob = LocalDate.parse(scanner.nextLine().trim());
+        } catch (DateTimeParseException e) {
+            System.out.println("Invalid date format.");
+            return;
+        }
+
+        System.out.print("Working hours (int): ");
+        int hours;
+        try {
+            hours = Integer.parseInt(scanner.nextLine().trim());
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid number.");
+            return;
+        }
+
+        try {
+            admin.registerStaff(username, password, dob, hours, Role.RECEPTIONIST);
+            System.out.println("Receptionist '" + username + "' registered.");
+        } catch (InvalidCredentialsException e) {
+            System.out.println("Registration failed: " + e.getMessage());
         }
     }
 
