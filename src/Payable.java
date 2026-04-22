@@ -1,3 +1,5 @@
+import exceptions.InvalidPaymentException;
+
 public interface Payable {
-    boolean processPayment();
+    boolean processPayment() throws InvalidPaymentException;
 }

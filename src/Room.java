@@ -4,12 +4,11 @@ public class Room {
     private String roomNumber;
     private RoomType roomType;
     private ArrayList<Amenity> amenities = new ArrayList<>();
-    private boolean available;
+    
 
     public Room(String roomNumber, RoomType roomType) {
         this.roomNumber = roomNumber;
         this.roomType = roomType;
-        this.available = true;
         addAmenity(Database.getAmenities().get(0), Database.getAmenities().get(1));
     }
 
@@ -47,24 +46,19 @@ public class Room {
         }
     }
 
-    public void update(String roomNumber, RoomType roomType, boolean available) {
-        this.roomNumber = roomNumber;
+    public void update(RoomType roomType) {
         this.roomType = roomType;
-        this.available = available;
     }
 
-    public void setAvailable(boolean available) {
-        this.available = available;
+    public boolean removeAmenityByName(String name) {
+        return this.amenities.removeIf(a -> a.getName().equalsIgnoreCase(name));
     }
 
     @Override
     public String toString() {
         return "Room Number: " + roomNumber +
                 ", Type: " + roomType.getName() +
-                ", Available: " + available;
+                "";
     }
 
-    public boolean isAvailable() {
-        return available;
-    }
 }

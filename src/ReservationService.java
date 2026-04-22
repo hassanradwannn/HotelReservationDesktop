@@ -46,9 +46,8 @@ public abstract class ReservationService {
         }
 
         LocalDate today = SystemTime.getToday();
-        LocalDate tomorrow = today.plusDays(1);
-        if (checkIn.isBefore(tomorrow) || checkIn.isEqual(today)) {
-            throw new IllegalArgumentException("Check-in must be at least tomorrow. Deposit payment deadline is 1 day from booking.");
+        if (checkIn.isBefore(today)) {
+            throw new IllegalArgumentException("Check-in date cannot be in the past.");
         }
 
         if (!isRoomAvailable(room, checkIn, checkOut)) {
@@ -68,6 +67,12 @@ public abstract class ReservationService {
 
         reservation.setTotalPrice();
         reservations.add(reservation);
+
+        // For same-day reservations, confirm immediately and no deposit required
+        if (checkIn.isEqual(today)) {
+            reservation.setStatus(ReservationStatus.CONFIRMED);
+        }
+
         return reservation;
     }
 
@@ -82,10 +87,16 @@ public abstract class ReservationService {
     }
 
     public static double getDepositAmount(Reservation reservation) {
+        if (reservation.getCheckInDate() != null && reservation.getCheckInDate().isEqual(SystemTime.getToday())) {
+            return 0.0;
+        }
         return reservation.getTotalPrice() * 0.25;
     }
 
     public static double getRemainingAmount(Reservation reservation) {
+        if (reservation.getCheckInDate() != null && reservation.getCheckInDate().isEqual(SystemTime.getToday())) {
+            return reservation.getTotalPrice();
+        }
         return reservation.getTotalPrice() * 0.75;
     }
 
@@ -114,13 +125,13 @@ public abstract class ReservationService {
             throw new IllegalArgumentException("Check-in date has not arrived yet.");
         }
 
-        if (guest.getBalance() < reservation.getTotalPrice() * 0.75)  {
+        double requiredAtCheckIn = getRemainingAmount(reservation);
+        if (guest.getBalance() < requiredAtCheckIn)  {
             cancelReservation(reservation.getReservationId());
-            throw new IllegalArgumentException("Insufficient balance, you need $" + (reservation.getTotalPrice() - guest.getBalance()) + " more to check in.");
+            throw new IllegalArgumentException("Insufficient balance, you need $" + (requiredAtCheckIn - guest.getBalance()) + " more to check in.");
         }
 
         reservation.setStatus(ReservationStatus.ONGOING);
-        reservation.getRoom().setAvailable(false);
         return true;
     }
 
@@ -150,7 +161,6 @@ public abstract class ReservationService {
 
         reservation.setFullPaid(true);
         reservation.setStatus(ReservationStatus.COMPLETED);
-        reservation.getRoom().setAvailable(true);
         return true;
     }
 
