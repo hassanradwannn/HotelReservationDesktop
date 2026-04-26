@@ -57,8 +57,7 @@ public class Room {
     @Override
     public String toString() {
         return "Room Number: " + roomNumber +
-                ", Type: " + roomType.getName() +
-                "\nAmenties: ";
+                ", Type: " + roomType.getName();
     }
 
 }
