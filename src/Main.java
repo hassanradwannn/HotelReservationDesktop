@@ -47,6 +47,8 @@ public class Main {
                 return;
             }
             SystemTime.advanceDays(days);
+            // After advancing time, cancel any overdue reservations
+            ReservationService.cancelOverdueReservations();
         } catch (NumberFormatException e) {
             System.out.println("Invalid input.");
         }
@@ -144,6 +146,7 @@ public class Main {
             System.out.println("4. View My Reservations");
             System.out.println("5. Pay Deposit (for PENDING reservations)");
             System.out.println("6. Cancel a Reservation");
+            System.out.println("7. Advance Time");
             System.out.println("0. Logout");
             System.out.print("Choose: ");
 
@@ -154,6 +157,7 @@ public class Main {
                 case "4" -> viewGuestReservations(guest);
                 case "5" -> payDepositForReservation(guest);
                 case "6" -> cancelReservation(guest);
+                case "7" -> advanceTime();
                 case "0" -> {
                     System.out.println("Logged out.");
                     active = false;
@@ -177,7 +181,6 @@ public class Main {
         System.out.println("\n--- Available Rooms ---");
         boolean found = false;
         for (Room room : Database.getRooms()) {
-            // consider room available for today if no overlapping reservation exists
             if (ReservationService.isRoomAvailable(room, SystemTime.getToday(), SystemTime.getToday().plusDays(1))) {
                 System.out.println(room);
                 System.out.println("  Amenities: " + room.getAmenities());
@@ -191,7 +194,7 @@ public class Main {
     private static void makeReservation(Guest guest) {
         System.out.println("\n--- Make a Reservation ---");
 
-        // 1. Select Room Type
+        // Select Room Type
         List<RoomType> types = Database.getRoomTypes();
         for (int i = 0; i < types.size(); i++) {
             System.out.println((i + 1) + ". " + types.get(i));
@@ -228,7 +231,7 @@ public class Main {
             }
         }
 
-        // 2. Date Input Loop
+        // Date
         LocalDate checkIn = null;
         LocalDate checkOut = null;
         boolean datesValid = false;
@@ -251,7 +254,7 @@ public class Main {
             }
         }
 
-        // 3. Search for available rooms
+        // Search for available rooms
         List<Room> available = ReservationService.searchAvailableRooms(checkIn, checkOut, selectedType, numGuests);
 
         if (available.isEmpty()) {
@@ -264,11 +267,9 @@ public class Main {
             System.out.println("- Room Number: " + r.getRoomNumber() + " | Type: " + r.getRoomType().getName());
         }
 
-        // 4. Select room by string
         System.out.print("\nSelect room (Enter Room Number): ");
         String selectedRoomNumber = scanner.nextLine().trim();
 
-        // ... previous code ...
         Room selectedRoom = available.stream()
                 .filter(r -> r.getRoomNumber().equalsIgnoreCase(selectedRoomNumber))
                 .findFirst()
@@ -281,7 +282,7 @@ public class Main {
 
         boolean addGym = false;
         if (selectedRoom.getRoomType().getName().equalsIgnoreCase("Penthouse")) {
-            // Penthouse includes gym pass by default
+            // Penthouse includes gym pass
             addGym = true;
         } else {
             System.out.print("Would you like to add a Gym Pass for your stay? ($200 flat fee) (Y/N): ");
@@ -291,9 +292,7 @@ public class Main {
             }
         }
 
-        // Finalize Reservation
         try {
-            // Pass addGym to the service
             Reservation res = ReservationService.createReservation(guest, selectedRoom, checkIn, checkOut, addGym);
             System.out.println("Reservation created! ID: " + res.getReservationId());
             System.out.println("  Status: " + res.getStatus());
@@ -413,9 +412,7 @@ public class Main {
         }
     }
 
-    // ─────────────────────────────────────────────
     // ADMIN MENU
-    // ─────────────────────────────────────────────
 
     private static void adminMenu(Admin admin) {
         boolean active = true;
@@ -479,7 +476,7 @@ public class Main {
                 }
 
                 try {
-                    Database.createRoom(num, types.get(t));
+                    CatalogService.createRoom(num, types.get(t));
                     System.out.println("Room " + num + " added.");
                 } catch (IllegalArgumentException e) {
                     System.out.println("Could not add room: " + e.getMessage());
@@ -489,7 +486,7 @@ public class Main {
                 System.out.print("Room number to update: ");
                 String num = scanner.nextLine().trim();
 
-                Room room = Database.findRoom(num);
+                Room room = CatalogService.findRoom(num);
                 if (room == null) {
                     System.out.println("Room not found.");
                     return;
@@ -520,7 +517,7 @@ public class Main {
                     for (Amenity a : Database.getAmenities()) System.out.println("- " + a.getName());
                     System.out.print("Enter amenity name to add: ");
                     String an = scanner.nextLine().trim();
-                    Amenity aobj = Database.findAmenity(an);
+                    Amenity aobj = CatalogService.findAmenity(an);
                     if (aobj == null) {
                         System.out.println("Amenity not found.");
                     } else {
@@ -543,15 +540,15 @@ public class Main {
                 System.out.print("Room number to delete: ");
                 String num = scanner.nextLine().trim();
 
-                Room room = Database.findRoom(num);
+                Room room = CatalogService.findRoom(num);
                 if (room == null) {
                     System.out.println("Room not found.");
                     return;
                 }
                 try {
-                    Database.deleteRoom(room);
+                    CatalogService.deleteRoom(room);
                     System.out.println("Room " + num + " deleted.");
-                } catch (IllegalArgumentException e) {
+                } catch (InUseException e) {
                     System.out.println("Could not delete room: " + e.getMessage());
                 }
             }
@@ -588,16 +585,16 @@ public class Main {
                 }
 
                 try {
-                    Database.createRoomType(name, price, cap);
+                    CatalogService.createRoomType(name, price, cap);
                     System.out.println("Room type '" + name + "' added.");
-                } catch (IllegalArgumentException e) {
+                } catch (AlreadyExistsException e) {
                     System.out.println("Could not add RoomType: " + e.getMessage());
                 }
             }
             case "2" -> {
                 System.out.print("Current room type name: ");
                 String name = scanner.nextLine().trim();
-                RoomType rt =  Database.findRoomType(name);
+                RoomType rt =  CatalogService.findRoomType(name);
                 if (rt == null) {
                     System.out.println("Room type not found.");
                     return;
@@ -627,15 +624,15 @@ public class Main {
             case "3" -> {
                 System.out.print("Room type name to delete: ");
                 String name = scanner.nextLine().trim();
-                RoomType rt = Database.findRoomType(name);
+                RoomType rt = CatalogService.findRoomType(name);
                 if (rt == null) {
                     System.out.println("Room type not found.");
                     return;
                 }
                 try {
-                    Database.deleteRoomType(rt);
+                    CatalogService.deleteRoomType(rt);
                     System.out.println("Room type '" + name + "' deleted.");
-                } catch (IllegalArgumentException e) {
+                } catch (InUseException e) {
                     System.out.println("Could not delete RoomType: " + e.getMessage());
                 }
             }
@@ -663,7 +660,7 @@ public class Main {
                     return;
                 }
                 try {
-                    Database.createAmenity(name, price);
+                    CatalogService.createAmenity(name, price);
                     System.out.println("Amenity '" + name + "' added.");
                 } catch (IllegalArgumentException e) {
                     System.out.println("Could not add Amenity: " + e.getMessage());
@@ -672,7 +669,7 @@ public class Main {
             case "2" -> {
                 System.out.print("Current amenity name: ");
                 String name = scanner.nextLine().trim();
-                Amenity a = Database.findAmenity(name);
+                Amenity a = CatalogService.findAmenity(name);
                 if (a == null) {
                     System.out.println("Amenity not found.");
                     return;
@@ -692,13 +689,13 @@ public class Main {
             case "3" -> {
                 System.out.print("Amenity name to delete: ");
                 String name = scanner.nextLine().trim();
-                Amenity a = Database.findAmenity(name);
+                Amenity a = CatalogService.findAmenity(name);
                 if (a == null) {
                     System.out.println("Amenity not found.");
                     return;
                 }
                 try {
-                    Database.deleteAmenity(a);
+                    CatalogService.deleteAmenity(a);
                     System.out.println("Amenity '" + name + "' deleted.");
                 } catch (IllegalArgumentException e) {
                     System.out.println("Could not delete Amenity: " + e.getMessage());
@@ -708,9 +705,7 @@ public class Main {
         }
     }
 
-    // ─────────────────────────────────────────────
     // RECEPTIONIST MENU
-    // ─────────────────────────────────────────────
 
     private static void receptionistMenu(Receptionist rec) {
         boolean active = true;
@@ -723,6 +718,7 @@ public class Main {
             System.out.println("4. View All Reservations");
             System.out.println("5. View All Guests");
             System.out.println("6. View All Rooms");
+            System.out.println("7. Advance Time");
             System.out.println("0. Logout");
             System.out.print("Choose: ");
 
@@ -733,6 +729,7 @@ public class Main {
                 case "4" -> rec.viewReservations();
                 case "5" -> rec.viewGuests();
                 case "6" -> rec.viewRooms();
+                case "7" -> advanceTime();
                 case "0" -> {
                     System.out.println("Logged out.");
                     active = false;

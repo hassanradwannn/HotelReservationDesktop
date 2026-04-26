@@ -37,7 +37,6 @@ public abstract class ReservationService {
         return true;
     }
 
-    // Update the method signature to include the boolean
     public static Reservation createReservation(Guest guest, Room room,
                                          LocalDate checkIn, LocalDate checkOut, boolean addGym) {
 
@@ -68,9 +67,11 @@ public abstract class ReservationService {
         reservation.setTotalPrice();
         reservations.add(reservation);
 
-        // For same-day reservations, confirm immediately and no deposit required
+        // Confirm res for same-day and don't take deposit
+
         if (checkIn.isEqual(today)) {
             reservation.setStatus(ReservationStatus.CONFIRMED);
+            reservation.setDepositPaid(true);
         }
 
         return reservation;
@@ -87,17 +88,11 @@ public abstract class ReservationService {
     }
 
     public static double getDepositAmount(Reservation reservation) {
-        if (reservation.getCheckInDate() != null && reservation.getCheckInDate().isEqual(SystemTime.getToday())) {
-            return 0.0;
-        }
-        return reservation.getTotalPrice() * 0.25;
+        return reservation.getDepositAmount();
     }
 
     public static double getRemainingAmount(Reservation reservation) {
-        if (reservation.getCheckInDate() != null && reservation.getCheckInDate().isEqual(SystemTime.getToday())) {
-            return reservation.getTotalPrice();
-        }
-        return reservation.getTotalPrice() * 0.75;
+        return reservation.getRemainingAmount();
     }
 
     public static boolean payDeposit(Reservation reservation, Guest guest) {
@@ -107,13 +102,18 @@ public abstract class ReservationService {
 
         double deposit = getDepositAmount(reservation);
         if (guest.getBalance() < deposit) {
-            throw new IllegalArgumentException("Insufficient balance. Need $" + deposit + ", have $" + guest.getBalance());
+            throw new IllegalArgumentException(
+                    "Insufficient balance. Need $" + deposit + ", have $" + guest.getBalance());
         }
 
         guest.setBalance(guest.getBalance() - deposit);
         reservation.setDepositPaid(true);
         reservation.setStatus(ReservationStatus.CONFIRMED);
         return true;
+
+        // reservation.setDepositPaid(true);
+        // reservation.setStatus(ReservationStatus.CONFIRMED);
+        // return true;
     }
 
     public static boolean checkInGuest(Reservation reservation, Guest guest) {
@@ -186,5 +186,23 @@ public abstract class ReservationService {
         }
 
         return availableRooms;
+    }
+
+    // Cancel reservations whose check-in date has passed and are not ongoing/completed/cancelled
+    public static void cancelOverdueReservations() {
+        LocalDate today = SystemTime.getToday();
+        for (Reservation reservation : new ArrayList<>(reservations)) {
+            if (reservation.getStatus() == ReservationStatus.CANCELLED
+                    || reservation.getStatus() == ReservationStatus.ONGOING
+                    || reservation.getStatus() == ReservationStatus.COMPLETED) {
+                continue;
+            }
+
+            LocalDate checkIn = reservation.getCheckInDate();
+            if (checkIn != null && checkIn.isBefore(today)) {
+                reservation.setStatus(ReservationStatus.CANCELLED);
+                System.out.println("Reservation " + reservation.getReservationId() + " has been cancelled due to missed check-in (date passed: " + checkIn + ").");
+            }
+        }
     }
 }
