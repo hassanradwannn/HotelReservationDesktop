@@ -12,6 +12,7 @@ public class Reservation {
     private LocalDate depositDeadline;
     private boolean depositPaid;
     private boolean fullPaid;
+    private boolean isSameDay;
 
     public Reservation(String reservationId, Guest guest, Room room,
                        LocalDate checkInDate, LocalDate checkOutDate,
@@ -26,6 +27,18 @@ public class Reservation {
         this.depositDeadline = SystemTime.getToday().plusDays(1);
         this.depositPaid = false;
         this.fullPaid = false;
+        setSameDay();
+    }
+
+    public final double getDepositAmount() {
+        if (isSameDay) {
+            return 0.0;
+        }
+        return this.totalPrice * 0.25;
+    }
+
+    public double getRemainingAmount() {
+        return this.totalPrice - getDepositAmount();
     }
 
     public boolean hasGymPass() {
@@ -101,12 +114,18 @@ public class Reservation {
         return this.totalPrice;
     }
 
+    private void setSameDay() {
+        if(this.checkInDate != null && this.checkInDate.isEqual(SystemTime.getToday())) {
+            isSameDay = true;
+        }
+    }
+
     @Override
     public String toString() {
         return "ID: " + getReservationId()
                 + " | Guest: " + getGuest().getUsername()
                 + " | Room: " + getRoom().getRoomNumber()
-                + " | " + getCheckInDate() + " → " + getCheckOutDate()
+                + " | " + getCheckInDate() + " : " + getCheckOutDate()
                 + " | Status: " + getStatus();
     }
 }
