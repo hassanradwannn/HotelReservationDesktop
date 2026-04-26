@@ -7,8 +7,6 @@ public class Admin extends Staff {
         super(username, password, dateOfBirth, Role.ADMIN, workingHours);
     }
 
-    // CatalogService methods are static utility-style
-
     public void registerGuest(String username, String password, LocalDate dob,
                               double balance, String address, Gender gender, String preferences)
             throws InvalidCredentialsException {

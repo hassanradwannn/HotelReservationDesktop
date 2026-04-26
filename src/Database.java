@@ -70,15 +70,15 @@ public class Database {
             Room room = new Room(String.valueOf(i), type);
             String typeName = type.getName();
 
-            // Determine how many total amenities this room type should have
-            int targetCount = 2; // base (WiFi + TV) - Room constructor already adds them
+            // Determine how many amenities
+            int targetCount = 2;
             if (typeName.equalsIgnoreCase("Deluxe")) targetCount = 3;
             else if (typeName.equalsIgnoreCase("Suite")) targetCount = 3;
             else if (typeName.equalsIgnoreCase("Penthouse")) targetCount = 4;
 
-            // If penthouse, ensure it comes with Gym pass by default (not part of random pool)
+            // Penthouse comes with gym pass
             if (typeName.equalsIgnoreCase("Penthouse")) {
-                room.addAmenity(getAmenities().get(4)); // Gym
+                room.addAmenity(getAmenities().get(4));
             }
 
             int extrasNeeded = Math.max(0, targetCount - room.getAmenities().size());
