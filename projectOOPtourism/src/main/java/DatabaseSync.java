@@ -1,0 +1,27 @@
+public class DatabaseSync {
+
+    public static void syncDefaultDataToMySQL() {
+
+        for (RoomType type : Database.getRoomTypes()) {
+            DatabaseSaver.saveRoomType(type);
+        }
+
+        for (Amenity amenity : Database.getAmenities()) {
+            DatabaseSaver.saveAmenity(amenity);
+        }
+
+        for (Room room : Database.getRooms()) {
+            DatabaseSaver.saveRoom(room);
+        }
+
+        for (Guest guest : Database.getGuests()) {
+            DatabaseSaver.saveUser(guest);
+        }
+
+        for (Staff staff : Database.getStaffMembers()) {
+            DatabaseSaver.saveUser(staff);
+        }
+
+        System.out.println("Default memory data synced to MySQL.");
+    }
+}
