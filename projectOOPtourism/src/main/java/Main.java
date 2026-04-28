@@ -1,20 +1,33 @@
-import exceptions.*;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.util.List;
 
-import javafx.collections.FXCollections;
 import javafx.application.Application;
+import javafx.collections.FXCollections;
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
-
-import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
-import java.util.List;
 
 public class Main extends Application {
 
@@ -44,190 +57,60 @@ public class Main extends Application {
         stage.show();
     }
 
-    private void showLoginScreen() {
-        AnchorPane root = new AnchorPane();
-        root.setStyle("-fx-background-color: " + BG + ";");
-
-        HBox container = new HBox();
-        container.setPrefSize(1000, 600);
-        container.setLayoutX(140);
-        container.setLayoutY(60);
-        container.setStyle("""
-                -fx-background-color: #EFE4D6;
-                -fx-background-radius: 26;
-                -fx-effect: dropshadow(gaussian, rgba(80,45,35,0.18), 28, 0.22, 0, 8);
-                """);
-
-        VBox left = new VBox(18);
-        left.setPrefWidth(500);
-        left.setAlignment(Pos.CENTER);
-        left.setPadding(new Insets(45));
-        left.setStyle("""
-                -fx-background-color: #F9F3EA;
-                -fx-background-radius: 26 0 0 26;
-                """);
-
-        Label hotelName = smallHotelLabel("GRAND BUDAPEST HOTEL");
-        Label title = titleLabel("WELCOME BACK");
-        Label subtitle = label("Sign in to continue your reservation experience", 14, MUTED, false);
-
-        TextField usernameField = smallInput("Username");
-
-        PasswordField passwordField = new PasswordField();
-        passwordField.setPromptText("Password");
-        passwordField.setMaxWidth(350);
-        passwordField.setStyle(inputStyle());
-
-        Label message = label("", 13, ROSE, false);
-
-        Button loginBtn = mainButton("SIGN IN", 210, 45);
-        loginBtn.setOnAction(e -> {
-            try {
-                currentUser = Authentication.login(usernameField.getText().trim(), passwordField.getText().trim());
-
-                if (currentUser instanceof Admin admin) {
-                    showAdminDashboard(admin);
-                } else if (currentUser instanceof Receptionist receptionist) {
-                    showReceptionistDashboard(receptionist);
-                } else if (currentUser instanceof Guest guest) {
-                    showGuestDashboard(guest);
-                }
-
-            } catch (InvalidCredentialsException ex) {
-                message.setText("Login failed: " + ex.getMessage());
-            }
-        });
-
-        Button registerBtn = outlineButton("REGISTER AS GUEST", 210, 42);
-        registerBtn.setOnAction(e -> showGuestRegisterScreen());
-
-        Label demo = label("Demo users: Admin / Admin@123   |   Hassan / Hassan123   |   Manar / Manar2002",
-                11, MUTED, false);
-        demo.setWrapText(true);
-        demo.setMaxWidth(360);
-
-        left.getChildren().addAll(hotelName, title, subtitle, usernameField, passwordField, loginBtn, registerBtn, message, demo);
-
-        VBox right = hotelRightPanel();
-
-        container.getChildren().addAll(left, right);
-        root.getChildren().add(container);
-
-        stage.setScene(new Scene(root, WIDTH, HEIGHT));
+    public void setCurrentUser(User user) {
+        this.currentUser = user;
     }
 
-    private VBox hotelRightPanel() {
-        VBox right = new VBox(16);
-        right.setPrefWidth(500);
-        right.setAlignment(Pos.CENTER_LEFT);
-        right.setPadding(new Insets(65));
-        right.setStyle("""
-                -fx-background-color: #EFE4D6;
-                -fx-background-radius: 0 26 26 0;
-                """);
-
-        Label small = smallHotelLabel("EXPERIENCE EGYPTIAN HOTELS LIKE NEVER BEFORE");
-
-        Label title = label("RESERVE YOUR\nSUITE", 42, TEXT, false);
-        title.setFont(Font.font("Georgia", FontWeight.NORMAL, 42));
-
-        Label location = label("Cairo, Arab Republic of Egypt", 13, BURGUNDY, false);
-        location.setFont(Font.font("Georgia", 13));
-
-        Separator line = new Separator();
-        line.setMaxWidth(270);
-        line.setStyle("-fx-background-color: #C9AA7C;");
-
-        Label slogan = label("Luxury reservations made simple, elegant, and personal.", 15, MUTED, false);
-        slogan.setWrapText(true);
-        slogan.setMaxWidth(300);
-
-        Button book = mainButton("BOOK NOW", 130, 38);
-        book.setOnAction(e -> alert("Welcome", "Please sign in or register to reserve a suite."));
-
-        right.getChildren().addAll(small, title, location, line, slogan, book);
-        return right;
+    public void showLoginScreen() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/Login.fxml"));
+            AnchorPane root = loader.load();
+            
+            // Pass a reference of Main to the controller so it can navigate
+            LoginController controller = loader.getController();
+            controller.setMainApp(this);
+            
+            stage.setScene(new Scene(root, WIDTH, HEIGHT));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    private void showGuestRegisterScreen() {
-        VBox page = basePage("Guest Registration");
-
-        TextField username = smallInput("Username");
-
-        PasswordField password = new PasswordField();
-        password.setPromptText("Password: min 8 chars, uppercase, digit");
-        password.setMaxWidth(360);
-        password.setStyle(inputStyle());
-
-        TextField dob = smallInput("Date of Birth YYYY-MM-DD");
-        TextField balance = smallInput("Balance");
-        TextField address = smallInput("Address");
-
-        ComboBox<Gender> gender = new ComboBox<>(FXCollections.observableArrayList(Gender.values()));
-        gender.setPromptText("Gender");
-        gender.setMaxWidth(360);
-
-        TextField prefs = smallInput("Room Preferences");
-
-        Label msg = label("", 13, ROSE, false);
-
-        Button register = mainButton("CREATE ACCOUNT", 240, 45);
-        register.setOnAction(e -> {
-            try {
-                Authentication.validatePasswordStrength(password.getText().trim());
-
-                Guest guest = new Guest(
-                        username.getText().trim(),
-                        password.getText().trim(),
-                        LocalDate.parse(dob.getText().trim()),
-                        Double.parseDouble(balance.getText().trim()),
-                        address.getText().trim(),
-                        gender.getValue(),
-                        prefs.getText().trim()
-                );
-
-                guest.register();
-                alert("Success", "Account created successfully. You can now log in.");
-                showLoginScreen();
-
-            } catch (InvalidCredentialsException ex) {
-                msg.setText(ex.getMessage());
-            } catch (DateTimeParseException ex) {
-                msg.setText("Invalid date format. Use YYYY-MM-DD.");
-            } catch (NumberFormatException ex) {
-                msg.setText("Balance must be a number.");
-            } catch (Exception ex) {
-                msg.setText("Please fill all fields correctly.");
-            }
-        });
-
-        Button back = outlineButton("BACK", 180, 42);
-        back.setOnAction(e -> showLoginScreen());
-
-        page.getChildren().addAll(username, password, dob, balance, address, gender, prefs, register, back, msg);
-        stage.setScene(new Scene(wrapCenter(page), WIDTH, HEIGHT));
+    public void showGuestRegisterScreen() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/Register.fxml"));
+            AnchorPane root = loader.load();
+            RegisterController controller = loader.getController();
+            controller.setMainApp(this);
+            stage.setScene(new Scene(root, WIDTH, HEIGHT));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    private void showGuestDashboard(Guest guest) {
-        BorderPane root = dashboardBase("Guest Dashboard", guest.getUsername());
+    public void showGuestDashboard(Guest guest) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/Dashboard.fxml"));
+            BorderPane root = loader.load();
+            DashboardController controller = loader.getController();
+            controller.setMainApp(this);
+            controller.setTitle("Guest Dashboard");
+            controller.setUserInfo("Logged in as: " + guest.getUsername() + "   |   Date: " + SystemTime.getDate());
 
-        VBox menu = sideMenu();
+            VBox menu = controller.getSideMenu();
+            VBox content = controller.getContentArea();
 
-        Button profile = menuButton("View Profile");
-        Button rooms = menuButton("Browse Rooms");
-        Button reserve = menuButton("Make Reservation");
-        Button myReservations = menuButton("My Reservations");
-        Button deposit = menuButton("Pay Deposit");
-        Button cancel = menuButton("Cancel Reservation");
-        Button time = menuButton("Advance Time");
-        Button chatBtn = menuButton("Live Chat");
-        Button logout = menuButton("Logout");
+            Button profile = menuButton("View Profile");
+            Button rooms = menuButton("Browse Rooms");
+            Button reserve = menuButton("Make Reservation");
+            Button myReservations = menuButton("My Reservations");
+            Button deposit = menuButton("Pay Deposit");
+            Button cancel = menuButton("Cancel Reservation");
+            Button time = menuButton("Advance Time");
+            Button chatBtn = menuButton("Live Chat");
+            Button logout = menuButton("Logout");
 
-        menu.getChildren().addAll(profile, rooms, reserve, myReservations, deposit, cancel, time, chatBtn, logout);
-        root.setLeft(menu);
-
-        VBox content = contentBox();
-        root.setCenter(content);
+            menu.getChildren().addAll(profile, rooms, reserve, myReservations, deposit, cancel, time, chatBtn, logout);
 
         profile.setOnAction(e -> content.getChildren().setAll(
                 sectionTitle("My Profile"),
@@ -255,28 +138,32 @@ public class Main extends Application {
 
         profile.fire();
         stage.setScene(new Scene(root, WIDTH, HEIGHT));
+        } catch (Exception e) { e.printStackTrace(); }
     }
 
-    private void showAdminDashboard(Admin admin) {
-        BorderPane root = dashboardBase("Admin Dashboard", admin.getUsername());
+    public void showAdminDashboard(Admin admin) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/Dashboard.fxml"));
+            BorderPane root = loader.load();
+            DashboardController controller = loader.getController();
+            controller.setMainApp(this);
+            controller.setTitle("Admin Dashboard");
+            controller.setUserInfo("Logged in as: " + admin.getUsername() + "   |   Date: " + SystemTime.getDate());
 
-        VBox menu = sideMenu();
+            VBox menu = controller.getSideMenu();
+            VBox content = controller.getContentArea();
 
-        Button guests = menuButton("View Guests");
-        Button rooms = menuButton("View Rooms");
-        Button reservations = menuButton("View Reservations");
-        Button roomTypes = menuButton("Manage Room Types");
-        Button amenities = menuButton("Manage Amenities");
-        Button addRoom = menuButton("Add Room");
-        Button addReceptionist = menuButton("Add Receptionist");
-        Button chatBtn = menuButton("Live Chat");
-        Button logout = menuButton("Logout");
+            Button guests = menuButton("View Guests");
+            Button rooms = menuButton("View Rooms");
+            Button reservations = menuButton("View Reservations");
+            Button roomTypes = menuButton("Manage Room Types");
+            Button amenities = menuButton("Manage Amenities");
+            Button addRoom = menuButton("Add Room");
+            Button addReceptionist = menuButton("Add Receptionist");
+            Button chatBtn = menuButton("Live Chat");
+            Button logout = menuButton("Logout");
 
-        menu.getChildren().addAll(guests, rooms, reservations, roomTypes, amenities, addRoom, addReceptionist, chatBtn, logout);
-        root.setLeft(menu);
-
-        VBox content = contentBox();
-        root.setCenter(content);
+            menu.getChildren().addAll(guests, rooms, reservations, roomTypes, amenities, addRoom, addReceptionist, chatBtn, logout);
 
         guests.setOnAction(e -> showList(content, "Guests", Database.getGuests()));
         rooms.setOnAction(e -> showList(content, "Rooms", Database.getRooms()));
@@ -290,28 +177,32 @@ public class Main extends Application {
 
         guests.fire();
         stage.setScene(new Scene(root, WIDTH, HEIGHT));
+        } catch (Exception e) { e.printStackTrace(); }
     }
 
-    private void showReceptionistDashboard(Receptionist rec) {
-        BorderPane root = dashboardBase("Receptionist Dashboard", rec.getUsername());
+    public void showReceptionistDashboard(Receptionist rec) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/Dashboard.fxml"));
+            BorderPane root = loader.load();
+            DashboardController controller = loader.getController();
+            controller.setMainApp(this);
+            controller.setTitle("Receptionist Dashboard");
+            controller.setUserInfo("Logged in as: " + rec.getUsername() + "   |   Date: " + SystemTime.getDate());
 
-        VBox menu = sideMenu();
+            VBox menu = controller.getSideMenu();
+            VBox content = controller.getContentArea();
 
-        Button today = menuButton("Today's Reservations");
-        Button checkIn = menuButton("Check In");
-        Button checkOut = menuButton("Check Out");
-        Button allReservations = menuButton("All Reservations");
-        Button guests = menuButton("Guests");
-        Button rooms = menuButton("Rooms");
-        Button time = menuButton("Advance Time");
-        Button chatBtn = menuButton("Live Chat");
-        Button logout = menuButton("Logout");
+            Button today = menuButton("Today's Reservations");
+            Button checkIn = menuButton("Check In");
+            Button checkOut = menuButton("Check Out");
+            Button allReservations = menuButton("All Reservations");
+            Button guests = menuButton("Guests");
+            Button rooms = menuButton("Rooms");
+            Button time = menuButton("Advance Time");
+            Button chatBtn = menuButton("Live Chat");
+            Button logout = menuButton("Logout");
 
-        menu.getChildren().addAll(today, checkIn, checkOut, allReservations, guests, rooms, time, chatBtn, logout);
-        root.setLeft(menu);
-
-        VBox content = contentBox();
-        root.setCenter(content);
+            menu.getChildren().addAll(today, checkIn, checkOut, allReservations, guests, rooms, time, chatBtn, logout);
 
         today.setOnAction(e -> showList(content, "Today's Reservations",
                 Database.getReservations().stream()
@@ -329,6 +220,7 @@ public class Main extends Application {
 
         today.fire();
         stage.setScene(new Scene(root, WIDTH, HEIGHT));
+        } catch (Exception e) { e.printStackTrace(); }
     }
 
     private void showRoomBrowser(VBox content, Guest guest) {
@@ -1007,76 +899,7 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
         content.getChildren().add(view);
     }
 
-    private BorderPane dashboardBase(String title, String username) {
-        BorderPane root = new BorderPane();
-        root.setStyle("-fx-background-color: " + BG + ";");
-
-        HBox top = new HBox(22);
-        top.setAlignment(Pos.CENTER_LEFT);
-        top.setPadding(new Insets(18, 30, 18, 30));
-        top.setStyle("""
-                -fx-background-color: #F9F3EA;
-                -fx-border-color: transparent transparent #C9AA7C transparent;
-                -fx-border-width: 0 0 1 0;
-                """);
-
-        Label titleLabel = titleLabel(title);
-
-        Label userLabel = label("Logged in as: " + username + "   |   Date: " + SystemTime.getDate(),
-                14, BURGUNDY, false);
-
-        top.getChildren().addAll(titleLabel, userLabel);
-        root.setTop(top);
-
-        return root;
-    }
-
-    private VBox sideMenu() {
-        VBox menu = new VBox(12);
-        menu.setPadding(new Insets(25));
-        menu.setPrefWidth(260);
-        menu.setStyle("""
-                -fx-background-color: #EFE4D6;
-                -fx-border-color: transparent #C9AA7C transparent transparent;
-                -fx-border-width: 0 1 0 0;
-                """);
-        return menu;
-    }
-
-    private VBox contentBox() {
-        VBox box = new VBox(15);
-        box.setPadding(new Insets(30));
-        box.setStyle("""
-                -fx-background-color: #F9F3EA;
-                -fx-background-radius: 18;
-                """);
-        return box;
-    }
-
-    private VBox basePage(String title) {
-        VBox box = new VBox(14);
-        box.setAlignment(Pos.CENTER);
-        box.setPadding(new Insets(35));
-        box.setMaxWidth(470);
-        box.setStyle("""
-                -fx-background-color: #F9F3EA;
-                -fx-background-radius: 24;
-                -fx-effect: dropshadow(gaussian, rgba(80,45,35,0.16), 24, 0.25, 0, 7);
-                """);
-
-        box.getChildren().add(smallHotelLabel("GRAND BUDAPEST HOTEL"));
-        box.getChildren().add(sectionTitle(title));
-
-        return box;
-    }
-
-    private StackPane wrapCenter(VBox content) {
-        StackPane pane = new StackPane(content);
-        pane.setStyle("-fx-background-color: " + BG + ";");
-        return pane;
-    }
-
-    private TextField smallInput(String prompt) {
+    public TextField smallInput(String prompt) {
         TextField field = new TextField();
         field.setPromptText(prompt);
         field.setMaxWidth(360);
@@ -1084,7 +907,7 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
         return field;
     }
 
-    private Button menuButton(String text) {
+    public Button menuButton(String text) {
         Button b = new Button(text);
         b.setMaxWidth(Double.MAX_VALUE);
         b.setPrefHeight(40);
@@ -1115,7 +938,7 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
         return b;
     }
 
-    private Button mainButton(String text, int width, int height) {
+    public Button mainButton(String text, int width, int height) {
         Button b = new Button(text);
         b.setPrefSize(width, height);
 
@@ -1144,7 +967,7 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
         return b;
     }
 
-    private Button outlineButton(String text, int width, int height) {
+    public Button outlineButton(String text, int width, int height) {
         Button b = new Button(text);
         b.setPrefSize(width, height);
         b.setStyle("""
@@ -1158,7 +981,7 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
         return b;
     }
 
-    private String inputStyle() {
+    public String inputStyle() {
         return """
                 -fx-background-color: #FFFFFF;
                 -fx-background-radius: 8;
@@ -1171,40 +994,40 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
                 """;
     }
 
-    private Label sectionTitle(String text) {
+    public Label sectionTitle(String text) {
         Label l = label(text, 29, TEXT, true);
         l.setFont(Font.font("Georgia", FontWeight.NORMAL, 29));
         return l;
     }
 
-    private Label titleLabel(String text) {
+    public Label titleLabel(String text) {
         Label l = label(text, 34, TEXT, true);
         l.setFont(Font.font("Georgia", FontWeight.NORMAL, 34));
         return l;
     }
 
-    private Label smallHotelLabel(String text) {
+    public Label smallHotelLabel(String text) {
         Label l = label(text, 13, BURGUNDY, false);
         l.setFont(Font.font("Georgia", 13));
         return l;
     }
 
-    private Label info(String text) {
+    public Label info(String text) {
         return label(text, 15, TEXT, false);
     }
 
-    private Label label(String text, int size, String color, boolean bold) {
+    public Label label(String text, int size, String color, boolean bold) {
         Label l = new Label(text);
         l.setFont(Font.font("Arial", bold ? FontWeight.BOLD : FontWeight.NORMAL, size));
         l.setTextFill(Color.web(color));
         return l;
     }
 
-    private String money(double value) {
+    public String money(double value) {
         return String.format("%.2f", value);
     }
 
-    private void alert(String title, String msg) {
+    public void alert(String title, String msg) {
         Alert a = new Alert(Alert.AlertType.INFORMATION);
         a.setTitle(title);
         a.setHeaderText(null);
@@ -1213,7 +1036,7 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
     }
 
     public static void main(String[] args) {
-        DatabaseSync.syncDefaultDataToMySQL();
+        // DatabaseSync.syncDefaultDataToMySQL();
         launch(args);
     }
 }
