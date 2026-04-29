@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<VBox spacing="20" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="RoomDetailsController">
+    <Button text="BACK TO ROOMS" prefWidth="170" prefHeight="40" onAction="#handleBack" style="-fx-background-color: transparent; -fx-border-color: #C74261; -fx-border-radius: 7; -fx-text-fill: #C74261; -fx-font-weight: bold; -fx-cursor: hand;"/>
+    
+    <Label fx:id="titleLabel" style="-fx-text-fill: black; -fx-font-family: 'Georgia'; -fx-font-size: 29;"/>
+    
+    <StackPane prefHeight="230" maxWidth="720" style="-fx-background-color: linear-gradient(to bottom right, #EFE4D6, #E6A4B4); -fx-background-radius: 18; -fx-border-color: #C9AA7C; -fx-border-radius: 18;">
+        <Label fx:id="imageTextLabel" textFill="#8F1D3F" alignment="CENTER" textAlignment="CENTER" style="-fx-font-family: 'Georgia'; -fx-font-size: 30;"/>
+    </StackPane>
+    
+    <Label fx:id="detailsLabel" style="-fx-text-fill: black; -fx-font-size: 15; -fx-font-family: 'Arial';"/>
+    
+    <Button text="RESERVE THIS ROOM" prefWidth="220" prefHeight="45" onAction="#handleReserve" style="-fx-background-color: #C74261; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 7; -fx-font-size: 13px; -fx-cursor: hand;"/>
+</VBox>

@@ -34,6 +34,7 @@ public class Main extends Application {
     private Stage stage;
     private User currentUser;
     private Room selectedRoomForReservation;
+    private VBox currentContentArea;
 
     private final int WIDTH = 1280;
     private final int HEIGHT = 720;
@@ -45,7 +46,8 @@ public class Main extends Application {
     private static final String ROSE_SOFT = "#E6A4B4";
     private static final String BURGUNDY = "#8F1D3F";
     private static final String GOLD = "#C9AA7C";
-    private static final String TEXT = "#2B2421";
+    private static final String TEXTDARK = "#2B2421";
+    private static final String TEXT = "#FFFFFF";
     private static final String MUTED = "#8A726B";
     private static final String WHITE = "#FFFFFF";
 
@@ -88,6 +90,34 @@ public class Main extends Application {
         }
     }
 
+    public void switchDashboardContent(VBox contentArea, String fxmlFile, Object data) {
+        this.currentContentArea = contentArea;
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlFile));
+            javafx.scene.Node node = loader.load();
+            Object controller = loader.getController();
+            if (controller instanceof DashboardContentController contentController) {
+                contentController.initData(this, data);
+            }
+            contentArea.getChildren().setAll(node);
+        } catch (Exception e) {
+            System.out.println("Could not load FXML: " + fxmlFile);
+            e.printStackTrace();
+        }
+    }
+
+    public VBox getCurrentContentArea() {
+        return currentContentArea;
+    }
+
+    public Room getSelectedRoomForReservation() {
+        return selectedRoomForReservation;
+    }
+
+    public void setSelectedRoomForReservation(Room room) {
+        this.selectedRoomForReservation = room;
+    }
+
     public void showGuestDashboard(Guest guest) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/Dashboard.fxml"));
@@ -112,28 +142,16 @@ public class Main extends Application {
 
             menu.getChildren().addAll(profile, rooms, reserve, myReservations, deposit, cancel, time, chatBtn, logout);
 
-        profile.setOnAction(e -> content.getChildren().setAll(
-                sectionTitle("My Profile"),
-                info("Username: " + guest.getUsername()),
-                info("DOB: " + guest.getDateOfBirth()),
-                info("Balance: $" + money(guest.getBalance())),
-                info("Address: " + guest.getAddress()),
-                info("Gender: " + guest.getGender()),
-                info("Preferences: " + guest.getRoomPreferences())
-        ));
+        profile.setOnAction(e -> switchDashboardContent(content, "/GuestProfile.fxml", guest));
 
-        rooms.setOnAction(e -> showRoomBrowser(content, guest));
+        rooms.setOnAction(e -> switchDashboardContent(content, "/RoomBrowser.fxml", guest));
+        reserve.setOnAction(e -> switchDashboardContent(content, "/MakeReservation.fxml", guest));
 
-        reserve.setOnAction(e -> {
-            selectedRoomForReservation = null;
-            showMakeReservation(content, guest);
-        });
-
-        myReservations.setOnAction(e -> showGuestReservations(content, guest));
-        deposit.setOnAction(e -> showPayDeposit(content, guest));
-        cancel.setOnAction(e -> showCancelReservation(content, guest));
-        time.setOnAction(e -> showAdvanceTime(content));
-        chatBtn.setOnAction(e -> showChat(content));
+        myReservations.setOnAction(e ->  switchDashboardContent(content, "/GuestReservations.fxml", guest));
+        deposit.setOnAction(e -> switchDashboardContent(content, "/PayDeposit.fxml", guest));
+        cancel.setOnAction(e -> switchDashboardContent(content, "/CancelReservation.fxml", guest));
+        time.setOnAction(e -> switchDashboardContent(content, "/AdvanceTime.fxml", guest));
+        chatBtn.setOnAction(e -> switchDashboardContent(content, "/LiveChat.fxml", guest));
         logout.setOnAction(e -> showLoginScreen());
 
         profile.fire();
@@ -483,7 +501,7 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
                                 + "\nTotal: $" + money(res.getTotalPrice())
                                 + "\nDeposit: $" + money(ReservationService.getDepositAmount(res)));
 
-                showGuestReservations(content, guest);
+                switchDashboardContent(content, "/GuestReservations.fxml", guest);
 
             } catch (Exception ex) {
                 msg.setText("Reservation failed: " + ex.getMessage());
@@ -492,90 +510,6 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
         });
 
         content.getChildren().addAll(typeBox, guests, checkIn, checkOut, gym, search, roomBox, create, msg);
-    }
-
-    private void showGuestReservations(VBox content, Guest guest) {
-        List<Reservation> list = Database.getReservations().stream()
-                .filter(r -> r.getGuest().getUsername().equalsIgnoreCase(guest.getUsername()))
-                .toList();
-
-        showList(content, "My Reservations", list);
-    }
-
-    private void showPayDeposit(VBox content, Guest guest) {
-        content.getChildren().clear();
-        content.getChildren().add(sectionTitle("Pay Deposit"));
-
-        ComboBox<Reservation> pending = new ComboBox<>(FXCollections.observableArrayList(
-                Database.getReservations().stream()
-                        .filter(r -> r.getGuest().getUsername().equalsIgnoreCase(guest.getUsername()))
-                        .filter(r -> r.getStatus() == ReservationStatus.PENDING)
-                        .toList()
-        ));
-        pending.setPromptText("Select Pending Reservation");
-        pending.setMaxWidth(420);
-
-        Label details = info("Choose a reservation.");
-        Button pay = mainButton("PAY DEPOSIT", 180, 42);
-
-        pending.setOnAction(e -> {
-            Reservation r = pending.getValue();
-            if (r != null) {
-                details.setText("Deposit: $" + money(ReservationService.getDepositAmount(r))
-                        + " | Your balance: $" + money(guest.getBalance()));
-            }
-        });
-
-        pay.setOnAction(e -> {
-            try {
-                if (pending.getValue() == null) {
-                    alert("Error", "Please select a reservation first.");
-                    return;
-                }
-
-                ReservationService.payDeposit(pending.getValue(), guest);
-                alert("Success", "Deposit paid. Reservation confirmed.");
-                showGuestReservations(content, guest);
-
-            } catch (Exception ex) {
-                alert("Payment Failed", ex.getMessage());
-            }
-        });
-
-        content.getChildren().addAll(pending, details, pay);
-    }
-
-    private void showCancelReservation(VBox content, Guest guest) {
-        content.getChildren().clear();
-        content.getChildren().add(sectionTitle("Cancel Reservation"));
-
-        ComboBox<Reservation> box = new ComboBox<>(FXCollections.observableArrayList(
-                Database.getReservations().stream()
-                        .filter(r -> r.getGuest().getUsername().equalsIgnoreCase(guest.getUsername()))
-                        .filter(r -> r.getStatus() != ReservationStatus.CANCELLED)
-                        .toList()
-        ));
-        box.setPromptText("Select Reservation");
-        box.setMaxWidth(420);
-
-        Button cancel = mainButton("CANCEL RESERVATION", 220, 42);
-        cancel.setOnAction(e -> {
-            try {
-                if (box.getValue() == null) {
-                    alert("Error", "Please select a reservation first.");
-                    return;
-                }
-
-                ReservationService.cancelReservation(box.getValue().getReservationId());
-                alert("Cancelled", "Reservation cancelled successfully.");
-                showGuestReservations(content, guest);
-
-            } catch (Exception ex) {
-                alert("Error", ex.getMessage());
-            }
-        });
-
-        content.getChildren().addAll(box, cancel);
     }
 
     private void showManageRoomTypes(VBox content) {

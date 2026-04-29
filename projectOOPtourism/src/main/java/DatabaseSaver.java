@@ -24,23 +24,16 @@ public class DatabaseSaver {
                 stmt.setNull(4, java.sql.Types.DATE);
             }
 
-            try {
-                stmt.setString(5, user.getGender().toString());
-            } catch (Exception e) {
+            if (user instanceof Guest guest) {
+                stmt.setString(5, guest.getGender() != null ? guest.getGender().toString() : null);
+                stmt.setString(6, guest.getAddress());
+            } else {
                 stmt.setNull(5, java.sql.Types.VARCHAR);
-            }
-
-            try {
-                stmt.setString(6, user.getAddress());
-            } catch (Exception e) {
                 stmt.setNull(6, java.sql.Types.VARCHAR);
             }
 
-            try {
-                stmt.setDouble(7, user.getSalary());
-            } catch (Exception e) {
-                stmt.setNull(7, java.sql.Types.DOUBLE);
-            }
+            // Salary is not in your current User/Staff models, safely set to null
+            stmt.setNull(7, java.sql.Types.DOUBLE);
 
             stmt.executeUpdate();
 
@@ -59,7 +52,7 @@ public class DatabaseSaver {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, type.getName());
-            stmt.setDouble(2, type.getPrice());
+            stmt.setDouble(2, type.getPricePerNight());
             stmt.setInt(3, type.getCapacity());
             stmt.executeUpdate();
 
