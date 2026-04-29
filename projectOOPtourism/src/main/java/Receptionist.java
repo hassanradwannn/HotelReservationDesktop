@@ -1,5 +1,6 @@
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class Receptionist extends Staff {
@@ -13,7 +14,8 @@ public class Receptionist extends Staff {
    
 
     public void viewReservations(LocalDate checkIn) {
-        System.out.println("Viewing reservations for " + checkIn.toString());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        System.out.println("Viewing reservations for " + checkIn.format(formatter));
         Database.getReservations().stream().filter(
                 r -> r.getCheckInDate().isEqual(checkIn))
                 .forEach(System.out::println);
@@ -30,7 +32,8 @@ public class Receptionist extends Staff {
 
     public void viewReservationsForToday() {
         LocalDate today = SystemTime.getToday();
-        System.out.println("\n=== Reservations for Today (" + today + ") ===");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        System.out.println("\n=== Reservations for Today (" + today.format(formatter) + ") ===");
         List<Reservation> todayRes = Database.getReservations().stream()
                 .filter(r -> r.getCheckInDate().isEqual(today) ||
                             (r.getStatus() == ReservationStatus.ONGOING &&
@@ -115,9 +118,10 @@ public class Receptionist extends Staff {
         System.out.println(String.format("  %-25s: %s", "Room Type", room.getRoomType()));
 
         // Dates
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         System.out.println("\nSTAY DETAILS:");
-        System.out.println(String.format("  %-25s: %s", "Check-In Date", reservation.getCheckInDate()));
-        System.out.println(String.format("  %-25s: %s", "Check-Out Date", reservation.getCheckOutDate()));
+        System.out.println(String.format("  %-25s: %s", "Check-In Date", reservation.getCheckInDate().format(formatter)));
+        System.out.println(String.format("  %-25s: %s", "Check-Out Date", reservation.getCheckOutDate().format(formatter)));
         long nights = reservation.getCheckInDate().until(reservation.getCheckOutDate()).getDays();
         System.out.println(String.format("  %-25s: %d night(s)", "Number of Nights", nights));
 
@@ -126,7 +130,7 @@ public class Receptionist extends Staff {
         System.out.println(String.format("  %-25s: $%.2f", "Total Stay Cost", reservation.getTotalPrice()));
         System.out.println(String.format("  %-25s: $%.2f", "Amount Paid at Checkout", amountPaid));
         System.out.println(String.format("  %-25s: %s", "Payment Method", paymentMethod));
-        System.out.println(String.format("  %-25s: %s", "Payment Date", paymentDate));
+        System.out.println(String.format("  %-25s: %s", "Payment Date", paymentDate.format(formatter)));
 
         // Account Balance
         System.out.println("\nACCOUNT INFORMATION:");

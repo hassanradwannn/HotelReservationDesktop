@@ -3,7 +3,7 @@ import java.time.format.DateTimeFormatter;
 
 public abstract class SystemTime {
     private static LocalDate today = LocalDate.now();
-    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
     public static LocalDate getToday() {
         return today;
