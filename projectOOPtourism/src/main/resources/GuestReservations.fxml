@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox spacing="10" style="-fx-padding: 20;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GuestReservationsController">
+    <children>
+        <Label text="My Reservations" textFill="#2b2421">
+            <font><Font name="Georgia" size="29.0" /></font>
+        </Label>
+        <ListView fx:id="reservationsList" prefHeight="470.0" style="-fx-font-size: 14px; -fx-background-color: #FFFFFF; -fx-control-inner-background: #FFFFFF; -fx-text-fill: #2B2421; -fx-border-color: #C9AA7C; -fx-border-radius: 8;" />
+    </children>
+</VBox>

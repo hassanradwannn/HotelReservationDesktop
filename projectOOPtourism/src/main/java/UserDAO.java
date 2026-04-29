@@ -1,6 +1,5 @@
 package database;
 
-import DatabaseInitializer.DatabaseConnection;
 import java.sql.*;
 
 public class UserDAO {

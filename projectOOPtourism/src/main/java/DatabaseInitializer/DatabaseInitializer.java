@@ -1,6 +1,8 @@
 package DatabaseInitializer;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 /**
  * Initializes the database schema and creates necessary tables
@@ -30,6 +32,7 @@ public class DatabaseInitializer {
                     gender VARCHAR(20),
                     address VARCHAR(255),
                     salary DOUBLE,
+                balance DOUBLE DEFAULT 0.0,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """;
@@ -71,6 +74,7 @@ public class DatabaseInitializer {
             String reservationsTable = """
                 CREATE TABLE IF NOT EXISTS reservations (
                     id INT AUTO_INCREMENT PRIMARY KEY,
+                    reservation_id VARCHAR(50) UNIQUE NOT NULL,
                     guest_username VARCHAR(100) NOT NULL,
                     room_number VARCHAR(50) NOT NULL,
                     check_in_date DATE NOT NULL,
@@ -84,6 +88,20 @@ public class DatabaseInitializer {
             executeUpdate(conn, reservationsTable);
 
             System.out.println("All tables created successfully.");
+            
+            // Gracefully add missing columns to existing tables (if they were created before)
+            try {
+                executeUpdate(conn, "ALTER TABLE users ADD COLUMN balance DOUBLE DEFAULT 0.0");
+                System.out.println("Added missing 'balance' column to users table.");
+            } catch (SQLException e) {
+                // Column already exists, safe to ignore
+            }
+            try {
+                executeUpdate(conn, "ALTER TABLE reservations ADD COLUMN reservation_id VARCHAR(50) UNIQUE NOT NULL AFTER id");
+                System.out.println("Added missing 'reservation_id' column to reservations table.");
+            } catch (SQLException e) {
+                // Column already exists, safe to ignore
+            }
         }
     }
 

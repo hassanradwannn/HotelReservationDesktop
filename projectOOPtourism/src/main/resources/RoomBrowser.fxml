@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox spacing="15" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="RoomBrowserController">
+    <Label style="-fx-font-family: 'Georgia'; -fx-font-size: 29;" text="Browse Available Rooms" />
+    
+    <HBox alignment="CENTER_LEFT" spacing="12">
+        <ComboBox fx:id="typeFilter" prefWidth="260" promptText="Filter by Room Type" style="-fx-background-color: #FFFFFF; -fx-background-radius: 8; -fx-border-color: #C9AA7C; -fx-border-radius: 8;" />
+        <TextField fx:id="maxPrice" prefWidth="220" promptText="Max price per night" style="-fx-background-color: #FFFFFF; -fx-background-radius: 8; -fx-border-color: #C9AA7C; -fx-border-radius: 8; -fx-padding: 10; -fx-font-size: 14px; -fx-text-fill: #2B2421;" />
+        <Button onAction="#loadRooms" prefHeight="40" prefWidth="120" style="-fx-background-color: #C74261; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 7; -fx-font-size: 13px; -fx-cursor: hand;" text="FILTER" />
+    </HBox>
+
+    <ScrollPane fitToWidth="true" prefHeight="520" style="-fx-background-color: transparent; -fx-background: transparent;">
+        <content>
+            <VBox fx:id="roomCards" spacing="15" style="-fx-padding: 10;" />
+        </content>
+    </ScrollPane>
+</VBox>

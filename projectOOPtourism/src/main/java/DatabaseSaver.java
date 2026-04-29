@@ -1,14 +1,15 @@
-import DatabaseInitializer.DatabaseConnection;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+
+import database.DatabaseConnection;
 
 public class DatabaseSaver {
 
     public static void saveUser(User user) {
         String sql = """
             INSERT IGNORE INTO users 
-            (username, password, role, date_of_birth, gender, address, salary)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            (username, password, role, date_of_birth, gender, address, salary, balance)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """;
 
         try (Connection conn = DatabaseConnection.getConnection();
@@ -24,23 +25,18 @@ public class DatabaseSaver {
                 stmt.setNull(4, java.sql.Types.DATE);
             }
 
-            try {
-                stmt.setString(5, user.getGender().toString());
-            } catch (Exception e) {
+            if (user instanceof Guest guest) {
+                stmt.setString(5, guest.getGender() != null ? guest.getGender().toString() : null);
+                stmt.setString(6, guest.getAddress());
+                stmt.setDouble(8, guest.getBalance());
+            } else {
                 stmt.setNull(5, java.sql.Types.VARCHAR);
-            }
-
-            try {
-                stmt.setString(6, user.getAddress());
-            } catch (Exception e) {
                 stmt.setNull(6, java.sql.Types.VARCHAR);
+                stmt.setNull(8, java.sql.Types.DOUBLE);
             }
 
-            try {
-                stmt.setDouble(7, user.getSalary());
-            } catch (Exception e) {
-                stmt.setNull(7, java.sql.Types.DOUBLE);
-            }
+            // Salary is not in your current User/Staff models, safely set to null
+            stmt.setNull(7, java.sql.Types.DOUBLE);
 
             stmt.executeUpdate();
 
@@ -59,7 +55,7 @@ public class DatabaseSaver {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, type.getName());
-            stmt.setDouble(2, type.getPrice());
+            stmt.setDouble(2, type.getPricePerNight());
             stmt.setInt(3, type.getCapacity());
             stmt.executeUpdate();
 
@@ -104,24 +100,25 @@ public class DatabaseSaver {
         }
     }
 
-    public static void saveReservation(String guestUsername, String roomNumber,
+    public static void saveReservation(String reservationId, String guestUsername, String roomNumber,
                                        java.time.LocalDate checkIn,
                                        java.time.LocalDate checkOut,
                                        String status) {
         String sql = """
             INSERT INTO reservations 
-            (guest_username, room_number, check_in, check_out, status)
-            VALUES (?, ?, ?, ?, ?)
+            (reservation_id, guest_username, room_number, check_in_date, check_out_date, status)
+            VALUES (?, ?, ?, ?, ?, ?)
         """;
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, guestUsername);
-            stmt.setString(2, roomNumber);
-            stmt.setDate(3, java.sql.Date.valueOf(checkIn));
-            stmt.setDate(4, java.sql.Date.valueOf(checkOut));
-            stmt.setString(5, status);
+            stmt.setString(1, reservationId);
+            stmt.setString(2, guestUsername);
+            stmt.setString(3, roomNumber);
+            stmt.setDate(4, java.sql.Date.valueOf(checkIn));
+            stmt.setDate(5, java.sql.Date.valueOf(checkOut));
+            stmt.setString(6, status);
             stmt.executeUpdate();
 
         } catch (Exception e) {
@@ -150,6 +147,51 @@ public class DatabaseSaver {
 
         } catch (Exception e) {
             System.out.println("Invoice database save failed: " + e.getMessage());
+        }
+    }
+
+    public static void updateUserBalance(String username, double newBalance) {
+        String sql = "UPDATE users SET balance = ? WHERE username = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setDouble(1, newBalance);
+            stmt.setString(2, username);
+            stmt.executeUpdate();
+
+        } catch (Exception e) {
+            System.out.println("Failed to update user balance: " + e.getMessage());
+        }
+    }
+
+    public static void updateReservationStatus(String reservationId, String newStatus) {
+        String sql = "UPDATE reservations SET status = ? WHERE reservation_id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, newStatus);
+            stmt.setString(2, reservationId);
+            stmt.executeUpdate();
+
+        } catch (Exception e) {
+            System.out.println("Failed to update reservation status: " + e.getMessage());
+        }
+    }
+
+    public static void updateUserPassword(String username, String newPassword) {
+        String sql = "UPDATE users SET password = ? WHERE username = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, newPassword);
+            stmt.setString(2, username);
+            stmt.executeUpdate();
+
+        } catch (Exception e) {
+            System.out.println("Failed to update user password: " + e.getMessage());
         }
     }
 }

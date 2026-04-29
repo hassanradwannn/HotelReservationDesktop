@@ -1,28 +1,42 @@
-import exceptions.*;
-import DatabaseInitializer.DatabaseInitializer;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.List;
 
-import javafx.collections.FXCollections;
+import DatabaseInitializer.DatabaseInitializer;
 import javafx.application.Application;
+import javafx.collections.FXCollections;
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
-
-import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
-import java.util.List;
-import java.util.ArrayList;
 
 public class Main extends Application {
 
     private Stage stage;
     private User currentUser;
     private Room selectedRoomForReservation;
+    private VBox currentContentArea;
 
     private final int WIDTH = 1280;
     private final int HEIGHT = 720;
@@ -34,224 +48,126 @@ public class Main extends Application {
     private static final String ROSE_SOFT = "#E6A4B4";
     private static final String BURGUNDY = "#8F1D3F";
     private static final String GOLD = "#C9AA7C";
-    private static final String TEXT = "#2B2421";
+    private static final String TEXTDARK = "#2B2421";
+    private static final String TEXT = "#FFFFFF";
     private static final String MUTED = "#8A726B";
     private static final String WHITE = "#FFFFFF";
 
     @Override
     public void start(Stage stage) {
+        DatabaseInitializer.initializeDatabase();
+        Database.getRooms();
+        
+        // Sync generated rooms to MySQL so reservations don't fail Foreign Key constraints!
+        DatabaseSync.syncDefaultDataToMySQL();
+        
         this.stage = stage;
         stage.setTitle("Grand Budapest Hotel Reservation System");
-        
-        // Initialize database and load users from SQL
-        DatabaseInitializer.initializeDatabase();
-        
         showLoginScreen();
         stage.show();
     }
 
-    private void showLoginScreen() {
-        AnchorPane root = new AnchorPane();
-        root.setStyle("-fx-background-color: " + BG + ";");
+    public void showLoginScreen() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/Login.fxml"));
+            AnchorPane root = loader.load();
+            
+            // Pass a reference of Main to the controller so it can navigate
+            LoginController controller = loader.getController();
+            controller.setMainApp(this);
+            
+            stage.setScene(new Scene(root, WIDTH, HEIGHT));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-        HBox container = new HBox();
-        container.setPrefSize(1000, 600);
-        container.setLayoutX(140);
-        container.setLayoutY(60);
-        container.setStyle("""
-                -fx-background-color: #EFE4D6;
-                -fx-background-radius: 26;
-                -fx-effect: dropshadow(gaussian, rgba(80,45,35,0.18), 28, 0.22, 0, 8);
-                """);
+    public void showForgotPasswordScreen() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/ForgotPassword.fxml"));
+            AnchorPane root = loader.load();
+            
+            ForgotPasswordController controller = loader.getController();
+            controller.setMainApp(this);
+            stage.setScene(new Scene(root, WIDTH, HEIGHT));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-        VBox left = new VBox(18);
-        left.setPrefWidth(500);
-        left.setAlignment(Pos.CENTER);
-        left.setPadding(new Insets(45));
-        left.setStyle("""
-                -fx-background-color: #F9F3EA;
-                -fx-background-radius: 26 0 0 26;
-                """);
+    public void showGuestRegisterScreen() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/Register.fxml"));
+            AnchorPane root = loader.load();
+            
+            RegisterController controller = loader.getController();
+            controller.setMainApp(this);
+            stage.setScene(new Scene(root, WIDTH, HEIGHT));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-        Label hotelName = smallHotelLabel("GRAND BUDAPEST HOTEL");
-        Label title = titleLabel("WELCOME BACK");
-        Label subtitle = label("Sign in to continue your reservation experience", 14, MUTED, false);
-
-        TextField usernameField = smallInput("Username");
-
-        PasswordField passwordField = new PasswordField();
-        passwordField.setPromptText("Password");
-        passwordField.setMaxWidth(350);
-        passwordField.setStyle(inputStyle());
-
-        Label message = label("", 13, ROSE, false);
-
-        Button loginBtn = mainButton("SIGN IN", 210, 45);
-        loginBtn.setOnAction(e -> {
-            try {
-                currentUser = Authentication.login(usernameField.getText().trim(), passwordField.getText().trim());
-
-                if (currentUser instanceof Admin admin) {
-                    showAdminDashboard(admin);
-                } else if (currentUser instanceof Receptionist receptionist) {
-                    showReceptionistDashboard(receptionist);
-                } else if (currentUser instanceof Guest guest) {
-                    showGuestDashboard(guest);
-                }
-
-            } catch (InvalidCredentialsException ex) {
-                message.setText("Login failed: " + ex.getMessage());
+    public void switchDashboardContent(VBox contentArea, String fxmlFile, Object data) {
+        this.currentContentArea = contentArea;
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlFile));
+            javafx.scene.Node node = loader.load();
+            
+            Object controller = loader.getController();
+            if (controller instanceof DashboardContentController contentController) {
+                contentController.initData(this, data);
             }
-        });
-
-        Button registerBtn = outlineButton("REGISTER AS GUEST", 210, 42);
-        registerBtn.setOnAction(e -> showGuestRegisterScreen());
-
-        Label demo = label("Demo users: Admin / Admin@123   |   Hassan / Hassan123   |   Manar / Manar2002",
-                11, MUTED, false);
-        demo.setWrapText(true);
-        demo.setMaxWidth(360);
-
-        left.getChildren().addAll(hotelName, title, subtitle, usernameField, passwordField, loginBtn, registerBtn, message, demo);
-
-        VBox right = hotelRightPanel();
-
-        container.getChildren().addAll(left, right);
-        root.getChildren().add(container);
-
-        stage.setScene(new Scene(root, WIDTH, HEIGHT));
+            contentArea.getChildren().setAll(node);
+        } catch (Exception e) {
+            System.out.println("Could not load FXML: " + fxmlFile);
+            e.printStackTrace();
+        }
     }
 
-    private VBox hotelRightPanel() {
-        VBox right = new VBox(16);
-        right.setPrefWidth(500);
-        right.setAlignment(Pos.CENTER_LEFT);
-        right.setPadding(new Insets(65));
-        right.setStyle("""
-                -fx-background-color: #EFE4D6;
-                -fx-background-radius: 0 26 26 0;
-                """);
-
-        Label small = smallHotelLabel("EXPERIENCE EGYPTIAN HOTELS LIKE NEVER BEFORE");
-
-        Label title = label("RESERVE YOUR\nSUITE", 42, TEXT, false);
-        title.setFont(Font.font("Georgia", FontWeight.NORMAL, 42));
-
-        Label location = label("Cairo, Arab Republic of Egypt", 13, BURGUNDY, false);
-        location.setFont(Font.font("Georgia", 13));
-
-        Separator line = new Separator();
-        line.setMaxWidth(270);
-        line.setStyle("-fx-background-color: #C9AA7C;");
-
-        Label slogan = label("Luxury reservations made simple, elegant, and personal.", 15, MUTED, false);
-        slogan.setWrapText(true);
-        slogan.setMaxWidth(300);
-
-        Button book = mainButton("BOOK NOW", 130, 38);
-        book.setOnAction(e -> alert("Welcome", "Please sign in or register to reserve a suite."));
-
-        right.getChildren().addAll(small, title, location, line, slogan, book);
-        return right;
+    public VBox getCurrentContentArea() {
+        return currentContentArea;
     }
 
-    private void showGuestRegisterScreen() {
-        VBox page = basePage("Guest Registration");
-
-        TextField username = smallInput("Username");
-
-        PasswordField password = new PasswordField();
-        password.setPromptText("Password: min 8 chars, uppercase, digit");
-        password.setMaxWidth(360);
-        password.setStyle(inputStyle());
-
-        TextField dob = smallInput("Date of Birth YYYY-MM-DD");
-        TextField balance = smallInput("Balance");
-        TextField address = smallInput("Address");
-
-        ComboBox<Gender> gender = new ComboBox<>(FXCollections.observableArrayList(Gender.values()));
-        gender.setPromptText("Gender");
-        gender.setMaxWidth(360);
-
-        TextField prefs = smallInput("Room Preferences");
-
-        Label msg = label("", 13, ROSE, false);
-
-        Button register = mainButton("CREATE ACCOUNT", 240, 45);
-        register.setOnAction(e -> {
-            try {
-                Authentication.validatePasswordStrength(password.getText().trim());
-
-                Guest guest = new Guest(
-                        username.getText().trim(),
-                        password.getText().trim(),
-                        LocalDate.parse(dob.getText().trim()),
-                        Double.parseDouble(balance.getText().trim()),
-                        address.getText().trim(),
-                        gender.getValue(),
-                        prefs.getText().trim()
-                );
-
-                guest.register();
-                alert("Success", "Account created successfully. You can now log in.");
-                showLoginScreen();
-
-            } catch (InvalidCredentialsException ex) {
-                msg.setText(ex.getMessage());
-            } catch (DateTimeParseException ex) {
-                msg.setText("Invalid date format. Use YYYY-MM-DD.");
-            } catch (NumberFormatException ex) {
-                msg.setText("Balance must be a number.");
-            } catch (Exception ex) {
-                msg.setText("Please fill all fields correctly.");
-            }
-        });
-
-        Button back = outlineButton("BACK", 180, 42);
-        back.setOnAction(e -> showLoginScreen());
-
-        page.getChildren().addAll(username, password, dob, balance, address, gender, prefs, register, back, msg);
-        stage.setScene(new Scene(wrapCenter(page), WIDTH, HEIGHT));
+    public Room getSelectedRoomForReservation() {
+        return selectedRoomForReservation;
     }
 
-    private void showGuestDashboard(Guest guest) {
-        BorderPane root = dashboardBase("Guest Dashboard", guest.getUsername());
+    public void setSelectedRoomForReservation(Room room) {
+        this.selectedRoomForReservation = room;
+    }
 
-        VBox menu = sideMenu();
+    public void setCurrentUser(User user) {
+        this.currentUser = user;
+    }
 
-        Button profile = menuButton("View Profile");
-        Button rooms = menuButton("Browse Rooms");
-        Button reserve = menuButton("Make Reservation");
-        Button myReservations = menuButton("My Reservations");
-        Button deposit = menuButton("Pay Deposit");
-        Button cancel = menuButton("Cancel Reservation");
-        Button time = menuButton("Advance Time");
-        Button chatBtn = menuButton("Live Chat");
-        Button logout = menuButton("Logout");
+    public void showGuestDashboard(Guest guest) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/Dashboard.fxml"));
+            BorderPane root = loader.load();
+            
+            DashboardController controller = loader.getController();
+            controller.setTitle("Guest Dashboard");
+            controller.setUserInfo("Logged in as: " + guest.getUsername() + "   |   Date: " + SystemTime.getDate());
 
-        menu.getChildren().addAll(profile, rooms, reserve, myReservations, deposit, cancel, time, chatBtn, logout);
-        root.setLeft(menu);
+            VBox menu = controller.getSideMenu();
+            VBox content = controller.getContentArea();
 
-        VBox content = contentBox();
-        root.setCenter(content);
+            Button profile = menuButton("View Profile");
+            Button rooms = menuButton("Browse Rooms");
+            Button reserve = menuButton("Make Reservation");
+            Button myReservations = menuButton("My Reservations");
+            Button deposit = menuButton("Pay Deposit");
+            Button cancel = menuButton("Cancel Reservation");
+            Button time = menuButton("Advance Time");
+            Button chatBtn = menuButton("Live Chat");
+            Button logout = menuButton("Logout");
 
-        profile.setOnAction(e -> content.getChildren().setAll(
-                sectionTitle("My Profile"),
-                info("Username: " + guest.getUsername()),
-                info("DOB: " + guest.getDateOfBirth()),
-                info("Balance: $" + money(guest.getBalance())),
-                info("Address: " + guest.getAddress()),
-                info("Gender: " + guest.getGender()),
-                info("Preferences: " + guest.getRoomPreferences())
-        ));
+            menu.getChildren().addAll(profile, rooms, reserve, myReservations, deposit, cancel, time, chatBtn, logout);
 
+        profile.setOnAction(e -> showGuestProfile(content, guest));
         rooms.setOnAction(e -> showRoomBrowser(content, guest));
-
-        reserve.setOnAction(e -> {
-            selectedRoomForReservation = null;
-            showMakeReservation(content, guest);
-        });
-
+        reserve.setOnAction(e -> showMakeReservation(content, guest));
         myReservations.setOnAction(e -> showGuestReservations(content, guest));
         deposit.setOnAction(e -> showPayDeposit(content, guest));
         cancel.setOnAction(e -> showCancelReservation(content, guest));
@@ -261,28 +177,32 @@ public class Main extends Application {
 
         profile.fire();
         stage.setScene(new Scene(root, WIDTH, HEIGHT));
+        } catch (Exception e) { e.printStackTrace(); }
     }
 
-    private void showAdminDashboard(Admin admin) {
-        BorderPane root = dashboardBase("Admin Dashboard", admin.getUsername());
+    public void showAdminDashboard(Admin admin) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/Dashboard.fxml"));
+            BorderPane root = loader.load();
+            
+            DashboardController controller = loader.getController();
+            controller.setTitle("Admin Dashboard");
+            controller.setUserInfo("Logged in as: " + admin.getUsername() + "   |   Date: " + SystemTime.getDate());
 
-        VBox menu = sideMenu();
+            VBox menu = controller.getSideMenu();
+            VBox content = controller.getContentArea();
 
-        Button guests = menuButton("View Guests");
-        Button rooms = menuButton("View Rooms");
-        Button reservations = menuButton("View Reservations");
-        Button roomTypes = menuButton("Manage Room Types");
-        Button amenities = menuButton("Manage Amenities");
-        Button addRoom = menuButton("Add Room");
-        Button addReceptionist = menuButton("Add Receptionist");
-        Button chatBtn = menuButton("Live Chat");
-        Button logout = menuButton("Logout");
+            Button guests = menuButton("View Guests");
+            Button rooms = menuButton("View Rooms");
+            Button reservations = menuButton("View Reservations");
+            Button roomTypes = menuButton("Manage Room Types");
+            Button amenities = menuButton("Manage Amenities");
+            Button addRoom = menuButton("Add Room");
+            Button addReceptionist = menuButton("Add Receptionist");
+            Button chatBtn = menuButton("Live Chat");
+            Button logout = menuButton("Logout");
 
-        menu.getChildren().addAll(guests, rooms, reservations, roomTypes, amenities, addRoom, addReceptionist, chatBtn, logout);
-        root.setLeft(menu);
-
-        VBox content = contentBox();
-        root.setCenter(content);
+            menu.getChildren().addAll(guests, rooms, reservations, roomTypes, amenities, addRoom, addReceptionist, chatBtn, logout);
 
         guests.setOnAction(e -> showList(content, "Guests", Database.getGuests()));
         rooms.setOnAction(e -> showList(content, "Rooms", Database.getRooms()));
@@ -296,28 +216,32 @@ public class Main extends Application {
 
         guests.fire();
         stage.setScene(new Scene(root, WIDTH, HEIGHT));
+        } catch (Exception e) { e.printStackTrace(); }
     }
 
-    private void showReceptionistDashboard(Receptionist rec) {
-        BorderPane root = dashboardBase("Receptionist Dashboard", rec.getUsername());
+    public void showReceptionistDashboard(Receptionist rec) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/Dashboard.fxml"));
+            BorderPane root = loader.load();
+            
+            DashboardController controller = loader.getController();
+            controller.setTitle("Receptionist Dashboard");
+            controller.setUserInfo("Logged in as: " + rec.getUsername() + "   |   Date: " + SystemTime.getDate());
 
-        VBox menu = sideMenu();
+            VBox menu = controller.getSideMenu();
+            VBox content = controller.getContentArea();
 
-        Button today = menuButton("Today's Reservations");
-        Button checkIn = menuButton("Check In");
-        Button checkOut = menuButton("Check Out");
-        Button allReservations = menuButton("All Reservations");
-        Button guests = menuButton("Guests");
-        Button rooms = menuButton("Rooms");
-        Button time = menuButton("Advance Time");
-        Button chatBtn = menuButton("Live Chat");
-        Button logout = menuButton("Logout");
+            Button today = menuButton("Today's Reservations");
+            Button checkIn = menuButton("Check In");
+            Button checkOut = menuButton("Check Out");
+            Button allReservations = menuButton("All Reservations");
+            Button guests = menuButton("Guests");
+            Button rooms = menuButton("Rooms");
+            Button time = menuButton("Advance Time");
+            Button chatBtn = menuButton("Live Chat");
+            Button logout = menuButton("Logout");
 
-        menu.getChildren().addAll(today, checkIn, checkOut, allReservations, guests, rooms, time, chatBtn, logout);
-        root.setLeft(menu);
-
-        VBox content = contentBox();
-        root.setCenter(content);
+            menu.getChildren().addAll(today, checkIn, checkOut, allReservations, guests, rooms, time, chatBtn, logout);
 
         today.setOnAction(e -> showList(content, "Today's Reservations",
                 Database.getReservations().stream()
@@ -335,12 +259,15 @@ public class Main extends Application {
 
         today.fire();
         stage.setScene(new Scene(root, WIDTH, HEIGHT));
+        } catch (Exception e) { e.printStackTrace(); }
     }
 
     private void showRoomBrowser(VBox content, Guest guest) {
         content.getChildren().clear();
 
         Label title = sectionTitle("Browse Available Rooms");
+        title.setStyle("-fx-text-fill: #000000;");
+        
 
         ComboBox<RoomType> typeFilter = new ComboBox<>(FXCollections.observableArrayList(Database.getRoomTypes()));
         typeFilter.setPromptText("Filter by Room Type");
@@ -416,7 +343,7 @@ public class Main extends Application {
                 -fx-border-radius: 12;
                 """);
 
-        Label imageText = label("ROOM\n" + room.getRoomNumber(), 22, BURGUNDY, true);
+        Label imageText = label("ROOM\n" + room.getRoomNumber(), 22, TEXTDARK, true);
         imageText.setFont(Font.font("Georgia", FontWeight.NORMAL, 22));
         imageText.setAlignment(Pos.CENTER);
         imageBox.getChildren().add(imageText);
@@ -424,7 +351,7 @@ public class Main extends Application {
         VBox details = new VBox(7);
         details.setPrefWidth(560);
 
-        Label roomTitle = label("Room " + room.getRoomNumber() + " — " + room.getRoomType().getName(), 22, TEXT, true);
+        Label roomTitle = label("Room " + room.getRoomNumber() + " — " + room.getRoomType().getName(), 22, TEXTDARK, true);
         roomTitle.setFont(Font.font("Georgia", FontWeight.NORMAL, 22));
 
         Label price = label("Price per night: $" + money(room.getRoomType().getPricePerNight()), 14, BURGUNDY, true);
@@ -503,11 +430,11 @@ public class Main extends Application {
         typeBox.setMaxWidth(360);
 
         TextField guests = smallInput("Number of Guests");
-        TextField checkIn = smallInput("Check-in YYYY-MM-DD");
-        TextField checkOut = smallInput("Check-out YYYY-MM-DD");
+        TextField checkIn = smallInput("Check-in DD-MM-YYYY");
+        TextField checkOut = smallInput("Check-out DD-MM-YYYY");
 
         CheckBox gym = new CheckBox("Add Gym Pass ($200)");
-        gym.setTextFill(Color.web(TEXT));
+        gym.setTextFill(Color.web(TEXTDARK));
 
         ComboBox<Room> roomBox = new ComboBox<>();
         roomBox.setPromptText("Search first, then choose room");
@@ -533,8 +460,9 @@ public class Main extends Application {
                 }
 
                 int numGuests = Integer.parseInt(guests.getText().trim());
-                LocalDate in = LocalDate.parse(checkIn.getText().trim());
-                LocalDate out = LocalDate.parse(checkOut.getText().trim());
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d-M-yyyy");
+                LocalDate in = LocalDate.parse(checkIn.getText().trim(), formatter);
+                LocalDate out = LocalDate.parse(checkOut.getText().trim(), formatter);
 
                 if (!ReservationService.isDateRangeValid(in, out)) {
                     msg.setText("Invalid dates. Check-out must be after check-in.");
@@ -556,7 +484,7 @@ public class Main extends Application {
                 msg.setText("Number of guests must be a number.");
                 msg.setTextFill(Color.web(ROSE));
             } catch (DateTimeParseException ex) {
-                msg.setText("Use date format YYYY-MM-DD.");
+                msg.setText("Use date format DD-MM-YYYY.");
                 msg.setTextFill(Color.web(ROSE));
             } catch (Exception ex) {
                 msg.setText("Enter valid room type, guests, and dates.");
@@ -573,8 +501,9 @@ public class Main extends Application {
                     return;
                 }
 
-                LocalDate in = LocalDate.parse(checkIn.getText().trim());
-                LocalDate out = LocalDate.parse(checkOut.getText().trim());
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d-M-yyyy");
+                LocalDate in = LocalDate.parse(checkIn.getText().trim(), formatter);
+                LocalDate out = LocalDate.parse(checkOut.getText().trim(), formatter);
 
                 if (!ReservationService.isDateRangeValid(in, out)) {
                     msg.setText("Invalid date range.");
@@ -606,90 +535,6 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
         });
 
         content.getChildren().addAll(typeBox, guests, checkIn, checkOut, gym, search, roomBox, create, msg);
-    }
-
-    private void showGuestReservations(VBox content, Guest guest) {
-        List<Reservation> list = Database.getReservations().stream()
-                .filter(r -> r.getGuest().getUsername().equalsIgnoreCase(guest.getUsername()))
-                .toList();
-
-        showList(content, "My Reservations", list);
-    }
-
-    private void showPayDeposit(VBox content, Guest guest) {
-        content.getChildren().clear();
-        content.getChildren().add(sectionTitle("Pay Deposit"));
-
-        ComboBox<Reservation> pending = new ComboBox<>(FXCollections.observableArrayList(
-                Database.getReservations().stream()
-                        .filter(r -> r.getGuest().getUsername().equalsIgnoreCase(guest.getUsername()))
-                        .filter(r -> r.getStatus() == ReservationStatus.PENDING)
-                        .toList()
-        ));
-        pending.setPromptText("Select Pending Reservation");
-        pending.setMaxWidth(420);
-
-        Label details = info("Choose a reservation.");
-        Button pay = mainButton("PAY DEPOSIT", 180, 42);
-
-        pending.setOnAction(e -> {
-            Reservation r = pending.getValue();
-            if (r != null) {
-                details.setText("Deposit: $" + money(ReservationService.getDepositAmount(r))
-                        + " | Your balance: $" + money(guest.getBalance()));
-            }
-        });
-
-        pay.setOnAction(e -> {
-            try {
-                if (pending.getValue() == null) {
-                    alert("Error", "Please select a reservation first.");
-                    return;
-                }
-
-                ReservationService.payDeposit(pending.getValue(), guest);
-                alert("Success", "Deposit paid. Reservation confirmed.");
-                showGuestReservations(content, guest);
-
-            } catch (Exception ex) {
-                alert("Payment Failed", ex.getMessage());
-            }
-        });
-
-        content.getChildren().addAll(pending, details, pay);
-    }
-
-    private void showCancelReservation(VBox content, Guest guest) {
-        content.getChildren().clear();
-        content.getChildren().add(sectionTitle("Cancel Reservation"));
-
-        ComboBox<Reservation> box = new ComboBox<>(FXCollections.observableArrayList(
-                Database.getReservations().stream()
-                        .filter(r -> r.getGuest().getUsername().equalsIgnoreCase(guest.getUsername()))
-                        .filter(r -> r.getStatus() != ReservationStatus.CANCELLED)
-                        .toList()
-        ));
-        box.setPromptText("Select Reservation");
-        box.setMaxWidth(420);
-
-        Button cancel = mainButton("CANCEL RESERVATION", 220, 42);
-        cancel.setOnAction(e -> {
-            try {
-                if (box.getValue() == null) {
-                    alert("Error", "Please select a reservation first.");
-                    return;
-                }
-
-                ReservationService.cancelReservation(box.getValue().getReservationId());
-                alert("Cancelled", "Reservation cancelled successfully.");
-                showGuestReservations(content, guest);
-
-            } catch (Exception ex) {
-                alert("Error", ex.getMessage());
-            }
-        });
-
-        content.getChildren().addAll(box, cancel);
     }
 
     private void showManageRoomTypes(VBox content) {
@@ -783,7 +628,7 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
         password.setMaxWidth(360);
         password.setStyle(inputStyle());
 
-        TextField dob = smallInput("DOB YYYY-MM-DD");
+        TextField dob = smallInput("DOB DD-MM-YYYY");
         TextField hours = smallInput("Working Hours");
 
         Button add = mainButton("REGISTER", 170, 42);
@@ -791,7 +636,7 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
             try {
                 admin.registerStaff(username.getText().trim(),
                         password.getText().trim(),
-                        LocalDate.parse(dob.getText().trim()),
+                        LocalDate.parse(dob.getText().trim(), DateTimeFormatter.ofPattern("d-M-yyyy")),
                         Integer.parseInt(hours.getText().trim()),
                         Role.RECEPTIONIST);
 
@@ -935,7 +780,7 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
         avatar.getChildren().add(avatarText);
 
         VBox headerText = new VBox(2);
-        Label chatName = label("Hotel Live Chat", 18, TEXT, true);
+        Label chatName = label("Hotel Live Chat", 18, TEXTDARK, true);
         chatName.setFont(Font.font("Georgia", FontWeight.NORMAL, 18));
         Label chatStatus = label("Connected to reception desk", 12, MUTED, false);
         headerText.getChildren().addAll(chatName, chatStatus);
@@ -1013,76 +858,108 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
         content.getChildren().add(view);
     }
 
-    private BorderPane dashboardBase(String title, String username) {
-        BorderPane root = new BorderPane();
-        root.setStyle("-fx-background-color: " + BG + ";");
+    private void showGuestProfile(VBox content, Guest guest) {
+        content.getChildren().clear();
+        content.getChildren().add(sectionTitle("My Profile"));
 
-        HBox top = new HBox(22);
-        top.setAlignment(Pos.CENTER_LEFT);
-        top.setPadding(new Insets(18, 30, 18, 30));
-        top.setStyle("""
-                -fx-background-color: #F9F3EA;
-                -fx-border-color: transparent transparent #C9AA7C transparent;
-                -fx-border-width: 0 0 1 0;
+        // Fetch fresh data from DB to reflect external SQL updates instantly
+        User freshData = UserDatabase.findUser(guest.getUsername());
+        if (freshData instanceof Guest dbGuest) {
+            guest.setBalance(dbGuest.getBalance());
+        }
+
+        VBox details = new VBox(15);
+        details.setPadding(new Insets(20));
+        details.setStyle("""
+                -fx-background-color: #FFFFFF;
+                -fx-background-radius: 14;
+                -fx-border-color: #C9AA7C;
+                -fx-border-radius: 14;
                 """);
 
-        Label titleLabel = titleLabel(title);
+        details.getChildren().addAll(
+            info("Username: " + guest.getUsername()),
+            info("Date of Birth: " + guest.getDateOfBirth()),
+            info("Balance: $" + money(guest.getBalance())),
+            info("Address: " + guest.getAddress()),
+            info("Gender: " + guest.getGender()),
+            info("Room Preferences: " + guest.getRoomPreferences())
+        );
 
-        Label userLabel = label("Logged in as: " + username + "   |   Date: " + SystemTime.getDate(),
-                14, BURGUNDY, false);
-
-        top.getChildren().addAll(titleLabel, userLabel);
-        root.setTop(top);
-
-        return root;
+        content.getChildren().add(details);
     }
 
-    private VBox sideMenu() {
-        VBox menu = new VBox(12);
-        menu.setPadding(new Insets(25));
-        menu.setPrefWidth(260);
-        menu.setStyle("""
-                -fx-background-color: #EFE4D6;
-                -fx-border-color: transparent #C9AA7C transparent transparent;
-                -fx-border-width: 0 1 0 0;
-                """);
-        return menu;
+    private void showGuestReservations(VBox content, Guest guest) {
+        showList(content, "My Reservations", 
+            Database.getReservations().stream()
+                .filter(r -> r.getGuest().getUsername().equals(guest.getUsername()))
+                .toList()
+        );
     }
 
-    private VBox contentBox() {
-        VBox box = new VBox(15);
-        box.setPadding(new Insets(30));
-        box.setStyle("""
-                -fx-background-color: #F9F3EA;
-                -fx-background-radius: 18;
-                """);
-        return box;
+    private void showPayDeposit(VBox content, Guest guest) {
+        content.getChildren().clear();
+        content.getChildren().add(sectionTitle("Pay Deposit"));
+
+        ComboBox<Reservation> box = new ComboBox<>(FXCollections.observableArrayList(
+                Database.getReservations().stream()
+                        .filter(r -> r.getGuest().getUsername().equals(guest.getUsername()))
+                        .filter(r -> !r.isDepositPaid() && r.getStatus() == ReservationStatus.PENDING)
+                        .toList()
+        ));
+        box.setPromptText("Select Reservation");
+        box.setMaxWidth(420);
+
+        Button pay = mainButton("PAY DEPOSIT", 170, 42);
+        pay.setOnAction(e -> {
+            try {
+                if (box.getValue() == null) {
+                    alert("Error", "Please select a reservation first.");
+                    return;
+                }
+                ReservationService.payDeposit(box.getValue(), guest);
+                alert("Success", "Deposit paid successfully. Status is now CONFIRMED.");
+                showPayDeposit(content, guest);
+            } catch (Exception ex) {
+                alert("Error", ex.getMessage());
+            }
+        });
+
+        content.getChildren().addAll(box, pay);
     }
 
-    private VBox basePage(String title) {
-        VBox box = new VBox(14);
-        box.setAlignment(Pos.CENTER);
-        box.setPadding(new Insets(35));
-        box.setMaxWidth(470);
-        box.setStyle("""
-                -fx-background-color: #F9F3EA;
-                -fx-background-radius: 24;
-                -fx-effect: dropshadow(gaussian, rgba(80,45,35,0.16), 24, 0.25, 0, 7);
-                """);
+    private void showCancelReservation(VBox content, Guest guest) {
+        content.getChildren().clear();
+        content.getChildren().add(sectionTitle("Cancel Reservation"));
 
-        box.getChildren().add(smallHotelLabel("GRAND BUDAPEST HOTEL"));
-        box.getChildren().add(sectionTitle(title));
+        ComboBox<Reservation> box = new ComboBox<>(FXCollections.observableArrayList(
+                Database.getReservations().stream()
+                        .filter(r -> r.getGuest().getUsername().equals(guest.getUsername()))
+                        .filter(r -> r.getStatus() == ReservationStatus.PENDING || r.getStatus() == ReservationStatus.CONFIRMED)
+                        .toList()
+        ));
+        box.setPromptText("Select Reservation to Cancel");
+        box.setMaxWidth(420);
 
-        return box;
+        Button cancel = mainButton("CANCEL RESERVATION", 190, 42);
+        cancel.setOnAction(e -> {
+            try {
+                if (box.getValue() == null) {
+                    alert("Error", "Please select a reservation first.");
+                    return;
+                }
+                ReservationService.cancelReservation(box.getValue().getReservationId());
+                alert("Success", "Reservation cancelled successfully.");
+                showCancelReservation(content, guest);
+            } catch (Exception ex) {
+                alert("Error", ex.getMessage());
+            }
+        });
+
+        content.getChildren().addAll(box, cancel);
     }
 
-    private StackPane wrapCenter(VBox content) {
-        StackPane pane = new StackPane(content);
-        pane.setStyle("-fx-background-color: " + BG + ";");
-        return pane;
-    }
-
-    private TextField smallInput(String prompt) {
+    public TextField smallInput(String prompt) {
         TextField field = new TextField();
         field.setPromptText(prompt);
         field.setMaxWidth(360);
@@ -1090,7 +967,7 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
         return field;
     }
 
-    private Button menuButton(String text) {
+    public Button menuButton(String text) {
         Button b = new Button(text);
         b.setMaxWidth(Double.MAX_VALUE);
         b.setPrefHeight(40);
@@ -1121,7 +998,7 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
         return b;
     }
 
-    private Button mainButton(String text, int width, int height) {
+    public Button mainButton(String text, int width, int height) {
         Button b = new Button(text);
         b.setPrefSize(width, height);
 
@@ -1150,7 +1027,7 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
         return b;
     }
 
-    private Button outlineButton(String text, int width, int height) {
+    public Button outlineButton(String text, int width, int height) {
         Button b = new Button(text);
         b.setPrefSize(width, height);
         b.setStyle("""
@@ -1164,7 +1041,7 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
         return b;
     }
 
-    private String inputStyle() {
+    public String inputStyle() {
         return """
                 -fx-background-color: #FFFFFF;
                 -fx-background-radius: 8;
@@ -1177,40 +1054,41 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
                 """;
     }
 
-    private Label sectionTitle(String text) {
-        Label l = label(text, 29, TEXT, true);
+    public Label sectionTitle(String text) {
+        Label l = label(text, 29, TEXTDARK, true);
         l.setFont(Font.font("Georgia", FontWeight.NORMAL, 29));
         return l;
     }
 
-    private Label titleLabel(String text) {
-        Label l = label(text, 34, TEXT, true);
+    public Label titleLabel(String text) {
+        Label l = label(text, 34, TEXTDARK, true);
         l.setFont(Font.font("Georgia", FontWeight.NORMAL, 34));
         return l;
     }
 
-    private Label smallHotelLabel(String text) {
+    public Label smallHotelLabel(String text) {
         Label l = label(text, 13, BURGUNDY, false);
         l.setFont(Font.font("Georgia", 13));
         return l;
     }
 
-    private Label info(String text) {
-        return label(text, 15, TEXT, false);
+    public Label info(String text) {
+        return label(text, 15, TEXTDARK, false);
     }
 
-    private Label label(String text, int size, String color, boolean bold) {
+    public Label label(String text, int size, String color, boolean bold) {
         Label l = new Label(text);
         l.setFont(Font.font("Arial", bold ? FontWeight.BOLD : FontWeight.NORMAL, size));
         l.setTextFill(Color.web(color));
+        l.setStyle("-fx-text-fill: " + color + ";");
         return l;
     }
 
-    private String money(double value) {
+    public String money(double value) {
         return String.format("%.2f", value);
     }
 
-    private void alert(String title, String msg) {
+    public void alert(String title, String msg) {
         Alert a = new Alert(Alert.AlertType.INFORMATION);
         a.setTitle(title);
         a.setHeaderText(null);
@@ -1218,23 +1096,8 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
         a.showAndWait();
     }
 
-
     public static void main(String[] args) {
-    
-
-    Database.getGuests().clear();
-    Database.getStaffMembers().clear();
-
-    ArrayList<User> loadedUsers = UserDatabase.loadUsersFromDatabase();
-
-    for (User user : loadedUsers) {
-        Database.addUser(user);
+        // DatabaseSync.syncDefaultDataToMySQL();
+        launch(args);
     }
-DatabaseSync.syncDefaultDataToMySQL();
-    System.out.println("Users loaded from MySQL: " + loadedUsers.size());
-    System.out.println("Guests: " + Database.getGuests().size());
-    System.out.println("Staff: " + Database.getStaffMembers().size());
-
-    launch(args);
-}
 }

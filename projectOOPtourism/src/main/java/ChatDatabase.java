@@ -1,4 +1,4 @@
-import DatabaseInitializer.DatabaseConnection;
+import database.DatabaseConnection;
 import java.sql.*;
 import java.util.Scanner;
 

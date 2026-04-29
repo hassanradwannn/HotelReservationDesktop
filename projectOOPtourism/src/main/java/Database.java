@@ -1,9 +1,14 @@
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
 
-import exceptions.*;
+import database.DatabaseConnection;
+import exceptions.InvalidCredentialsException;
 
 
 
@@ -60,6 +65,9 @@ public class Database {
         generateRoomRange(400, 420, deluxe);
         generateRoomRange(500, 520, suite);
         generateRoomRange(600, 620, penthouse);
+
+        // Load reservations from database
+        loadReservationsFromDatabase();
     }
 
     private static void loadUsersFromDatabase() {
@@ -155,6 +163,48 @@ public class Database {
             addUser(user);
         }
     }
+
+    private static void loadReservationsFromDatabase() {
+        String sql = "SELECT * FROM reservations";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                String resId = rs.getString("reservation_id");
+                String guestUsername = rs.getString("guest_username");
+                String roomNumber = rs.getString("room_number");
+                LocalDate checkIn = rs.getDate("check_in_date").toLocalDate();
+                LocalDate checkOut = rs.getDate("check_out_date").toLocalDate();
+                String statusStr = rs.getString("status");
+                ReservationStatus status = ReservationStatus.valueOf(statusStr.toUpperCase());
+
+                User user = findUser(guestUsername);
+                Room room = null;
+                for (Room r : rooms) {
+                    if (r.getRoomNumber().equalsIgnoreCase(roomNumber)) {
+                        room = r;
+                        break;
+                    }
+                }
+
+                if (user instanceof Guest guest && room != null && resId != null) {
+                    Reservation res = new Reservation(resId, guest, room, checkIn, checkOut, status, false);
+                    res.setTotalPrice();
+
+                    if (status == ReservationStatus.CONFIRMED || status == ReservationStatus.ONGOING || status == ReservationStatus.COMPLETED) {
+                        res.setDepositPaid(true);
+                    }
+                    if (status == ReservationStatus.COMPLETED) {
+                        res.setFullPaid(true);
+                    }
+
+                    reservations.add(res);
+                }
+            }
+            System.out.println("Loaded " + reservations.size() + " reservations from database.");
+        } catch (SQLException e) {
+            System.out.println("Error loading reservations from database: " + e.getMessage());
+        }
+    }
 }
-
-

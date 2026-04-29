@@ -1,4 +1,8 @@
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
@@ -42,7 +46,7 @@ public class UserDatabase {
                 }
                 else {
                     // Guest constructor: (username, password, dateOfBirth, balance, address, gender, roomPreferences)
-                    double balance = 0.0; // Default balance since we don't store it
+                    double balance = rs.getDouble("balance");
                     String address = rs.getString("address") != null ? rs.getString("address") : "";
                     Gender gender = rs.getString("gender") != null ?
                         Gender.valueOf(rs.getString("gender").toUpperCase()) : Gender.MALE;
@@ -87,7 +91,7 @@ public class UserDatabase {
                     user = new Receptionist(username, password, dateOfBirth, 0);
                 }
                 else {
-                    double balance = 0.0;
+                    double balance = rs.getDouble("balance");
                     String address = rs.getString("address") != null ? rs.getString("address") : "";
                     Gender gender = rs.getString("gender") != null ?
                         Gender.valueOf(rs.getString("gender").toUpperCase()) : Gender.MALE;
