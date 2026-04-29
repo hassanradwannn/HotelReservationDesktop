@@ -2,6 +2,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import javafx.util.Duration;
 
 import DatabaseInitializer.DatabaseInitializer;
 import javafx.application.Application;
@@ -9,6 +10,8 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -37,6 +40,10 @@ public class Main extends Application {
     private User currentUser;
     private Room selectedRoomForReservation;
     private VBox currentContentArea;
+    private DashboardController currentDashboardController;
+    private Timeline autoRefreshTimeline;
+    private Runnable currentViewRefresher;
+    private volatile long localDataVersion = -1;
 
     private final int WIDTH = 1280;
     private final int HEIGHT = 720;
@@ -56,18 +63,42 @@ public class Main extends Application {
     @Override
     public void start(Stage stage) {
         DatabaseInitializer.initializeDatabase();
+        if (Database.isFirstInstance()) {
+            SystemTime.resetToRealToday();
+        } else {
+            SystemTime.syncFromDatabase();
+        }
         Database.getRooms();
         
         // Sync generated rooms to MySQL so reservations don't fail Foreign Key constraints!
-        DatabaseSync.syncDefaultDataToMySQL();
+        new Thread(() -> {
+            DatabaseSync.syncDefaultDataToMySQL();
+        }).start();
         
         this.stage = stage;
         stage.setTitle("Grand Budapest Hotel Reservation System");
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            Database.unregisterInstance();
+        }));
+
+         stage.setOnCloseRequest(event -> {
+            System.exit(0);
+        });
+
+        
         showLoginScreen();
         stage.show();
     }
 
     public void showLoginScreen() {
+        // Stop any running auto-refresh when returning to login screen
+        if (autoRefreshTimeline != null) {
+            autoRefreshTimeline.stop();
+            autoRefreshTimeline = null;
+        }
+        localDataVersion = -1;
+
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/Login.fxml"));
             AnchorPane root = loader.load();
@@ -143,11 +174,44 @@ public class Main extends Application {
 
     public void showGuestDashboard(Guest guest) {
         try {
+            this.currentUser = guest;
+
+            // Stop any existing timeline before starting a new one
+            if (autoRefreshTimeline != null) {
+                autoRefreshTimeline.stop();
+            }
+
+            autoRefreshTimeline = new Timeline(new KeyFrame(Duration.seconds(2), event -> {
+                new Thread(() -> {
+                    long currentVersion = Database.getLatestDataVersion();
+                    if (localDataVersion == -1) {
+                        localDataVersion = currentVersion;
+                    } else if (currentVersion > localDataVersion) {
+                        System.out.println("Database changes detected! Syncing view...");
+                        localDataVersion = currentVersion;
+
+                        SystemTime.syncFromDatabase();
+                        javafx.application.Platform.runLater(() -> {
+                            if (currentDashboardController != null && currentUser != null) {
+                                currentDashboardController.setUserInfo("Logged in as: " + currentUser.getUsername() + "   |   Date: " + SystemTime.getDate());
+                            }
+                            if (currentViewRefresher != null) {
+                                currentViewRefresher.run();
+                            }
+                        });
+                    }
+                }).start();
+            }));
+            autoRefreshTimeline.setCycleCount(Timeline.INDEFINITE);
+            autoRefreshTimeline.play();
+
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/Dashboard.fxml"));
             BorderPane root = loader.load();
             
             DashboardController controller = loader.getController();
+            this.currentDashboardController = controller;
             controller.setTitle("Guest Dashboard");
+            SystemTime.syncFromDatabase();
             controller.setUserInfo("Logged in as: " + guest.getUsername() + "   |   Date: " + SystemTime.getDate());
 
             VBox menu = controller.getSideMenu();
@@ -179,14 +243,46 @@ public class Main extends Application {
         stage.setScene(new Scene(root, WIDTH, HEIGHT));
         } catch (Exception e) { e.printStackTrace(); }
     }
-
     public void showAdminDashboard(Admin admin) {
         try {
+            this.currentUser = admin;
+
+            // Stop any existing timeline before starting a new one
+            if (autoRefreshTimeline != null) {
+                autoRefreshTimeline.stop();
+            }
+
+            autoRefreshTimeline = new Timeline(new KeyFrame(Duration.seconds(2), event -> {
+                new Thread(() -> {
+                    long currentVersion = Database.getLatestDataVersion();
+                    if (localDataVersion == -1) {
+                        localDataVersion = currentVersion;
+                    } else if (currentVersion > localDataVersion) {
+                        System.out.println("Database changes detected! Syncing view...");
+                        localDataVersion = currentVersion;
+
+                        SystemTime.syncFromDatabase();
+                        javafx.application.Platform.runLater(() -> {
+                            if (currentDashboardController != null && currentUser != null) {
+                                currentDashboardController.setUserInfo("Logged in as: " + currentUser.getUsername() + "   |   Date: " + SystemTime.getDate());
+                            }
+                            if (currentViewRefresher != null) {
+                                currentViewRefresher.run();
+                            }
+                        });
+                    }
+                }).start();
+            }));
+            autoRefreshTimeline.setCycleCount(Timeline.INDEFINITE);
+            autoRefreshTimeline.play();
+
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/Dashboard.fxml"));
             BorderPane root = loader.load();
             
             DashboardController controller = loader.getController();
+            this.currentDashboardController = controller;
             controller.setTitle("Admin Dashboard");
+            SystemTime.syncFromDatabase();
             controller.setUserInfo("Logged in as: " + admin.getUsername() + "   |   Date: " + SystemTime.getDate());
 
             VBox menu = controller.getSideMenu();
@@ -204,9 +300,15 @@ public class Main extends Application {
 
             menu.getChildren().addAll(guests, rooms, reservations, roomTypes, amenities, addRoom, addReceptionist, chatBtn, logout);
 
-        guests.setOnAction(e -> showList(content, "Guests", Database.getGuests()));
-        rooms.setOnAction(e -> showList(content, "Rooms", Database.getRooms()));
-        reservations.setOnAction(e -> showList(content, "Reservations", Database.getReservations()));
+        guests.setOnAction(e -> showList(content, "Guests", () -> {
+            Database.refreshUsersFromDatabase();
+            return Database.getGuests();
+        }));
+        rooms.setOnAction(e -> showList(content, "Rooms", () -> Database.getRooms()));
+        reservations.setOnAction(e -> showList(content, "Reservations", () -> {
+            Database.refreshReservationsFromDatabase();
+            return Database.getReservations();
+        }));
         roomTypes.setOnAction(e -> showManageRoomTypes(content));
         amenities.setOnAction(e -> showManageAmenities(content));
         addRoom.setOnAction(e -> showAddRoom(content));
@@ -218,14 +320,46 @@ public class Main extends Application {
         stage.setScene(new Scene(root, WIDTH, HEIGHT));
         } catch (Exception e) { e.printStackTrace(); }
     }
-
     public void showReceptionistDashboard(Receptionist rec) {
         try {
+            this.currentUser = rec;
+
+            // Stop any existing timeline before starting a new one
+            if (autoRefreshTimeline != null) {
+                autoRefreshTimeline.stop();
+            }
+
+            autoRefreshTimeline = new Timeline(new KeyFrame(Duration.seconds(2), event -> {
+                new Thread(() -> {
+                    long currentVersion = Database.getLatestDataVersion();
+                    if (localDataVersion == -1) {
+                        localDataVersion = currentVersion;
+                    } else if (currentVersion > localDataVersion) {
+                        System.out.println("Database changes detected! Syncing view...");
+                        localDataVersion = currentVersion;
+
+                        SystemTime.syncFromDatabase();
+                        javafx.application.Platform.runLater(() -> {
+                            if (currentDashboardController != null && currentUser != null) {
+                                currentDashboardController.setUserInfo("Logged in as: " + currentUser.getUsername() + "   |   Date: " + SystemTime.getDate());
+                            }
+                            if (currentViewRefresher != null) {
+                                currentViewRefresher.run();
+                            }
+                        });
+                    }
+                }).start();
+            }));
+            autoRefreshTimeline.setCycleCount(Timeline.INDEFINITE);
+            autoRefreshTimeline.play();
+
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/Dashboard.fxml"));
             BorderPane root = loader.load();
             
             DashboardController controller = loader.getController();
+            this.currentDashboardController = controller;
             controller.setTitle("Receptionist Dashboard");
+            SystemTime.syncFromDatabase();
             controller.setUserInfo("Logged in as: " + rec.getUsername() + "   |   Date: " + SystemTime.getDate());
 
             VBox menu = controller.getSideMenu();
@@ -243,16 +377,23 @@ public class Main extends Application {
 
             menu.getChildren().addAll(today, checkIn, checkOut, allReservations, guests, rooms, time, chatBtn, logout);
 
-        today.setOnAction(e -> showList(content, "Today's Reservations",
-                Database.getReservations().stream()
-                        .filter(r -> r.getCheckInDate().isEqual(SystemTime.getToday()))
-                        .toList()));
-
+        today.setOnAction(e -> showList(content, "Today's Reservations", () -> {
+            Database.refreshReservationsFromDatabase();
+            return Database.getReservations().stream()
+                            .filter(r -> r.getCheckInDate().isEqual(SystemTime.getToday()))
+                            .toList();
+        }));
         checkIn.setOnAction(e -> showCheckIn(content));
         checkOut.setOnAction(e -> showCheckOut(content));
-        allReservations.setOnAction(e -> showList(content, "All Reservations", Database.getReservations()));
-        guests.setOnAction(e -> showList(content, "Guests", Database.getGuests()));
-        rooms.setOnAction(e -> showList(content, "Rooms", Database.getRooms()));
+        allReservations.setOnAction(e -> showList(content, "All Reservations", () -> {
+            Database.refreshReservationsFromDatabase();
+            return Database.getReservations();
+        }));
+        guests.setOnAction(e -> showList(content, "Guests", () -> {
+            Database.refreshUsersFromDatabase();
+            return Database.getGuests();
+        }));
+        rooms.setOnAction(e -> showList(content, "Rooms", () -> Database.getRooms()));
         time.setOnAction(e -> showAdvanceTime(content));
         chatBtn.setOnAction(e -> showChat(content));
         logout.setOnAction(e -> showLoginScreen());
@@ -262,7 +403,11 @@ public class Main extends Application {
         } catch (Exception e) { e.printStackTrace(); }
     }
 
+
+
+
     private void showRoomBrowser(VBox content, Guest guest) {
+        currentViewRefresher = null;
         content.getChildren().clear();
 
         Label title = sectionTitle("Browse Available Rooms");
@@ -290,6 +435,7 @@ public class Main extends Application {
         roomCards.setPadding(new Insets(10));
 
         Runnable loadRooms = () -> {
+            Database.refreshReservationsFromDatabase();
             roomCards.getChildren().clear();
 
             List<Room> rooms = Database.getRooms().stream()
@@ -320,6 +466,7 @@ public class Main extends Application {
 
         content.getChildren().addAll(title, filters, scroll);
         loadRooms.run();
+        this.currentViewRefresher = loadRooms;
     }
 
     private HBox roomCard(Room room, Guest guest, VBox content) {
@@ -382,6 +529,7 @@ public class Main extends Application {
     }
 
     private void showRoomDetails(VBox content, Guest guest, Room room) {
+        currentViewRefresher = null;
         content.getChildren().clear();
 
         Button back = outlineButton("BACK TO ROOMS", 170, 40);
@@ -422,6 +570,7 @@ public class Main extends Application {
     }
 
     private void showMakeReservation(VBox content, Guest guest) {
+        currentViewRefresher = null;
         content.getChildren().clear();
         content.getChildren().add(sectionTitle("Make Reservation"));
 
@@ -434,7 +583,7 @@ public class Main extends Application {
         TextField checkOut = smallInput("Check-out DD-MM-YYYY");
 
         CheckBox gym = new CheckBox("Add Gym Pass ($200)");
-        gym.setTextFill(Color.web(TEXTDARK));
+        gym.setStyle("-fx-text-fill: #000000; -fx-font-size: 14px;");
 
         ComboBox<Room> roomBox = new ComboBox<>();
         roomBox.setPromptText("Search first, then choose room");
@@ -452,6 +601,7 @@ public class Main extends Application {
 
         Button search = mainButton("SEARCH ROOMS", 180, 42);
         search.setOnAction(e -> {
+            Database.refreshReservationsFromDatabase();
             try {
                 if (typeBox.getValue() == null) {
                     msg.setText("Please select a room type.");
@@ -538,6 +688,7 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
     }
 
     private void showManageRoomTypes(VBox content) {
+        currentViewRefresher = null;
         content.getChildren().clear();
         content.getChildren().add(sectionTitle("Manage Room Types"));
 
@@ -565,6 +716,7 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
     }
 
     private void showManageAmenities(VBox content) {
+        currentViewRefresher = null;
         content.getChildren().clear();
         content.getChildren().add(sectionTitle("Manage Amenities"));
 
@@ -588,6 +740,7 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
     }
 
     private void showAddRoom(VBox content) {
+        currentViewRefresher = null;
         content.getChildren().clear();
         content.getChildren().add(sectionTitle("Add Room"));
 
@@ -607,7 +760,7 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
 
                 CatalogService.createRoom(roomNumber.getText().trim(), type.getValue());
                 alert("Success", "Room added.");
-                showList(content, "Rooms", Database.getRooms());
+                showList(content, "Rooms", () -> Database.getRooms());
 
             } catch (Exception ex) {
                 alert("Error", ex.getMessage());
@@ -618,6 +771,7 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
     }
 
     private void showAddReceptionist(VBox content, Admin admin) {
+        currentViewRefresher = null;
         content.getChildren().clear();
         content.getChildren().add(sectionTitle("Register Receptionist"));
 
@@ -651,6 +805,8 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
     }
 
     private void showCheckIn(VBox content) {
+        currentViewRefresher = null;
+        Database.refreshReservationsFromDatabase();
         content.getChildren().clear();
         content.getChildren().add(sectionTitle("Check In Guest"));
 
@@ -674,7 +830,7 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
                 Reservation r = box.getValue();
                 ReservationService.checkInGuest(r, r.getGuest());
                 alert("Success", "Guest checked in.");
-                showList(content, "Reservations", Database.getReservations());
+                showList(content, "Reservations", () -> Database.getReservations());
 
             } catch (Exception ex) {
                 alert("Error", ex.getMessage());
@@ -685,6 +841,8 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
     }
 
     private void showCheckOut(VBox content) {
+        currentViewRefresher = null;
+        Database.refreshReservationsFromDatabase();
         content.getChildren().clear();
         content.getChildren().add(sectionTitle("Check Out Guest"));
 
@@ -710,7 +868,7 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
 
                 ReservationService.checkOutGuest(box.getValue(), payment.getValue());
                 alert("Success", "Guest checked out.");
-                showList(content, "Reservations", Database.getReservations());
+                showList(content, "Reservations", () -> Database.getReservations());
 
             } catch (Exception ex) {
                 alert("Error", ex.getMessage());
@@ -721,6 +879,7 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
     }
 
     private void showAdvanceTime(VBox content) {
+        currentViewRefresher = null;
         content.getChildren().clear();
         content.getChildren().add(sectionTitle("Advance System Time"));
 
@@ -741,6 +900,9 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
                 ReservationService.cancelOverdueReservations();
 
                 today.setText("Current date: " + SystemTime.getDate());
+                if (currentDashboardController != null && currentUser != null) {
+                    currentDashboardController.setUserInfo("Logged in as: " + currentUser.getUsername() + "   |   Date: " + SystemTime.getDate());
+                }
                 alert("Success", "System date advanced.");
 
             } catch (Exception ex) {
@@ -748,10 +910,22 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
             }
         });
 
-        content.getChildren().addAll(today, days, advance);
+        Button reset = outlineButton("RESET TO REAL TODAY", 220, 42);
+        reset.setOnAction(e -> {
+            SystemTime.resetToRealToday();
+            ReservationService.cancelOverdueReservations();
+            today.setText("Current date: " + SystemTime.getDate());
+            if (currentDashboardController != null && currentUser != null) {
+                currentDashboardController.setUserInfo("Logged in as: " + currentUser.getUsername() + "   |   Date: " + SystemTime.getDate());
+            }
+            alert("Success", "System date reset to actual real-world date.");
+        });
+
+        content.getChildren().addAll(today, days, advance, reset);
     }
 
     private void showChat(VBox content) {
+        currentViewRefresher = null;
         content.getChildren().clear();
 
         Label title = sectionTitle("Live Reception Chat");
@@ -782,7 +956,7 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
         VBox headerText = new VBox(2);
         Label chatName = label("Hotel Live Chat", 18, TEXTDARK, true);
         chatName.setFont(Font.font("Georgia", FontWeight.NORMAL, 18));
-        Label chatStatus = label("Connected to reception desk", 12, MUTED, false);
+        Label chatStatus = label("Connected to secure database", 12, MUTED, false);
         headerText.getChildren().addAll(chatName, chatStatus);
 
         header.getChildren().addAll(avatar, headerText);
@@ -811,36 +985,99 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
         HBox bottom = new HBox(10, input, send);
         bottom.setAlignment(Pos.CENTER);
 
-        try {
-            ChatClient client = new ChatClient("localhost", 5000, currentUser.getUsername());
-            client.listen(chatArea);
-
-            chatArea.appendText("System: You joined the hotel live chat.\n");
-
-            send.setOnAction(e -> {
-                String msg = input.getText().trim();
-
-                if (!msg.isEmpty()) {
-                    client.send(msg);
-                    input.clear();
+        // SQL Chat Persistence Logic
+        int[] activeChatId = {-1};
+        
+        if (currentUser instanceof Guest) {
+            // Guests can select which receptionist to chat with
+            ComboBox<String> repSelector = new ComboBox<>();
+            repSelector.setPromptText("Select Receptionist...");
+            repSelector.setStyle(inputStyle() + "-fx-padding: 5; -fx-font-size: 13px;");
+            repSelector.setItems(FXCollections.observableArrayList(
+                    Database.getStaffMembers().stream().filter(s -> s instanceof Receptionist).map(User::getUsername).toList()
+            ));
+            repSelector.setOnAction(e -> {
+                if (repSelector.getValue() != null) {
+                    activeChatId[0] = ChatDatabase.getOrCreateChat(currentUser.getUsername(), repSelector.getValue());
+                    if (currentViewRefresher != null) currentViewRefresher.run();
                 }
             });
-
-            input.setOnAction(e -> send.fire());
-
-        } catch (Exception e) {
-            chatStatus.setText("Offline — start ChatServer.java first");
-            chatArea.setText("Cannot connect to server.\nMake sure ChatServer.java is running first.");
+            header.getChildren().add(repSelector);
+        } else {
+            // Receptionists/Admins can select which guest to chat with
+            ComboBox<String> guestSelector = new ComboBox<>();
+            guestSelector.setPromptText("Select a Guest to chat...");
+            guestSelector.setStyle(inputStyle() + "-fx-padding: 5; -fx-font-size: 13px;");
+            guestSelector.setItems(FXCollections.observableArrayList(
+                    Database.getGuests().stream().map(Guest::getUsername).toList()
+            ));
+            guestSelector.setOnAction(e -> {
+                if (guestSelector.getValue() != null) {
+                    activeChatId[0] = ChatDatabase.getOrCreateChat(guestSelector.getValue(), currentUser.getUsername());
+                    if (currentViewRefresher != null) currentViewRefresher.run();
+                }
+            });
+            header.getChildren().add(guestSelector);
         }
+
+        Runnable loadChatHistory = () -> {
+            if (activeChatId[0] != -1) {
+                chatArea.clear();
+                List<ChatDatabase.ChatMessage> msgs = ChatDatabase.loadChatMessages(activeChatId[0]);
+                for (ChatDatabase.ChatMessage m : msgs) {
+                    chatArea.appendText(m.getSenderUsername() + ": " + m.getMessage() + "\n");
+                }
+                chatArea.setScrollTop(Double.MAX_VALUE);
+            } else {
+                chatArea.setText("Please select a user from the dropdown above to view chat history...\n");
+            }
+        };
+
+        this.currentViewRefresher = loadChatHistory;
+        loadChatHistory.run();
+
+        send.setOnAction(e -> {
+            String msg = input.getText().trim();
+            if (!msg.isEmpty()) {
+                if (activeChatId[0] == -1) {
+                    alert("Error", "Please select a chat first.");
+                    return;
+                }
+                ChatDatabase.sendMessage(activeChatId[0], currentUser.getUsername(), msg);
+                input.clear();
+                loadChatHistory.run();
+            }
+        });
+
+        input.setOnAction(e -> send.fire());
 
         chatCard.getChildren().addAll(header, chatArea, bottom);
         content.getChildren().addAll(title, chatCard);
     }
 
-    private void showList(VBox content, String title, List<?> list) {
+    private void showList(VBox content, String title, java.util.function.Supplier<List<?>> listSupplier) {
+        currentViewRefresher = null;
         content.getChildren().clear();
         content.getChildren().add(sectionTitle(title));
-        addListView(content, list);
+
+        ListView<String> view = new ListView<>();
+        view.setPrefHeight(470);
+        view.setStyle("""
+                -fx-font-size: 14px;
+                -fx-background-color: #FFFFFF;
+                -fx-control-inner-background: #FFFFFF;
+                -fx-text-fill: #2B2421;
+                -fx-border-color: #C9AA7C;
+                -fx-border-radius: 8;
+                """);
+        content.getChildren().add(view);
+
+        Runnable dataRefresher = () -> {
+            List<?> list = listSupplier.get();
+            view.setItems(FXCollections.observableArrayList(list.stream().map(Object::toString).toList()));
+        };
+        dataRefresher.run();
+        this.currentViewRefresher = dataRefresher;
     }
 
     private void addListView(VBox content, List<?> list) {
@@ -859,6 +1096,7 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
     }
 
     private void showGuestProfile(VBox content, Guest guest) {
+        currentViewRefresher = null;
         content.getChildren().clear();
         content.getChildren().add(sectionTitle("My Profile"));
 
@@ -890,14 +1128,17 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
     }
 
     private void showGuestReservations(VBox content, Guest guest) {
-        showList(content, "My Reservations", 
-            Database.getReservations().stream()
+        showList(content, "My Reservations", () -> {
+            Database.refreshReservationsFromDatabase();
+            return Database.getReservations().stream()
                 .filter(r -> r.getGuest().getUsername().equals(guest.getUsername()))
-                .toList()
-        );
+                .toList();
+        });
     }
 
     private void showPayDeposit(VBox content, Guest guest) {
+        currentViewRefresher = null;
+        Database.refreshReservationsFromDatabase();
         content.getChildren().clear();
         content.getChildren().add(sectionTitle("Pay Deposit"));
 
@@ -929,6 +1170,8 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
     }
 
     private void showCancelReservation(VBox content, Guest guest) {
+        currentViewRefresher = null;
+        Database.refreshReservationsFromDatabase();
         content.getChildren().clear();
         content.getChildren().add(sectionTitle("Cancel Reservation"));
 

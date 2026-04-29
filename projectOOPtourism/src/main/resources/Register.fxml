@@ -24,7 +24,10 @@
                   <TextField fx:id="addressField" maxWidth="360.0" promptText="Address" styleClass="input-field" />
                   <ComboBox fx:id="genderBox" maxWidth="360.0" promptText="Gender" />
                   <TextField fx:id="prefsField" maxWidth="360.0" promptText="Room Preferences" styleClass="input-field" />
-                  
+                  <HBox alignment="CENTER" spacing="5">
+                     <Label text="Already registered?" style="-fx-text-fill: #2B2421; -fx-font-size: 14px;" />
+                     <Hyperlink text="Sign in here" onAction="#handleSignInLink" style="-fx-text-fill: #C74261; -fx-font-size: 14px; -fx-font-weight: bold; -fx-border-color: transparent;" />
+                  </HBox>
                   <Label fx:id="messageLabel" textFill="#c74261" />
                   
                   <Button mnemonicParsing="false" onAction="#handleRegister" prefHeight="45.0" prefWidth="240.0" styleClass="main-btn" text="CREATE ACCOUNT" />

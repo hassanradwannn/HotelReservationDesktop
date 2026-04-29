@@ -13,7 +13,7 @@
     <TextField fx:id="guestsField" maxWidth="360" promptText="Number of Guests" style="-fx-background-color: #FFFFFF; -fx-background-radius: 8; -fx-border-color: #C9AA7C; -fx-border-radius: 8; -fx-padding: 10; -fx-font-size: 14px; -fx-text-fill: #2B2421;" />
     <TextField fx:id="checkInField" maxWidth="360" promptText="Check-in DD-MM-YYYY" style="-fx-background-color: #FFFFFF; -fx-background-radius: 8; -fx-border-color: #C9AA7C; -fx-border-radius: 8; -fx-padding: 10; -fx-font-size: 14px; -fx-text-fill: #2B2421;" />
     <TextField fx:id="checkOutField" maxWidth="360" promptText="Check-out DD-MM-YYYY" style="-fx-background-color: #FFFFFF; -fx-background-radius: 8; -fx-border-color: #C9AA7C; -fx-border-radius: 8; -fx-padding: 10; -fx-font-size: 14px; -fx-text-fill: #2B2421;" />
-    <CheckBox fx:id="gymBox" text="Add Gym Pass ($200)" />
+    <CheckBox fx:id="gymBox" text="Add Gym Pass ($200)" style="-fx-text-fill: black;" />
     <Button onAction="#handleSearch" prefHeight="42" prefWidth="180" style="-fx-background-color: #C74261; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 7; -fx-font-size: 13px; -fx-cursor: hand;" text="SEARCH ROOMS" />
     <ComboBox fx:id="roomBox" maxWidth="360" promptText="Search first, then choose room" style="-fx-background-color: #FFFFFF; -fx-background-radius: 8; -fx-border-color: #C9AA7C; -fx-border-radius: 8;" />
     <Button onAction="#handleCreate" prefHeight="42" prefWidth="220" style="-fx-background-color: #C74261; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 7; -fx-font-size: 13px; -fx-cursor: hand;" text="CREATE RESERVATION" />
