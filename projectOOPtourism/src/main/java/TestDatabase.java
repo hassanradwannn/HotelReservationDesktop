@@ -1,5 +1,7 @@
 package DatabaseInitializer;
 
+import database.DatabaseConnection;
+
 public class TestDatabase {
     public static void main(String[] args) {
         try {

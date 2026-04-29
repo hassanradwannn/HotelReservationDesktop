@@ -1,8 +1,9 @@
 import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
+import DatabaseInitializer.DatabaseInitializer;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXMLLoader;
@@ -54,14 +55,16 @@ public class Main extends Application {
 
     @Override
     public void start(Stage stage) {
+        DatabaseInitializer.initializeDatabase();
+        Database.getRooms();
+        
+        // Sync generated rooms to MySQL so reservations don't fail Foreign Key constraints!
+        DatabaseSync.syncDefaultDataToMySQL();
+        
         this.stage = stage;
         stage.setTitle("Grand Budapest Hotel Reservation System");
         showLoginScreen();
         stage.show();
-    }
-
-    public void setCurrentUser(User user) {
-        this.currentUser = user;
     }
 
     public void showLoginScreen() {
@@ -73,6 +76,19 @@ public class Main extends Application {
             LoginController controller = loader.getController();
             controller.setMainApp(this);
             
+            stage.setScene(new Scene(root, WIDTH, HEIGHT));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void showForgotPasswordScreen() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/ForgotPassword.fxml"));
+            AnchorPane root = loader.load();
+            
+            ForgotPasswordController controller = loader.getController();
+            controller.setMainApp(this);
             stage.setScene(new Scene(root, WIDTH, HEIGHT));
         } catch (Exception e) {
             e.printStackTrace();
@@ -121,13 +137,16 @@ public class Main extends Application {
         this.selectedRoomForReservation = room;
     }
 
+    public void setCurrentUser(User user) {
+        this.currentUser = user;
+    }
+
     public void showGuestDashboard(Guest guest) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/Dashboard.fxml"));
             BorderPane root = loader.load();
             
             DashboardController controller = loader.getController();
-            controller.setMainApp(this);
             controller.setTitle("Guest Dashboard");
             controller.setUserInfo("Logged in as: " + guest.getUsername() + "   |   Date: " + SystemTime.getDate());
 
@@ -146,16 +165,14 @@ public class Main extends Application {
 
             menu.getChildren().addAll(profile, rooms, reserve, myReservations, deposit, cancel, time, chatBtn, logout);
 
-        profile.setOnAction(e -> switchDashboardContent(content, "/GuestProfile.fxml", guest));
-
-        rooms.setOnAction(e -> switchDashboardContent(content, "/RoomBrowser.fxml", guest));
-        reserve.setOnAction(e -> switchDashboardContent(content, "/MakeReservation.fxml", guest));
-
-        myReservations.setOnAction(e ->  switchDashboardContent(content, "/GuestReservations.fxml", guest));
-        deposit.setOnAction(e -> switchDashboardContent(content, "/PayDeposit.fxml", guest));
-        cancel.setOnAction(e -> switchDashboardContent(content, "/CancelReservation.fxml", guest));
-        time.setOnAction(e -> switchDashboardContent(content, "/AdvanceTime.fxml", guest));
-        chatBtn.setOnAction(e -> switchDashboardContent(content, "/LiveChat.fxml", guest));
+        profile.setOnAction(e -> showGuestProfile(content, guest));
+        rooms.setOnAction(e -> showRoomBrowser(content, guest));
+        reserve.setOnAction(e -> showMakeReservation(content, guest));
+        myReservations.setOnAction(e -> showGuestReservations(content, guest));
+        deposit.setOnAction(e -> showPayDeposit(content, guest));
+        cancel.setOnAction(e -> showCancelReservation(content, guest));
+        time.setOnAction(e -> showAdvanceTime(content));
+        chatBtn.setOnAction(e -> showChat(content));
         logout.setOnAction(e -> showLoginScreen());
 
         profile.fire();
@@ -169,7 +186,6 @@ public class Main extends Application {
             BorderPane root = loader.load();
             
             DashboardController controller = loader.getController();
-            controller.setMainApp(this);
             controller.setTitle("Admin Dashboard");
             controller.setUserInfo("Logged in as: " + admin.getUsername() + "   |   Date: " + SystemTime.getDate());
 
@@ -209,7 +225,6 @@ public class Main extends Application {
             BorderPane root = loader.load();
             
             DashboardController controller = loader.getController();
-            controller.setMainApp(this);
             controller.setTitle("Receptionist Dashboard");
             controller.setUserInfo("Logged in as: " + rec.getUsername() + "   |   Date: " + SystemTime.getDate());
 
@@ -511,7 +526,7 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
                                 + "\nTotal: $" + money(res.getTotalPrice())
                                 + "\nDeposit: $" + money(ReservationService.getDepositAmount(res)));
 
-                switchDashboardContent(content, "/GuestReservations.fxml", guest);
+                showGuestReservations(content, guest);
 
             } catch (Exception ex) {
                 msg.setText("Reservation failed: " + ex.getMessage());
@@ -841,6 +856,107 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
                 -fx-border-radius: 8;
                 """);
         content.getChildren().add(view);
+    }
+
+    private void showGuestProfile(VBox content, Guest guest) {
+        content.getChildren().clear();
+        content.getChildren().add(sectionTitle("My Profile"));
+
+        // Fetch fresh data from DB to reflect external SQL updates instantly
+        User freshData = UserDatabase.findUser(guest.getUsername());
+        if (freshData instanceof Guest dbGuest) {
+            guest.setBalance(dbGuest.getBalance());
+        }
+
+        VBox details = new VBox(15);
+        details.setPadding(new Insets(20));
+        details.setStyle("""
+                -fx-background-color: #FFFFFF;
+                -fx-background-radius: 14;
+                -fx-border-color: #C9AA7C;
+                -fx-border-radius: 14;
+                """);
+
+        details.getChildren().addAll(
+            info("Username: " + guest.getUsername()),
+            info("Date of Birth: " + guest.getDateOfBirth()),
+            info("Balance: $" + money(guest.getBalance())),
+            info("Address: " + guest.getAddress()),
+            info("Gender: " + guest.getGender()),
+            info("Room Preferences: " + guest.getRoomPreferences())
+        );
+
+        content.getChildren().add(details);
+    }
+
+    private void showGuestReservations(VBox content, Guest guest) {
+        showList(content, "My Reservations", 
+            Database.getReservations().stream()
+                .filter(r -> r.getGuest().getUsername().equals(guest.getUsername()))
+                .toList()
+        );
+    }
+
+    private void showPayDeposit(VBox content, Guest guest) {
+        content.getChildren().clear();
+        content.getChildren().add(sectionTitle("Pay Deposit"));
+
+        ComboBox<Reservation> box = new ComboBox<>(FXCollections.observableArrayList(
+                Database.getReservations().stream()
+                        .filter(r -> r.getGuest().getUsername().equals(guest.getUsername()))
+                        .filter(r -> !r.isDepositPaid() && r.getStatus() == ReservationStatus.PENDING)
+                        .toList()
+        ));
+        box.setPromptText("Select Reservation");
+        box.setMaxWidth(420);
+
+        Button pay = mainButton("PAY DEPOSIT", 170, 42);
+        pay.setOnAction(e -> {
+            try {
+                if (box.getValue() == null) {
+                    alert("Error", "Please select a reservation first.");
+                    return;
+                }
+                ReservationService.payDeposit(box.getValue(), guest);
+                alert("Success", "Deposit paid successfully. Status is now CONFIRMED.");
+                showPayDeposit(content, guest);
+            } catch (Exception ex) {
+                alert("Error", ex.getMessage());
+            }
+        });
+
+        content.getChildren().addAll(box, pay);
+    }
+
+    private void showCancelReservation(VBox content, Guest guest) {
+        content.getChildren().clear();
+        content.getChildren().add(sectionTitle("Cancel Reservation"));
+
+        ComboBox<Reservation> box = new ComboBox<>(FXCollections.observableArrayList(
+                Database.getReservations().stream()
+                        .filter(r -> r.getGuest().getUsername().equals(guest.getUsername()))
+                        .filter(r -> r.getStatus() == ReservationStatus.PENDING || r.getStatus() == ReservationStatus.CONFIRMED)
+                        .toList()
+        ));
+        box.setPromptText("Select Reservation to Cancel");
+        box.setMaxWidth(420);
+
+        Button cancel = mainButton("CANCEL RESERVATION", 190, 42);
+        cancel.setOnAction(e -> {
+            try {
+                if (box.getValue() == null) {
+                    alert("Error", "Please select a reservation first.");
+                    return;
+                }
+                ReservationService.cancelReservation(box.getValue().getReservationId());
+                alert("Success", "Reservation cancelled successfully.");
+                showCancelReservation(content, guest);
+            } catch (Exception ex) {
+                alert("Error", ex.getMessage());
+            }
+        });
+
+        content.getChildren().addAll(box, cancel);
     }
 
     public TextField smallInput(String prompt) {

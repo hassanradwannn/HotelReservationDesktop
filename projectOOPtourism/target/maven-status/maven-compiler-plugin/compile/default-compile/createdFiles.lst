@@ -19,6 +19,7 @@ CatalogService.class
 exceptions\InvalidPasswordException.class
 PaymentMethod.class
 RoomType.class
+UserDatabase.class
 Payable.class
 Staff.class
 exceptions\AlreadyExistsException.class

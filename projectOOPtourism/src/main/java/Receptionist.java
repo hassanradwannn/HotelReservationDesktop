@@ -9,6 +9,10 @@ public class Receptionist extends Staff {
         super(username, password, dateOfBirth, Role.RECEPTIONIST, workingHours);
     }
 
+      
+
+   
+
     public void viewReservations(LocalDate checkIn) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         System.out.println("Viewing reservations for " + checkIn.format(formatter));

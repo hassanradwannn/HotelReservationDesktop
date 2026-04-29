@@ -1,19 +1,26 @@
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
 
-import exceptions.*;
+import database.DatabaseConnection;
+import exceptions.InvalidCredentialsException;
+
+
 
 public class Database {
     // Static lists acting as our in-memory tables
-    private static ArrayList<Guest> guests = new ArrayList<>();
-    private static ArrayList<Staff> staffMembers = new ArrayList<>();
-    private static ArrayList<Room> rooms = new ArrayList<>();
-    private static ArrayList<RoomType> roomTypes = new ArrayList<>();
-    private static ArrayList<Amenity> amenities = new ArrayList<>();
-    private static ArrayList<Reservation> reservations = new ArrayList<>();
-    private static ArrayList<Invoice> invoices = new ArrayList<>();
+    private static final ArrayList<Guest> guests = new ArrayList<>();
+    private static final ArrayList<Staff> staffMembers = new ArrayList<>();
+    private static final ArrayList<Room> rooms = new ArrayList<>();
+    private static final ArrayList<RoomType> roomTypes = new ArrayList<>();
+    private static final ArrayList<Amenity> amenities = new ArrayList<>();
+    private static final ArrayList<Reservation> reservations = new ArrayList<>();
+    private static final ArrayList<Invoice> invoices = new ArrayList<>();
 
     public static ArrayList<Guest> getGuests() { return guests; }
     public static ArrayList<Staff> getStaffMembers() { return staffMembers; }
@@ -24,16 +31,12 @@ public class Database {
     public static ArrayList<Invoice> getInvoices() { return invoices; }
 
     static {
-        Admin admin = new Admin("Admin", "Admin@123", LocalDate.of(1964, 4, 19), 6);
-        Receptionist receptionist = new Receptionist("Manar", "Manar2002", LocalDate.of(2002, 6, 13), 8);
-        Guest defaultGuest = new Guest("Hassan", "Hassan123", LocalDate.of(2007, 4, 10), 10000, "2 haram",Gender.MALE, "");
+        // Load users from SQL database
+        loadUsersFromDatabase();
 
-        try {
-            Authentication.register(admin);
-            Authentication.register(receptionist);
-            Authentication.register(defaultGuest);
-        } catch (InvalidCredentialsException e) {
-            System.out.println("Error: Could not initialize staff.");
+        // If database is empty, add demo users for testing
+        if (guests.isEmpty() && staffMembers.isEmpty()) {
+            initializeDemoUsers();
         }
 
         Amenity wifi = new Amenity("WiFi", 10);
@@ -62,6 +65,32 @@ public class Database {
         generateRoomRange(400, 420, deluxe);
         generateRoomRange(500, 520, suite);
         generateRoomRange(600, 620, penthouse);
+
+        // Load reservations from database
+        loadReservationsFromDatabase();
+    }
+
+    private static void loadUsersFromDatabase() {
+        ArrayList<User> loadedUsers = UserDatabase.loadUsersFromDatabase();
+        System.out.println("Loaded " + loadedUsers.size() + " users from database.");
+        for (User user : loadedUsers) {
+            addUser(user);
+        }
+    }
+
+    private static void initializeDemoUsers() {
+        System.out.println("No users found in database. Initializing demo users...");
+        Admin admin = new Admin("Admin", "Admin@123", LocalDate.of(1964, 4, 19), 6);
+        Receptionist receptionist = new Receptionist("Manar", "Manar2002", LocalDate.of(2002, 6, 13), 8);
+        Guest defaultGuest = new Guest("Hassan", "Hassan123", LocalDate.of(2007, 4, 10), 10000, "2 haram", Gender.MALE, "");
+
+        try {
+            Authentication.register(admin);
+            Authentication.register(receptionist);
+            Authentication.register(defaultGuest);
+        } catch (InvalidCredentialsException e) {
+            System.out.println("Error: Could not initialize demo users.");
+        }
     }
 
     private static void generateRoomRange(int start, int end, RoomType type) {
@@ -122,5 +151,60 @@ public class Database {
         return null;
     }
 
-}
+    public static void refreshUsersFromDatabase() {
+        // Clear current in-memory users
+        getGuests().clear();
+        getStaffMembers().clear();
 
+        // Reload from database
+        ArrayList<User> loadedUsers = UserDatabase.loadUsersFromDatabase();
+        System.out.println("Refreshed " + loadedUsers.size() + " users from database.");
+        for (User user : loadedUsers) {
+            addUser(user);
+        }
+    }
+
+    private static void loadReservationsFromDatabase() {
+        String sql = "SELECT * FROM reservations";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                String resId = rs.getString("reservation_id");
+                String guestUsername = rs.getString("guest_username");
+                String roomNumber = rs.getString("room_number");
+                LocalDate checkIn = rs.getDate("check_in_date").toLocalDate();
+                LocalDate checkOut = rs.getDate("check_out_date").toLocalDate();
+                String statusStr = rs.getString("status");
+                ReservationStatus status = ReservationStatus.valueOf(statusStr.toUpperCase());
+
+                User user = findUser(guestUsername);
+                Room room = null;
+                for (Room r : rooms) {
+                    if (r.getRoomNumber().equalsIgnoreCase(roomNumber)) {
+                        room = r;
+                        break;
+                    }
+                }
+
+                if (user instanceof Guest guest && room != null && resId != null) {
+                    Reservation res = new Reservation(resId, guest, room, checkIn, checkOut, status, false);
+                    res.setTotalPrice();
+
+                    if (status == ReservationStatus.CONFIRMED || status == ReservationStatus.ONGOING || status == ReservationStatus.COMPLETED) {
+                        res.setDepositPaid(true);
+                    }
+                    if (status == ReservationStatus.COMPLETED) {
+                        res.setFullPaid(true);
+                    }
+
+                    reservations.add(res);
+                }
+            }
+            System.out.println("Loaded " + reservations.size() + " reservations from database.");
+        } catch (SQLException e) {
+            System.out.println("Error loading reservations from database: " + e.getMessage());
+        }
+    }
+}

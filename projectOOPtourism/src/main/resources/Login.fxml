@@ -32,6 +32,10 @@
                         <Font size="15.0" />
                      </font></Button>
                   <Button mnemonicParsing="false" onAction="#handleRegister" prefHeight="42.0" prefWidth="210.0" styleClass="outline-btn" text="REGISTER AS GUEST" />
+            
+            <Hyperlink onAction="#handleForgotPassword" text="Forgot Password?" textFill="#8f1d3f" underline="true">
+               <font><Font name="System Bold" size="13.0" /></font>
+            </Hyperlink>
 
                   <Label fx:id="messageLabel" textFill="#c74261" />
                   <Label maxWidth="360.0" text="Demo users: Admin / Admin@123 | Hassan / Hassan123 | Manar / Manar2002" textFill="#8a726b" wrapText="true" />
@@ -48,7 +52,7 @@
                   <Label text="RESERVE YOUR&#10;SUITE" textFill="#2b2421">
                      <font><Font name="Georgia" size="42.0" /></font>
                   </Label>
-                  <Label text="Cairo, Arab Republic of Egypt" textFill="#8f1d3f" />
+                  <Label text="Cairo, Arab Republic of Egypt - Est. 1908" textFill="#8f1d3f" />
                   <Separator maxWidth="270.0" style="-fx-background-color: #C9AA7C;" />
                   <Button mnemonicParsing="false" onAction="#handleRegister" prefHeight="45.0" prefWidth="160.0" styleClass="book-btn" text="BOOK NOW">
                      <font>

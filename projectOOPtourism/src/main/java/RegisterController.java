@@ -1,10 +1,13 @@
-import exceptions.InvalidCredentialsException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import java.time.format.DateTimeFormatter;
-import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextField;
 
 public class RegisterController {
     @FXML private TextField usernameField;
@@ -49,14 +52,16 @@ public class RegisterController {
             mainApp.alert("Success", "Account created successfully. You can now log in.");
             mainApp.showLoginScreen();
 
-        } catch (InvalidCredentialsException ex) {
-            messageLabel.setText(ex.getMessage());
         } catch (DateTimeParseException ex) {
             messageLabel.setText("Invalid date format. Use DD-MM-YYYY.");
         } catch (NumberFormatException ex) {
             messageLabel.setText("Balance must be a number.");
         } catch (Exception ex) {
-            messageLabel.setText("Please fill all fields correctly.");
+            if (ex.getMessage() != null && !ex.getMessage().isEmpty()) {
+                messageLabel.setText(ex.getMessage());
+            } else {
+                messageLabel.setText("Please fill all fields correctly.");
+            }
         }
     }
 

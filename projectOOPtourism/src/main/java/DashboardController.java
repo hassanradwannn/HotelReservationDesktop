@@ -8,12 +8,6 @@ public class DashboardController {
     @FXML private VBox sideMenu;
     @FXML private VBox contentArea;
 
-    private Main mainApp;
-
-    public void setMainApp(Main mainApp) {
-        this.mainApp = mainApp;
-    }
-
     public void setTitle(String title) {
         titleLabel.setText(title);
     }
@@ -25,4 +19,9 @@ public class DashboardController {
     public VBox getSideMenu() { return sideMenu; }
 
     public VBox getContentArea() { return contentArea; }
+}
+
+
+interface DashboardContentController {
+    void initData(Main mainApp, Object data);
 }

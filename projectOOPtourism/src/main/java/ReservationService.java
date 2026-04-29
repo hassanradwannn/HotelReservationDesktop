@@ -2,6 +2,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
 import exceptions.InvalidPaymentException;
 
 public abstract class ReservationService {
@@ -70,11 +71,19 @@ public abstract class ReservationService {
         reservation.setTotalPrice();
         reservations.add(reservation);
 
-  
-
+        // Save to database
+        DatabaseSaver.saveReservation(
+                reservation.getReservationId(),
+                guest.getUsername(),
+                room.getRoomNumber(),
+                checkIn,
+                checkOut,
+                reservation.getStatus().toString());
+                
         if (checkIn.isEqual(today)) {
             reservation.setStatus(ReservationStatus.CONFIRMED);
             reservation.setDepositPaid(true);
+            DatabaseSaver.updateReservationStatus(reservation.getReservationId(), ReservationStatus.CONFIRMED.toString());
         }
 
         return reservation;
@@ -83,7 +92,22 @@ public abstract class ReservationService {
     public static void cancelReservation(String reservationId) {
         for (Reservation reservation : reservations) {
             if (reservation.getReservationId().equals(reservationId)) {
+                
+                // Refund the deposit back to the guest's balance if it was already paid
+                if (reservation.isDepositPaid()) {
+                    Guest guest = reservation.getGuest();
+                    User freshData = UserDatabase.findUser(guest.getUsername());
+                    if (freshData instanceof Guest dbGuest) {
+                        guest.setBalance(dbGuest.getBalance());
+                    }
+                    double refundAmount = getDepositAmount(reservation);
+                    guest.setBalance(guest.getBalance() + refundAmount);
+                    DatabaseSaver.updateUserBalance(guest.getUsername(), guest.getBalance());
+                    reservation.setDepositPaid(false);
+                }
+
                 reservation.setStatus(ReservationStatus.CANCELLED);
+                DatabaseSaver.updateReservationStatus(reservationId, ReservationStatus.CANCELLED.toString());
                 return;
             }
         }
@@ -103,6 +127,12 @@ public abstract class ReservationService {
             throw new IllegalArgumentException("Deposit already paid.");
         }
 
+        // Fetch fresh data from DB to reflect external SQL updates instantly
+        User freshData = UserDatabase.findUser(guest.getUsername());
+        if (freshData instanceof Guest dbGuest) {
+            guest.setBalance(dbGuest.getBalance());
+        }
+
         double deposit = getDepositAmount(reservation);
         if (guest.getBalance() < deposit) {
             throw new IllegalArgumentException(
@@ -110,8 +140,17 @@ public abstract class ReservationService {
         }
 
         guest.setBalance(guest.getBalance() - deposit);
+        DatabaseSaver.updateUserBalance(guest.getUsername(), guest.getBalance());
         reservation.setDepositPaid(true);
         reservation.setStatus(ReservationStatus.CONFIRMED);
+        DatabaseSaver.updateReservationStatus(reservation.getReservationId(), ReservationStatus.CONFIRMED.toString());
+
+        // Log this transaction as an invoice
+        try {
+            Invoice depositInvoice = new Invoice(deposit, PaymentMethod.ONLINE);
+            DatabaseSaver.saveInvoice(guest.getUsername(), reservation.getRoom().getRoomNumber(), deposit, "DEPOSIT_ONLINE", true);
+        } catch (Exception e) {}
+
         return true;
 
         // reservation.setDepositPaid(true);
@@ -128,13 +167,19 @@ public abstract class ReservationService {
             throw new IllegalArgumentException("Check-in date has not arrived yet.");
         }
 
+        // Fetch fresh data from DB to reflect external SQL updates instantly
+        User freshData = UserDatabase.findUser(guest.getUsername());
+        if (freshData instanceof Guest dbGuest) {
+            guest.setBalance(dbGuest.getBalance());
+        }
+
         double requiredAtCheckIn = getRemainingAmount(reservation);
         if (guest.getBalance() < requiredAtCheckIn)  {
-            cancelReservation(reservation.getReservationId());
             throw new IllegalArgumentException("Insufficient balance, you need $" + (requiredAtCheckIn - guest.getBalance()) + " more to check in.");
         }
 
         reservation.setStatus(ReservationStatus.ONGOING);
+        DatabaseSaver.updateReservationStatus(reservation.getReservationId(), ReservationStatus.ONGOING.toString());
         return true;
     }
 
@@ -148,22 +193,33 @@ public abstract class ReservationService {
         }
 
         Guest guest = reservation.getGuest();
+        
+        // Fetch fresh data from DB to reflect external SQL updates instantly
+        User freshData = UserDatabase.findUser(guest.getUsername());
+        if (freshData instanceof Guest dbGuest) {
+            guest.setBalance(dbGuest.getBalance());
+        }
+
         double remaining = getRemainingAmount(reservation);
         if (guest.getBalance() < remaining) {
             throw new IllegalArgumentException("Insufficient balance for checkout payment. Need $" + remaining + ", have $" + guest.getBalance());
         }
 
         guest.setBalance(guest.getBalance() - remaining);
+        DatabaseSaver.updateUserBalance(guest.getUsername(), guest.getBalance());
         try {
             Invoice invoice = new Invoice(remaining, paymentMethod);
             invoice.processPayment();
+            DatabaseSaver.saveInvoice(guest.getUsername(), reservation.getRoom().getRoomNumber(), remaining, paymentMethod.toString(), true);
         } catch (InvalidPaymentException e) {
             guest.setBalance(guest.getBalance() + remaining);
+            DatabaseSaver.updateUserBalance(guest.getUsername(), guest.getBalance()); // Rollback DB on fail
             throw new IllegalArgumentException("Checkout payment failed: " + e.getMessage());
         }
 
         reservation.setFullPaid(true);
         reservation.setStatus(ReservationStatus.COMPLETED);
+        DatabaseSaver.updateReservationStatus(reservation.getReservationId(), ReservationStatus.COMPLETED.toString());
         return true;
     }
 
@@ -195,6 +251,22 @@ public abstract class ReservationService {
     public static void cancelOverdueReservations() {
         LocalDate today = SystemTime.getToday();
         for (Reservation reservation : new ArrayList<>(reservations)) {
+
+            // Only confirm PENDING reservations for today if deposit has been paid
+            if (reservation.getStatus() == ReservationStatus.PENDING && reservation.getCheckInDate().isEqual(today)) {
+                if (reservation.isDepositPaid()) {
+                    reservation.setStatus(ReservationStatus.CONFIRMED);
+                    DatabaseSaver.updateReservationStatus(reservation.getReservationId(), ReservationStatus.CONFIRMED.toString());
+                }
+            }
+
+            // Cancel if deposit is overdue (after a day)
+            if (reservation.getStatus() == ReservationStatus.PENDING && reservation.isDepositOverdue()) {
+                reservation.setStatus(ReservationStatus.CANCELLED);
+                DatabaseSaver.updateReservationStatus(reservation.getReservationId(), ReservationStatus.CANCELLED.toString());
+                System.out.println("Reservation " + reservation.getReservationId() + " has been cancelled due to unpaid deposit.");
+            }
+
             if (reservation.getStatus() == ReservationStatus.CANCELLED
                     || reservation.getStatus() == ReservationStatus.ONGOING
                     || reservation.getStatus() == ReservationStatus.COMPLETED) {
@@ -204,6 +276,7 @@ public abstract class ReservationService {
             LocalDate checkIn = reservation.getCheckInDate();
             if (checkIn != null && checkIn.isBefore(today)) {
                 reservation.setStatus(ReservationStatus.CANCELLED);
+                DatabaseSaver.updateReservationStatus(reservation.getReservationId(), ReservationStatus.CANCELLED.toString());
                 System.out.println("Reservation " + reservation.getReservationId() + " has been cancelled due to missed check-in (date passed: " + checkIn + ").");
             }
         }

@@ -13,7 +13,6 @@ public class Reservation {
     private LocalDate depositDeadline;
     private boolean depositPaid;
     private boolean fullPaid;
-    private boolean isSameDay;
 
     public Reservation(String reservationId, Guest guest, Room room,
                        LocalDate checkInDate, LocalDate checkOutDate,
@@ -28,11 +27,14 @@ public class Reservation {
         this.depositDeadline = SystemTime.getToday().plusDays(1);
         this.depositPaid = false;
         this.fullPaid = false;
-        setSameDay();
+    }
+
+    public boolean isSameDayBooking() {
+        return this.checkInDate != null && this.checkInDate.isEqual(SystemTime.getToday());
     }
 
     public final double getDepositAmount() {
-        if (isSameDay) {
+        if (isSameDayBooking()) {
             return 0.0;
         }
         return this.totalPrice * 0.25;
@@ -113,12 +115,6 @@ public class Reservation {
 
     public double getTotalPrice() {
         return this.totalPrice;
-    }
-
-    private void setSameDay() {
-        if(this.checkInDate != null && this.checkInDate.isEqual(SystemTime.getToday())) {
-            isSameDay = true;
-        }
     }
 
     @Override
