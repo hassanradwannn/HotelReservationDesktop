@@ -1,4 +1,5 @@
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -36,6 +37,19 @@ public class MakeReservationController implements DashboardContentController {
             msgLabel.setText("Selected Room " + selectedRoom.getRoomNumber() + " automatically.");
             msgLabel.setTextFill(Color.web("#8F1D3F"));
         }
+
+        javafx.application.Platform.runLater(() -> {
+            if (typeBox.getScene() != null) {
+                for (javafx.scene.Node node : typeBox.getScene().getRoot().lookupAll(".label")) {
+                    if (node instanceof Label label && label.getText() != null && label.getText().toLowerCase().contains("reservation")) {
+                        String currentStyle = label.getStyle() == null ? "" : label.getStyle();
+                        label.setStyle(currentStyle + "; -fx-text-fill: #2B2421;");
+                    }
+                }
+                String gymStyle = gymBox.getStyle() == null ? "" : gymBox.getStyle();
+                gymBox.setStyle(gymStyle + "; -fx-text-fill: #2B2421;");
+            }
+        });
     }
 
     @FXML
@@ -48,8 +62,9 @@ public class MakeReservationController implements DashboardContentController {
             }
 
             int numGuests = Integer.parseInt(guestsField.getText().trim());
-            LocalDate in = LocalDate.parse(checkInField.getText().trim());
-            LocalDate out = LocalDate.parse(checkOutField.getText().trim());
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d-M-yyyy");
+            LocalDate in = LocalDate.parse(checkInField.getText().trim(), formatter);
+            LocalDate out = LocalDate.parse(checkOutField.getText().trim(), formatter);
 
             if (!ReservationService.isDateRangeValid(in, out)) {
                 msgLabel.setText("Invalid dates. Check-out must be after check-in.");
@@ -72,7 +87,7 @@ public class MakeReservationController implements DashboardContentController {
             msgLabel.setText("Number of guests must be a number.");
             msgLabel.setTextFill(Color.web("#C74261"));
         } catch (Exception ex) {
-            msgLabel.setText("Enter valid room type, guests, and dates YYYY-MM-DD.");
+            msgLabel.setText("Enter valid room type, guests, and dates DD-MM-YYYY.");
             msgLabel.setTextFill(Color.web("#C74261"));
         }
     }
@@ -86,8 +101,9 @@ public class MakeReservationController implements DashboardContentController {
                 return;
             }
 
-            LocalDate in = LocalDate.parse(checkInField.getText().trim());
-            LocalDate out = LocalDate.parse(checkOutField.getText().trim());
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d-M-yyyy");
+            LocalDate in = LocalDate.parse(checkInField.getText().trim(), formatter);
+            LocalDate out = LocalDate.parse(checkOutField.getText().trim(), formatter);
 
             if (!ReservationService.isDateRangeValid(in, out)) {
                 msgLabel.setText("Invalid date range.");

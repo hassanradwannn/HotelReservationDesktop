@@ -1,4 +1,5 @@
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 public class Reservation {
     private String reservationId;
@@ -122,10 +123,11 @@ public class Reservation {
 
     @Override
     public String toString() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         return "ID: " + getReservationId()
                 + " | Guest: " + getGuest().getUsername()
                 + " | Room: " + getRoom().getRoomNumber()
-                + " | " + getCheckInDate() + " : " + getCheckOutDate()
+                + " | " + getCheckInDate().format(formatter) + " : " + getCheckOutDate().format(formatter)
                 + " | Status: " + getStatus();
     }
 }

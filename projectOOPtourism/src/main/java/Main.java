@@ -1,5 +1,6 @@
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import javafx.application.Application;
@@ -82,6 +83,7 @@ public class Main extends Application {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/Register.fxml"));
             AnchorPane root = loader.load();
+            
             RegisterController controller = loader.getController();
             controller.setMainApp(this);
             stage.setScene(new Scene(root, WIDTH, HEIGHT));
@@ -95,6 +97,7 @@ public class Main extends Application {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlFile));
             javafx.scene.Node node = loader.load();
+            
             Object controller = loader.getController();
             if (controller instanceof DashboardContentController contentController) {
                 contentController.initData(this, data);
@@ -122,6 +125,7 @@ public class Main extends Application {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/Dashboard.fxml"));
             BorderPane root = loader.load();
+            
             DashboardController controller = loader.getController();
             controller.setMainApp(this);
             controller.setTitle("Guest Dashboard");
@@ -163,6 +167,7 @@ public class Main extends Application {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/Dashboard.fxml"));
             BorderPane root = loader.load();
+            
             DashboardController controller = loader.getController();
             controller.setMainApp(this);
             controller.setTitle("Admin Dashboard");
@@ -202,6 +207,7 @@ public class Main extends Application {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/Dashboard.fxml"));
             BorderPane root = loader.load();
+            
             DashboardController controller = loader.getController();
             controller.setMainApp(this);
             controller.setTitle("Receptionist Dashboard");
@@ -245,6 +251,8 @@ public class Main extends Application {
         content.getChildren().clear();
 
         Label title = sectionTitle("Browse Available Rooms");
+        title.setStyle("-fx-text-fill: #000000;");
+        
 
         ComboBox<RoomType> typeFilter = new ComboBox<>(FXCollections.observableArrayList(Database.getRoomTypes()));
         typeFilter.setPromptText("Filter by Room Type");
@@ -320,7 +328,7 @@ public class Main extends Application {
                 -fx-border-radius: 12;
                 """);
 
-        Label imageText = label("ROOM\n" + room.getRoomNumber(), 22, BURGUNDY, true);
+        Label imageText = label("ROOM\n" + room.getRoomNumber(), 22, TEXTDARK, true);
         imageText.setFont(Font.font("Georgia", FontWeight.NORMAL, 22));
         imageText.setAlignment(Pos.CENTER);
         imageBox.getChildren().add(imageText);
@@ -328,7 +336,7 @@ public class Main extends Application {
         VBox details = new VBox(7);
         details.setPrefWidth(560);
 
-        Label roomTitle = label("Room " + room.getRoomNumber() + " — " + room.getRoomType().getName(), 22, TEXT, true);
+        Label roomTitle = label("Room " + room.getRoomNumber() + " — " + room.getRoomType().getName(), 22, TEXTDARK, true);
         roomTitle.setFont(Font.font("Georgia", FontWeight.NORMAL, 22));
 
         Label price = label("Price per night: $" + money(room.getRoomType().getPricePerNight()), 14, BURGUNDY, true);
@@ -407,11 +415,11 @@ public class Main extends Application {
         typeBox.setMaxWidth(360);
 
         TextField guests = smallInput("Number of Guests");
-        TextField checkIn = smallInput("Check-in YYYY-MM-DD");
-        TextField checkOut = smallInput("Check-out YYYY-MM-DD");
+        TextField checkIn = smallInput("Check-in DD-MM-YYYY");
+        TextField checkOut = smallInput("Check-out DD-MM-YYYY");
 
         CheckBox gym = new CheckBox("Add Gym Pass ($200)");
-        gym.setTextFill(Color.web(TEXT));
+        gym.setTextFill(Color.web(TEXTDARK));
 
         ComboBox<Room> roomBox = new ComboBox<>();
         roomBox.setPromptText("Search first, then choose room");
@@ -437,8 +445,9 @@ public class Main extends Application {
                 }
 
                 int numGuests = Integer.parseInt(guests.getText().trim());
-                LocalDate in = LocalDate.parse(checkIn.getText().trim());
-                LocalDate out = LocalDate.parse(checkOut.getText().trim());
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d-M-yyyy");
+                LocalDate in = LocalDate.parse(checkIn.getText().trim(), formatter);
+                LocalDate out = LocalDate.parse(checkOut.getText().trim(), formatter);
 
                 if (!ReservationService.isDateRangeValid(in, out)) {
                     msg.setText("Invalid dates. Check-out must be after check-in.");
@@ -460,7 +469,7 @@ public class Main extends Application {
                 msg.setText("Number of guests must be a number.");
                 msg.setTextFill(Color.web(ROSE));
             } catch (DateTimeParseException ex) {
-                msg.setText("Use date format YYYY-MM-DD.");
+                msg.setText("Use date format DD-MM-YYYY.");
                 msg.setTextFill(Color.web(ROSE));
             } catch (Exception ex) {
                 msg.setText("Enter valid room type, guests, and dates.");
@@ -477,8 +486,9 @@ public class Main extends Application {
                     return;
                 }
 
-                LocalDate in = LocalDate.parse(checkIn.getText().trim());
-                LocalDate out = LocalDate.parse(checkOut.getText().trim());
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d-M-yyyy");
+                LocalDate in = LocalDate.parse(checkIn.getText().trim(), formatter);
+                LocalDate out = LocalDate.parse(checkOut.getText().trim(), formatter);
 
                 if (!ReservationService.isDateRangeValid(in, out)) {
                     msg.setText("Invalid date range.");
@@ -603,7 +613,7 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
         password.setMaxWidth(360);
         password.setStyle(inputStyle());
 
-        TextField dob = smallInput("DOB YYYY-MM-DD");
+        TextField dob = smallInput("DOB DD-MM-YYYY");
         TextField hours = smallInput("Working Hours");
 
         Button add = mainButton("REGISTER", 170, 42);
@@ -611,7 +621,7 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
             try {
                 admin.registerStaff(username.getText().trim(),
                         password.getText().trim(),
-                        LocalDate.parse(dob.getText().trim()),
+                        LocalDate.parse(dob.getText().trim(), DateTimeFormatter.ofPattern("d-M-yyyy")),
                         Integer.parseInt(hours.getText().trim()),
                         Role.RECEPTIONIST);
 
@@ -755,7 +765,7 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
         avatar.getChildren().add(avatarText);
 
         VBox headerText = new VBox(2);
-        Label chatName = label("Hotel Live Chat", 18, TEXT, true);
+        Label chatName = label("Hotel Live Chat", 18, TEXTDARK, true);
         chatName.setFont(Font.font("Georgia", FontWeight.NORMAL, 18));
         Label chatStatus = label("Connected to reception desk", 12, MUTED, false);
         headerText.getChildren().addAll(chatName, chatStatus);
@@ -929,13 +939,13 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
     }
 
     public Label sectionTitle(String text) {
-        Label l = label(text, 29, TEXT, true);
+        Label l = label(text, 29, TEXTDARK, true);
         l.setFont(Font.font("Georgia", FontWeight.NORMAL, 29));
         return l;
     }
 
     public Label titleLabel(String text) {
-        Label l = label(text, 34, TEXT, true);
+        Label l = label(text, 34, TEXTDARK, true);
         l.setFont(Font.font("Georgia", FontWeight.NORMAL, 34));
         return l;
     }
@@ -947,13 +957,14 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
     }
 
     public Label info(String text) {
-        return label(text, 15, TEXT, false);
+        return label(text, 15, TEXTDARK, false);
     }
 
     public Label label(String text, int size, String color, boolean bold) {
         Label l = new Label(text);
         l.setFont(Font.font("Arial", bold ? FontWeight.BOLD : FontWeight.NORMAL, size));
         l.setTextFill(Color.web(color));
+        l.setStyle("-fx-text-fill: " + color + ";");
         return l;
     }
 

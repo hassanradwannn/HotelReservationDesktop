@@ -1,5 +1,6 @@
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
+import java.time.format.DateTimeFormatter;
 
 public class GuestProfileController implements DashboardContentController {
 
@@ -20,11 +21,23 @@ public class GuestProfileController implements DashboardContentController {
             this.guest = g;
             populateData();
         }
+
+        javafx.application.Platform.runLater(() -> {
+            if (usernameLabel.getScene() != null) {
+                for (javafx.scene.Node node : usernameLabel.getScene().getRoot().lookupAll(".label")) {
+                    if (node instanceof Label label && label.getText() != null && label.getText().toLowerCase().contains("profile")) {
+                        String currentStyle = label.getStyle() == null ? "" : label.getStyle();
+                        label.setStyle(currentStyle + "; -fx-text-fill: #2B2421;");
+                    }
+                }
+            }
+        });
     }
 
     private void populateData() {
         usernameLabel.setText("Username: " + guest.getUsername());
-        dobLabel.setText("DOB: " + guest.getDateOfBirth());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        dobLabel.setText("DOB: " + guest.getDateOfBirth().format(formatter));
         balanceLabel.setText("Balance: $" + mainApp.money(guest.getBalance()));
         addressLabel.setText("Address: " + guest.getAddress());
         genderLabel.setText("Gender: " + guest.getGender());

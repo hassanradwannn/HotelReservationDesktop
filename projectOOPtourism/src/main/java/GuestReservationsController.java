@@ -2,6 +2,7 @@ import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.ListView;
+import javafx.scene.control.Label;
 
 public class GuestReservationsController implements DashboardContentController {
 
@@ -17,6 +18,17 @@ public class GuestReservationsController implements DashboardContentController {
             this.guest = g;
             loadReservations();
         }
+
+        javafx.application.Platform.runLater(() -> {
+            if (reservationsList.getScene() != null) {
+                for (javafx.scene.Node node : reservationsList.getScene().getRoot().lookupAll(".label")) {
+                    if (node instanceof Label label && label.getText() != null && label.getText().toLowerCase().contains("reservation")) {
+                        String currentStyle = label.getStyle() == null ? "" : label.getStyle();
+                        label.setStyle(currentStyle + "; -fx-text-fill: #2B2421;");
+                    }
+                }
+            }
+        });
     }
 
     private void loadReservations() {

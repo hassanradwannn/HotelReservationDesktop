@@ -29,6 +29,18 @@ public class RoomBrowserController implements DashboardContentController {
         this.guest = (Guest) data;
         typeFilter.setItems(FXCollections.observableArrayList(Database.getRoomTypes()));
         loadRooms();
+
+        // Safely turn the title black without destroying the existing FXML font styles
+        javafx.application.Platform.runLater(() -> {
+            if (typeFilter.getScene() != null) {
+                for (javafx.scene.Node node : typeFilter.getScene().getRoot().lookupAll(".label")) {
+                    if (node instanceof Label label && label.getText() != null && label.getText().contains("Browse Available Rooms")) {
+                        String currentStyle = label.getStyle() == null ? "" : label.getStyle();
+                        label.setStyle(currentStyle + "; -fx-text-fill: #2B2421;");
+                    }
+                }
+            }
+        });
     }
 
     @FXML
@@ -50,7 +62,7 @@ public class RoomBrowserController implements DashboardContentController {
 
         if (rooms.isEmpty()) {
             Label l = new Label("No available rooms found.");
-            l.setTextFill(Color.WHITE);
+            l.setStyle("-fx-text-fill: #2B2421;");
             l.setFont(Font.font("Arial", 15));
             roomCards.getChildren().add(l);
             return;
@@ -72,7 +84,7 @@ public class RoomBrowserController implements DashboardContentController {
         imageBox.setStyle("-fx-background-color: linear-gradient(to bottom right, #EFE4D6, #E6A4B4); -fx-background-radius: 12; -fx-border-color: #C9AA7C; -fx-border-radius: 12;");
 
         Label imageText = new Label("ROOM\n" + room.getRoomNumber());
-        imageText.setTextFill(Color.web("#8F1D3F"));
+        imageText.setStyle("-fx-text-fill: #000000;");
         imageText.setFont(Font.font("Georgia", FontWeight.NORMAL, 22));
         imageText.setAlignment(Pos.CENTER);
         imageBox.getChildren().add(imageText);
@@ -82,20 +94,20 @@ public class RoomBrowserController implements DashboardContentController {
 
         Label roomTitle = new Label("Room " + room.getRoomNumber() + " — " + room.getRoomType().getName());
         roomTitle.setFont(Font.font("Georgia", FontWeight.NORMAL, 22));
-        roomTitle.setTextFill(Color.web("#2B2421"));
+        roomTitle.setStyle("-fx-text-fill: #000000;");
 
         Label price = new Label("Price per night: $" + mainApp.money(room.getRoomType().getPricePerNight()));
         price.setFont(Font.font("Arial", FontWeight.BOLD, 14));
-        price.setTextFill(Color.web("#8F1D3F"));
+        price.setStyle("-fx-text-fill: #8F1D3F;");
 
         Label capacity = new Label("Capacity: " + room.getRoomType().getCapacity() + " guests");
         capacity.setFont(Font.font("Arial", 14));
-        capacity.setTextFill(Color.web("#2B2421"));
+        capacity.setStyle("-fx-text-fill: #2B2421;");
 
         Label amenities = new Label("Amenities: " + room.getAmenities());
         amenities.setWrapText(true);
         amenities.setFont(Font.font("Arial", 13));
-        amenities.setTextFill(Color.web("#8A726B"));
+        amenities.setStyle("-fx-text-fill: #8A726B;");
 
         details.getChildren().addAll(roomTitle, price, capacity, amenities);
 
