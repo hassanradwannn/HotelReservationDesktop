@@ -1,4 +1,5 @@
 import exceptions.*;
+import DatabaseInitializer.DatabaseInitializer;
 
 import javafx.collections.FXCollections;
 import javafx.application.Application;
@@ -15,6 +16,7 @@ import javafx.stage.Stage;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.ArrayList;
 
 public class Main extends Application {
 
@@ -40,6 +42,10 @@ public class Main extends Application {
     public void start(Stage stage) {
         this.stage = stage;
         stage.setTitle("Grand Budapest Hotel Reservation System");
+        
+        // Initialize database and load users from SQL
+        DatabaseInitializer.initializeDatabase();
+        
         showLoginScreen();
         stage.show();
     }
@@ -1212,8 +1218,23 @@ if (ReservationService.hasOverlappingReservation(roomBox.getValue(), in, out)) {
         a.showAndWait();
     }
 
+
     public static void main(String[] args) {
-        DatabaseSync.syncDefaultDataToMySQL();
-        launch(args);
+    
+
+    Database.getGuests().clear();
+    Database.getStaffMembers().clear();
+
+    ArrayList<User> loadedUsers = UserDatabase.loadUsersFromDatabase();
+
+    for (User user : loadedUsers) {
+        Database.addUser(user);
     }
+DatabaseSync.syncDefaultDataToMySQL();
+    System.out.println("Users loaded from MySQL: " + loadedUsers.size());
+    System.out.println("Guests: " + Database.getGuests().size());
+    System.out.println("Staff: " + Database.getStaffMembers().size());
+
+    launch(args);
+}
 }

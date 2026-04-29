@@ -14,8 +14,8 @@ C:\Users\LOQ\Documents\NetBeansProjects\projectOOPtourism\src\main\java\com\myco
 C:\Users\LOQ\Documents\NetBeansProjects\projectOOPtourism\src\main\java\com\mycompany\projectooptourism\exceptions\WeakPasswordException.java
 C:\Users\LOQ\Documents\NetBeansProjects\projectOOPtourism\src\main\java\Database.java
 C:\Users\LOQ\Documents\NetBeansProjects\projectOOPtourism\src\main\java\database\DatabaseConnection.java
-C:\Users\LOQ\Documents\NetBeansProjects\projectOOPtourism\src\main\java\DatabaseInitializer.java
 C:\Users\LOQ\Documents\NetBeansProjects\projectOOPtourism\src\main\java\DatabaseInitializer\DatabaseConnection.java
+C:\Users\LOQ\Documents\NetBeansProjects\projectOOPtourism\src\main\java\DatabaseInitializer\DatabaseInitializer.java
 C:\Users\LOQ\Documents\NetBeansProjects\projectOOPtourism\src\main\java\DatabaseSaver.java
 C:\Users\LOQ\Documents\NetBeansProjects\projectOOPtourism\src\main\java\DatabaseSync.java
 C:\Users\LOQ\Documents\NetBeansProjects\projectOOPtourism\src\main\java\Gender.java
@@ -36,3 +36,4 @@ C:\Users\LOQ\Documents\NetBeansProjects\projectOOPtourism\src\main\java\SystemTi
 C:\Users\LOQ\Documents\NetBeansProjects\projectOOPtourism\src\main\java\TestDatabase.java
 C:\Users\LOQ\Documents\NetBeansProjects\projectOOPtourism\src\main\java\User.java
 C:\Users\LOQ\Documents\NetBeansProjects\projectOOPtourism\src\main\java\UserDAO.java
+C:\Users\LOQ\Documents\NetBeansProjects\projectOOPtourism\src\main\java\UserDatabase.java

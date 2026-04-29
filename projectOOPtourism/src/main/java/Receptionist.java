@@ -8,6 +8,10 @@ public class Receptionist extends Staff {
         super(username, password, dateOfBirth, Role.RECEPTIONIST, workingHours);
     }
 
+      
+
+   
+
     public void viewReservations(LocalDate checkIn) {
         System.out.println("Viewing reservations for " + checkIn.toString());
         Database.getReservations().stream().filter(

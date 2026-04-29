@@ -30,6 +30,7 @@ CatalogService.class
 exceptions\InvalidPasswordException.class
 PaymentMethod.class
 RoomType.class
+UserDatabase.class
 Payable.class
 Admin$1.class
 database\DatabaseConnection.class

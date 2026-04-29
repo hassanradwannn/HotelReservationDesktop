@@ -7,6 +7,9 @@ public class Guest extends User {
     private String address;
     private Gender gender;
     private String roomPreferences;
+    private String password;
+    private String name;
+    private int id;
 
     public Guest(String username, String password, LocalDate dateOfBirth,
                  double balance, String address, Gender gender, String roomPreferences) {
@@ -16,6 +19,7 @@ public class Guest extends User {
         this.gender = gender;
         this.roomPreferences = roomPreferences;
     }
+
 
     public double getBalance() { return balance; }
     public void setBalance(double balance) {

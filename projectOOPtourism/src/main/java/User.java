@@ -3,9 +3,9 @@ import java.time.LocalDate;
 import exceptions.InvalidCredentialsException;
 
 public abstract class User {
-    private String username;
+    String username;
     private String password;
-    private LocalDate dateOfBirth;
+    LocalDate dateOfBirth;
 
     User(String username, String password, LocalDate dateOfBirth) {
         this.username = username;

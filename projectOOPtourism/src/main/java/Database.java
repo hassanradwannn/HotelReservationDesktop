@@ -5,15 +5,17 @@ import java.util.Random;
 
 import exceptions.*;
 
+
+
 public class Database {
     // Static lists acting as our in-memory tables
-    private static ArrayList<Guest> guests = new ArrayList<>();
-    private static ArrayList<Staff> staffMembers = new ArrayList<>();
-    private static ArrayList<Room> rooms = new ArrayList<>();
-    private static ArrayList<RoomType> roomTypes = new ArrayList<>();
-    private static ArrayList<Amenity> amenities = new ArrayList<>();
-    private static ArrayList<Reservation> reservations = new ArrayList<>();
-    private static ArrayList<Invoice> invoices = new ArrayList<>();
+    private static final ArrayList<Guest> guests = new ArrayList<>();
+    private static final ArrayList<Staff> staffMembers = new ArrayList<>();
+    private static final ArrayList<Room> rooms = new ArrayList<>();
+    private static final ArrayList<RoomType> roomTypes = new ArrayList<>();
+    private static final ArrayList<Amenity> amenities = new ArrayList<>();
+    private static final ArrayList<Reservation> reservations = new ArrayList<>();
+    private static final ArrayList<Invoice> invoices = new ArrayList<>();
 
     public static ArrayList<Guest> getGuests() { return guests; }
     public static ArrayList<Staff> getStaffMembers() { return staffMembers; }
@@ -24,16 +26,12 @@ public class Database {
     public static ArrayList<Invoice> getInvoices() { return invoices; }
 
     static {
-        Admin admin = new Admin("Admin", "Admin@123", LocalDate.of(1964, 4, 19), 6);
-        Receptionist receptionist = new Receptionist("Manar", "Manar2002", LocalDate.of(2002, 6, 13), 8);
-        Guest defaultGuest = new Guest("Hassan", "Hassan123", LocalDate.of(2007, 4, 10), 10000, "2 haram",Gender.MALE, "");
+        // Load users from SQL database
+        loadUsersFromDatabase();
 
-        try {
-            Authentication.register(admin);
-            Authentication.register(receptionist);
-            Authentication.register(defaultGuest);
-        } catch (InvalidCredentialsException e) {
-            System.out.println("Error: Could not initialize staff.");
+        // If database is empty, add demo users for testing
+        if (guests.isEmpty() && staffMembers.isEmpty()) {
+            initializeDemoUsers();
         }
 
         Amenity wifi = new Amenity("WiFi", 10);
@@ -62,6 +60,29 @@ public class Database {
         generateRoomRange(400, 420, deluxe);
         generateRoomRange(500, 520, suite);
         generateRoomRange(600, 620, penthouse);
+    }
+
+    private static void loadUsersFromDatabase() {
+        ArrayList<User> loadedUsers = UserDatabase.loadUsersFromDatabase();
+        System.out.println("Loaded " + loadedUsers.size() + " users from database.");
+        for (User user : loadedUsers) {
+            addUser(user);
+        }
+    }
+
+    private static void initializeDemoUsers() {
+        System.out.println("No users found in database. Initializing demo users...");
+        Admin admin = new Admin("Admin", "Admin@123", LocalDate.of(1964, 4, 19), 6);
+        Receptionist receptionist = new Receptionist("Manar", "Manar2002", LocalDate.of(2002, 6, 13), 8);
+        Guest defaultGuest = new Guest("Hassan", "Hassan123", LocalDate.of(2007, 4, 10), 10000, "2 haram", Gender.MALE, "");
+
+        try {
+            Authentication.register(admin);
+            Authentication.register(receptionist);
+            Authentication.register(defaultGuest);
+        } catch (InvalidCredentialsException e) {
+            System.out.println("Error: Could not initialize demo users.");
+        }
     }
 
     private static void generateRoomRange(int start, int end, RoomType type) {
@@ -122,5 +143,18 @@ public class Database {
         return null;
     }
 
+    public static void refreshUsersFromDatabase() {
+        // Clear current in-memory users
+        getGuests().clear();
+        getStaffMembers().clear();
+
+        // Reload from database
+        ArrayList<User> loadedUsers = UserDatabase.loadUsersFromDatabase();
+        System.out.println("Refreshed " + loadedUsers.size() + " users from database.");
+        for (User user : loadedUsers) {
+            addUser(user);
+        }
+    }
 }
+
 
