@@ -55,11 +55,11 @@ public class LoginController {
 
     @FXML
     private void handleRegister() {
-        mainApp.showGuestRegisterScreen();
+        mainApp.switchScene("/Register.fxml");
     }
 
     @FXML
     private void handleForgotPassword() {
-        mainApp.showForgotPasswordScreen();
+        mainApp.switchScene("/ForgotPassword.fxml");
     }
 }

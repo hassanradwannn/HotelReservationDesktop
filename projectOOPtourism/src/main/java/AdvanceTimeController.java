@@ -13,19 +13,6 @@ public class AdvanceTimeController implements DashboardContentController {
     public void initData(Main mainApp, Object data) {
         this.mainApp = mainApp;
         todayLabel.setText("Current date: " + SystemTime.getDate());
-
-        javafx.application.Platform.runLater(() -> {
-            if (daysField.getScene() != null) {
-                for (javafx.scene.Node node : daysField.getScene().getRoot().lookupAll(".label")) {
-                    if (node instanceof Label label && label.getText() != null && label.getText().toLowerCase().contains("time")) {
-                        String currentStyle = label.getStyle() == null ? "" : label.getStyle();
-                        label.setStyle(currentStyle + "; -fx-text-fill: #2B2421;");
-                    }
-                }
-                String todayStyle = todayLabel.getStyle() == null ? "" : todayLabel.getStyle();
-                todayLabel.setStyle(todayStyle + "; -fx-text-fill: #2B2421;");
-            }
-        });
     }
 
     @FXML
@@ -46,5 +33,13 @@ public class AdvanceTimeController implements DashboardContentController {
         } catch (Exception ex) {
             mainApp.alert("Error", "Enter a valid positive number.");
         }
+    }
+
+    @FXML
+    private void handleResetTime() {
+        SystemTime.resetToRealToday();
+        ReservationService.cancelOverdueReservations();
+        todayLabel.setText("Current date: " + SystemTime.getDate());
+        mainApp.alert("Success", "System date reset to actual real-world date.");
     }
 }

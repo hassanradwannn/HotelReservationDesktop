@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox alignment="TOP_CENTER" spacing="20.0" style="-fx-background-color: #F7EFE5; -fx-padding: 20;" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ManageRoomTypesController">
+    <children>
+        <Label text="Manage Room Types" styleClass="section-title">
+            <font>
+                <Font name="Georgia" size="29.0" />
+            </font>
+        </Label>
+        <TextField fx:id="nameField" maxWidth="360.0" promptText="Room Type Name" styleClass="input-field" />
+        <TextField fx:id="priceField" maxWidth="360.0" promptText="Price Per Night" styleClass="input-field" />
+        <TextField fx:id="capField" maxWidth="360.0" promptText="Capacity" styleClass="input-field" />
+        <Button onAction="#handleAdd" prefHeight="42.0" prefWidth="190.0" text="ADD ROOM TYPE" styleClass="main-button" />
+        <ListView fx:id="listView" prefHeight="470.0" style="-fx-font-size: 14px; -fx-background-color: #FFFFFF; -fx-control-inner-background: #FFFFFF; -fx-text-fill: #2B2421; -fx-border-color: #C9AA7C; -fx-border-radius: 8;" />
+    </children>
+</VBox>

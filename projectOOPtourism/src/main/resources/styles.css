@@ -73,6 +73,70 @@
     -fx-effect: none;
 }
 
+/* ---------- Global Label Default ---------- */
+.label {
+    -fx-text-fill: #2B2421;
+}
+
+/* ---------- General Text & Labels ---------- */
+.section-title {
+    -fx-text-fill: #2B2421; /* Dark Text */
+}
+
+.info-label {
+    -fx-text-fill: #2B2421; /* Dark Text */
+    -fx-font-size: 15px;
+}
+
+.message-label {
+    -fx-text-fill: #C74261; /* Rose color for status/error messages */
+    -fx-font-size: 13px;
+}
+
+.chat-title {
+    -fx-text-fill: #2B2421; /* Dark Text */
+}
+
+.chat-status {
+    -fx-text-fill: #8A726B; /* Muted Text */
+}
+
+.chat-area {
+    -fx-control-inner-background: #F9F3EA;
+    -fx-text-fill: #2B2421;
+}
+
+.chat-area .content {
+     -fx-background-color: -fx-control-inner-background;
+}
+
+/* ---------- Restored Original Button Styles ---------- */
+.main-button {
+    -fx-background-color: #8B2040;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 7;
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+}
+
+.main-button:hover {
+    -fx-background-color: #C4415D;
+}
+
+.outline-button {
+    -fx-background-color: transparent;
+    -fx-border-color: #8B2040;
+    -fx-border-radius: 7;
+    -fx-text-fill: #8B2040;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
+.outline-button:hover {
+    -fx-background-color: #F7D6D9;
+}
+
 /* ---------- Outline / Secondary Button ---------- */
 .outline-btn {
     -fx-background-color: transparent;

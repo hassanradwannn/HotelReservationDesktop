@@ -1,8 +1,13 @@
-import DatabaseInitializer.DatabaseConnection;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+
+import DatabaseInitializer.DatabaseConnection;
 
 public class ChatDatabase {
 
@@ -102,6 +107,11 @@ public class ChatDatabase {
             stmt.setString(2, senderUsername);
             stmt.setString(3, message);
             stmt.executeUpdate();
+
+            // Trigger a global refresh for all clients by incrementing the data version
+            try (Statement updateStmt = conn.createStatement()) {
+                updateStmt.executeUpdate("UPDATE system_settings SET setting_value = setting_value + 1 WHERE setting_key = 'last_update'");
+            }
 
         } catch (Exception e) {
             System.out.println("Message save failed: " + e.getMessage());

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox spacing="5.0" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ReceptionistMenuController">
+    <Button text="Today's Reservations" onAction="#showToday" styleClass="side-btn" />
+    <Button text="Check In" onAction="#showCheckIn" styleClass="side-btn" />
+    <Button text="Check Out" onAction="#showCheckOut" styleClass="side-btn" />
+    <Button text="All Reservations" onAction="#showAllReservations" styleClass="side-btn" />
+    <Button text="Guests" onAction="#showGuests" styleClass="side-btn" />
+    <Button text="Rooms" onAction="#showRooms" styleClass="side-btn" />
+    <Button text="Advance Time" onAction="#showTime" styleClass="side-btn" />
+    <Button text="Live Chat" onAction="#showChat" styleClass="side-btn" />
+    <Button text="Logout" onAction="#doLogout" styleClass="side-btn" />
+</VBox>
