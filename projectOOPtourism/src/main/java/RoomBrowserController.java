@@ -46,7 +46,7 @@ public class RoomBrowserController implements DashboardContentController {
         List<String> requiredAmens = new java.util.ArrayList<>();
         if (minibarBox != null && minibarBox.isSelected()) requiredAmens.add("Mini-bar");
         if (jacuzziBox != null && jacuzziBox.isSelected()) requiredAmens.add("Jacuzzi");
-        if (gymBox != null && gymBox.isSelected()) requiredAmens.add("Gym");
+        if (gymBox != null && gymBox.isSelected()) requiredAmens.add("Gym Membership");
 
         List<RoomType> types = Database.getRoomTypes().stream()
                 .filter(t -> typeFilter.getValue() == null || t.equals(typeFilter.getValue()))

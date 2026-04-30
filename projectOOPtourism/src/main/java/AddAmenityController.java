@@ -27,6 +27,9 @@ public class AddAmenityController implements DashboardContentController {
             Amenity newAmenity = new Amenity(name, price);
             Database.insertAmenity(newAmenity);
 
+            // Reload the static list from the database to include the new item
+            Database.loadAllAmenities();
+
             mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/AdminAmenities.fxml", null);
 
         } catch (NumberFormatException e) {

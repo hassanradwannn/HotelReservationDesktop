@@ -1,6 +1,29 @@
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import database.DatabaseConnection;
+
 public class DatabaseSync {
 
+    private static boolean isTableEmpty(String tableName) {
+        String sql = "SELECT COUNT(*) FROM " + tableName;
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1) == 0;
+            }
+        } catch (Exception e) {
+            System.out.println("Error checking table " + tableName + ": " + e.getMessage());
+        }
+        return true;
+    }
+
     public static void syncDefaultDataToMySQL() {
+        // Safe guard: only perform massive startup sync if the database is truly empty
+        if (!isTableEmpty("rooms") && !isTableEmpty("amenities")) {
+            return;
+        }
 
         DatabaseSaver.silentSync = true;
 

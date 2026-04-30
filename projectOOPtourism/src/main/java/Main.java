@@ -21,9 +21,13 @@ public class Main extends Application {
     private Timeline autoRefreshTimeline;
     private Runnable currentViewRefresher;
     private volatile long localDataVersion = -1;
+    private String currentView = "";
+    private static Main instance;
 
     private final int WIDTH = 1280;
     private final int HEIGHT = 720;
+
+    public static Main getInstance() { return instance; }
 
     public void setCurrentViewRefresher(Runnable currentViewRefresher) {
         this.currentViewRefresher = currentViewRefresher;
@@ -47,18 +51,15 @@ public class Main extends Application {
 
     @Override
     public void start(Stage stage) {
+        instance = this;
         DatabaseInitializer.initializeDatabase();
         if (Database.isFirstInstance()) {
             SystemTime.resetToRealToday();
         } else {
             SystemTime.syncFromDatabase();
         }
-        Database.getRooms();
         
-        // Sync generated rooms to MySQL so reservations don't fail Foreign Key constraints!
-        new Thread(() -> {
-            DatabaseSync.syncDefaultDataToMySQL();
-        }).start();
+        Database.loadAll(); // Seeds empty DBs, fetches all data fresh
         
         this.stage = stage;
         stage.setTitle("Grand Budapest Hotel Reservation System");
@@ -109,6 +110,7 @@ public class Main extends Application {
     }
 
     public void switchDashboardContent(VBox contentArea, String fxmlFile, Object data) {
+        this.currentView = fxmlFile;
         this.currentContentArea = contentArea;
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlFile));
@@ -122,6 +124,16 @@ public class Main extends Application {
         } catch (Exception e) {
             System.out.println("Could not load FXML: " + fxmlFile);
             e.printStackTrace();
+        }
+    }
+
+    public void refreshActiveView() {
+        if (currentView.equals("AllReservations") || currentView.equals("/GenericList.fxml")) {
+            if (currentViewRefresher != null) currentViewRefresher.run();
+        } else if (currentView.equals("LiveChat") || currentView.equals("/Chat.fxml")) {
+            if (currentViewRefresher != null) currentViewRefresher.run();
+        } else {
+            if (currentViewRefresher != null) currentViewRefresher.run();
         }
     }
 
@@ -167,14 +179,15 @@ public class Main extends Application {
                         System.out.println("Database changes detected! Syncing view...");
                         localDataVersion = currentVersion;
 
+                        Database.refreshUsersFromDatabase();
+                        Database.loadAllReservations();
+
                         SystemTime.syncFromDatabase();
                         javafx.application.Platform.runLater(() -> {
                             if (currentDashboardController != null && currentUser != null) {
                                 currentDashboardController.setUserInfo("Logged in as: " + currentUser.getUsername() + "   |   Date: " + SystemTime.getDate());
                             }
-                            if (currentViewRefresher != null) {
-                                currentViewRefresher.run();
-                            }
+                            Main.getInstance().refreshActiveView();
                         });
                     }
                 }).start();
@@ -224,14 +237,15 @@ public class Main extends Application {
                         System.out.println("Database changes detected! Syncing view...");
                         localDataVersion = currentVersion;
 
+                        Database.refreshUsersFromDatabase();
+                        Database.loadAllReservations();
+
                         SystemTime.syncFromDatabase();
                         javafx.application.Platform.runLater(() -> {
                             if (currentDashboardController != null && currentUser != null) {
                                 currentDashboardController.setUserInfo("Logged in as: " + currentUser.getUsername() + "   |   Date: " + SystemTime.getDate());
                             }
-                            if (currentViewRefresher != null) {
-                                currentViewRefresher.run();
-                            }
+                            Main.getInstance().refreshActiveView();
                         });
                     }
                 }).start();
@@ -281,14 +295,16 @@ public class Main extends Application {
                         System.out.println("Database changes detected! Syncing view...");
                         localDataVersion = currentVersion;
 
+                        // Refresh in-memory data from the database in the background thread
+                        Database.refreshUsersFromDatabase();
+                        Database.loadAllReservations();
+
                         SystemTime.syncFromDatabase();
                         javafx.application.Platform.runLater(() -> {
                             if (currentDashboardController != null && currentUser != null) {
                                 currentDashboardController.setUserInfo("Logged in as: " + currentUser.getUsername() + "   |   Date: " + SystemTime.getDate());
                             }
-                            if (currentViewRefresher != null) {
-                                currentViewRefresher.run();
-                            }
+                            Main.getInstance().refreshActiveView();
                         });
                     }
                 }).start();

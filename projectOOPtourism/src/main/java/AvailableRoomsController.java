@@ -79,7 +79,10 @@ public class AvailableRoomsController implements DashboardContentController {
         roomTitle.getStyleClass().add("room-title");
         Label price = new Label("Price per night: $" + mainApp.money(room.getRoomType().getPricePerNight()));
         price.getStyleClass().add("room-price");
-        Label amenities = new Label("Amenities: " + room.getAmenities());
+        
+        String amenityText = String.join(", ", room.getAmenities().stream().map(Amenity::getName).toList());
+        Label amenities = new Label("Amenities: " + amenityText);
+        
         amenities.getStyleClass().add("room-amenities");
         amenities.setWrapText(true);
         details.getChildren().addAll(roomTitle, price, amenities);

@@ -37,12 +37,13 @@ public class RoomDetailsController implements DashboardContentController {
         mainApp.setSelectedRoomForReservation(room); // Ensure it's set for the reserve button
         imageTextLabel.setText(room.getRoomType().getName() + "\nLuxury Suite Preview");
 
+        String amenityText = String.join(", ", room.getAmenities().stream().map(Amenity::getName).toList());
         detailsLabel.setText(
                 "Room Number: " + room.getRoomNumber()
                         + "\nRoom Type: " + room.getRoomType().getName()
                         + "\nCapacity: " + room.getRoomType().getCapacity()
                         + "\nPrice per night: $" + mainApp.money(room.getRoomType().getPricePerNight())
-                        + "\nAmenities: " + room.getAmenities()
+                        + "\nAmenities: " + amenityText
         );
     }
 

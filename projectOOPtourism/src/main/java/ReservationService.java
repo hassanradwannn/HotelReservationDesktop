@@ -7,8 +7,8 @@ import exceptions.InvalidPaymentException;
 
 public abstract class ReservationService {
 
-    private static ArrayList<Room> rooms = Database.getRooms();
-    private static ArrayList<Reservation> reservations = Database.getReservations();
+    private static List<Room> rooms = Database.getRooms();
+    private static List<Reservation> reservations = Database.getReservations();
 
     public static boolean isDateRangeValid(LocalDate checkIn, LocalDate checkOut) {
         if (checkIn == null || checkOut == null) {

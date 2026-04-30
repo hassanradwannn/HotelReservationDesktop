@@ -53,6 +53,38 @@ public class ChatDatabase {
         public Timestamp getCreatedAt() { return createdAt; }
     }
 
+
+    // Creates the chats and chat_messages tables if they do not already exist.
+    // Called at startup from ChatController so the tables are always ready.
+    public static void ensureTablesExist() {
+        String chatsTable = """
+            CREATE TABLE IF NOT EXISTS chats (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                guest_username VARCHAR(100) NOT NULL,
+                receptionist_username VARCHAR(100) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_chat (guest_username, receptionist_username)
+            )
+        """;
+        String messagesTable = """
+            CREATE TABLE IF NOT EXISTS chat_messages (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                chat_id INT NOT NULL,
+                sender_username VARCHAR(100) NOT NULL,
+                message TEXT NOT NULL,
+                sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (chat_id) REFERENCES chats(id) ON DELETE CASCADE
+            )
+        """;
+        try (Connection conn = DatabaseConnection.getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.execute(chatsTable);
+            stmt.execute(messagesTable);
+        } catch (Exception e) {
+            System.out.println("Could not ensure chat tables: " + e.getMessage());
+        }
+    }
+
     public static int getOrCreateChat(String guestUsername, String receptionistUsername) {
         String findSql = """
             SELECT id FROM chats 

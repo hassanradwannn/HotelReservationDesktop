@@ -112,7 +112,7 @@ public class DatabaseSaver {
 
     public static void saveRoomAmenities(Room room) {
         String deleteSql = "DELETE FROM room_amenities WHERE room_number = ?";
-        String insertSql = "INSERT INTO room_amenities (room_number, amenity_name) VALUES (?, ?)";
+        String insertSql = "INSERT IGNORE INTO room_amenities (room_number, amenity_name) VALUES (?, ?)";
 
         try (Connection conn = DatabaseConnection.getConnection()) {
             // Clear existing amenities first to prevent duplicates/sync updates

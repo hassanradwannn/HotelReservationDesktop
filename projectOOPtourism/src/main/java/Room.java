@@ -10,7 +10,8 @@ public class Room {
     public Room(String roomNumber, RoomType roomType) {
         this.roomNumber = roomNumber;
         this.roomType = roomType;
-        addAmenity(Database.getAmenities().get(0), Database.getAmenities().get(1));
+        // Removed unsafe hardcoded defaults. 
+        // Database.java now handles fetching and linking proper amenities from SQL.
     }
 
     public int getId() {
@@ -65,9 +66,13 @@ public class Room {
 
     @Override
     public String toString() {
-        return "Room Number: " + roomNumber +
-                ", Type: " + roomType.getName() +
-                "\nAmenties: ";
+        String amenityList = (amenities == null || amenities.isEmpty()) 
+                             ? "None" 
+                             : String.join(", ", amenities.stream().map(Amenity::getName).toList());
+        
+        return String.format("Room Number: %s | Type: %s | Amenities: %s", 
+                roomNumber, 
+                roomType.getName(), 
+                amenityList);
     }
-
 }

@@ -1,5 +1,9 @@
 import java.util.List;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.application.Platform;
+import javafx.util.Duration;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -21,10 +25,19 @@ public class ChatController implements DashboardContentController {
     @FXML private TextField inputField;
     @FXML private Button sendButton;
 
+    // NOT @FXML — created programmatically to avoid a double-instance conflict.
+    // The original code declared guestDropdown as @FXML AND added a new one to
+    // the HBox, resulting in two separate ComboBox objects: the injected one
+    // (which the listener was attached to) and the visible one in the header
+    // (which the user was actually clicking). They were never the same object,
+    // so selections never triggered loadChatHistory.
+    private ComboBox<String> guestDropdown;
+
     private Main mainApp;
     private User currentUser;
-    private ComboBox<String> userSelector;
     private final int[] activeChatId = {-1};
+    private Timeline chatSyncTimeline;
+    private long localDataVersion = -1;
 
     @Override
     public void initData(Main mainApp, Object data) {
@@ -32,78 +45,153 @@ public class ChatController implements DashboardContentController {
         this.currentUser = (User) data;
 
         avatarText.setText(currentUser.getUsername().substring(0, 1).toUpperCase());
-        setupUserSelector();
-        loadChatHistory();
 
-        mainApp.setCurrentViewRefresher(this::loadChatHistory);
-    }
+        // Ensure chat tables exist before any DB calls
+        ChatDatabase.ensureTablesExist();
 
-    private void setupUserSelector() {
-        userSelector = new ComboBox<>();
-        userSelector.getStyleClass().add("combo-box");
+        // Create single ComboBox, populate, then wire listener
+        guestDropdown = new ComboBox<>();
+        guestDropdown.getStyleClass().add("combo-box");
+        populateDropdown();
 
-        if (currentUser instanceof Guest) {
-            userSelector.setPromptText("Select Receptionist...");
-            userSelector.setItems(FXCollections.observableArrayList(
-                    Database.getStaffMembers().stream()
-                            .filter(s -> s instanceof Receptionist)
-                            .map(User::getUsername)
-                            .toList()
-            ));
-            userSelector.setOnAction(e -> {
-                if (userSelector.getValue() != null) {
-                    activeChatId[0] = ChatDatabase.getOrCreateChat(currentUser.getUsername(), userSelector.getValue());
-                    loadChatHistory();
-                }
-            });
-        } else { // Admin or Receptionist
-            userSelector.setPromptText("Select a Guest to chat...");
-            userSelector.setItems(FXCollections.observableArrayList(
-                    Database.getGuests().stream().map(Guest::getUsername).toList()
-            ));
-            userSelector.setOnAction(e -> {
-                if (userSelector.getValue() != null) {
-                    activeChatId[0] = ChatDatabase.getOrCreateChat(userSelector.getValue(), currentUser.getUsername());
-                    loadChatHistory();
-                }
-            });
-        }
-        if (!header.getChildren().contains(userSelector)) {
-            header.getChildren().add(userSelector);
-        }
-    }
-
-    private void loadChatHistory() {
-        if (activeChatId[0] != -1) {
-            chatArea.clear();
-            List<ChatDatabase.ChatMessage> msgs = ChatDatabase.loadChatMessages(activeChatId[0]);
-            for (ChatDatabase.ChatMessage m : msgs) {
-                chatArea.appendText(m.getSenderUsername() + ": " + m.getMessage() + "\n");
+        // Listener attached AFTER population to avoid premature fires
+        guestDropdown.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                loadChatHistory(newVal);
             }
-            chatArea.setScrollTop(Double.MAX_VALUE);
-            chatStatus.setText("Connected to " + userSelector.getValue());
+        });
+
+        header.getChildren().add(guestDropdown);
+
+        if (!guestDropdown.getItems().isEmpty()) {
+            guestDropdown.getSelectionModel().selectFirst(); // triggers listener → loadChatHistory
         } else {
+            chatArea.setText("No users available to chat with.\n");
+            chatStatus.setText("No users found");
+        }
+
+        mainApp.setCurrentViewRefresher(this::refreshChatView);
+
+        if (chatSyncTimeline != null) chatSyncTimeline.stop();
+        chatSyncTimeline = new Timeline(new KeyFrame(Duration.seconds(2), event -> {
+            new Thread(() -> {
+                long currentVersion = Database.getLatestDataVersion();
+                if (localDataVersion == -1) {
+                    localDataVersion = currentVersion;
+                } else if (currentVersion > localDataVersion) {
+                    localDataVersion = currentVersion;
+                    Platform.runLater(this::refreshChatView);
+                }
+            }).start();
+        }));
+        chatSyncTimeline.setCycleCount(Timeline.INDEFINITE);
+        chatSyncTimeline.play();
+    }
+
+    private void populateDropdown() {
+        List<String> items;
+        if (currentUser instanceof Guest) {
+            guestDropdown.setPromptText("Select Receptionist...");
+            // Ensure staff are loaded
+            if (Database.getStaffMembers().isEmpty()) {
+                Database.refreshUsersFromDatabase();
+            }
+            items = Database.getStaffMembers().stream()
+                    .filter(s -> s instanceof Receptionist)
+                    .map(User::getUsername)
+                    .toList();
+        } else {
+            guestDropdown.setPromptText("Select Guest...");
+            items = Database.getActiveGuests();
+        }
+        guestDropdown.setItems(FXCollections.observableArrayList(items));
+    }
+
+    private void refreshChatView() {
+        String selected = guestDropdown.getValue();
+
+        List<String> freshItems;
+        if (currentUser instanceof Guest) {
+            Database.refreshUsersFromDatabase();
+            freshItems = Database.getStaffMembers().stream()
+                    .filter(s -> s instanceof Receptionist)
+                    .map(User::getUsername)
+                    .toList();
+        } else {
+            freshItems = Database.getActiveGuests();
+        }
+
+        if (!guestDropdown.getItems().equals(freshItems)) {
+            guestDropdown.setItems(FXCollections.observableArrayList(freshItems));
+        }
+
+        if (selected != null) {
+            if (!guestDropdown.getItems().contains(selected)) {
+                guestDropdown.getItems().add(selected);
+            }
+            // Don't rely on the listener — setValue won't fire if value hasn't changed,
+            // which leaves activeChatId at -1 and causes the "select a chat first" error.
+            guestDropdown.setValue(selected);
+            loadChatHistory(selected);
+        } else {
+            loadChatHistory(null);
+        }
+    }
+
+    public void loadChatHistory(String otherUsername) {
+        if (otherUsername == null) {
+            activeChatId[0] = -1;
             chatArea.setText("Please select a user from the dropdown above to view chat history...\n");
             chatStatus.setText("Select a chat");
+            return;
         }
+
+        String guestUser;
+        String receptionistUser;
+        if (currentUser instanceof Guest) {
+            guestUser = currentUser.getUsername();
+            receptionistUser = otherUsername;
+        } else {
+            guestUser = otherUsername;
+            receptionistUser = currentUser.getUsername();
+        }
+
+        int chatId = ChatDatabase.getOrCreateChat(guestUser, receptionistUser);
+        activeChatId[0] = chatId;
+
+        if (chatId == -1) {
+            chatArea.setText("Could not open chat. Check database connection.\n");
+            chatStatus.setText("Connection error");
+            return;
+        }
+
+        chatArea.clear();
+        List<ChatDatabase.ChatMessage> msgs = ChatDatabase.loadChatMessages(chatId);
+        for (ChatDatabase.ChatMessage m : msgs) {
+            chatArea.appendText(m.getSenderUsername() + ": " + m.getMessage() + "\n");
+        }
+        chatArea.setScrollTop(Double.MAX_VALUE);
+        chatStatus.setText("Chatting with " + otherUsername);
+        if (chatName != null) chatName.setText(otherUsername);
     }
 
     @FXML
     private void handleSend() {
         String msg = inputField.getText().trim();
-        if (!msg.isEmpty()) {
-            if (activeChatId[0] == -1) {
-                mainApp.alert("Error", "Please select a chat first.");
-                return;
-            }
-            ChatDatabase.sendMessage(activeChatId[0], currentUser.getUsername(), msg);
-            inputField.clear();
-            loadChatHistory();
+        if (msg.isEmpty()) return;
+        if (activeChatId[0] == -1) {
+            mainApp.alert("Error", "Please select a chat first.");
+            return;
         }
+        ChatDatabase.sendMessage(activeChatId[0], currentUser.getUsername(), msg);
+        inputField.clear();
+        loadChatHistory(guestDropdown.getValue());
     }
 
     @FXML
     public void initialize() {
-        inputField.setOnAction(e -> handleSend());
+        if (inputField != null) {
+            inputField.setOnAction(e -> handleSend());
+        }
     }
 }

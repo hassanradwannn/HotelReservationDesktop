@@ -2,528 +2,509 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDate;
+import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Random;
-
-import database.DatabaseConnection;
-import exceptions.InvalidCredentialsException;
-
-
 
 public class Database {
-    // Static lists acting as our in-memory tables
-    private static final ArrayList<Guest> guests = new ArrayList<>();
-    private static final ArrayList<Staff> staffMembers = new ArrayList<>();
-    private static final ArrayList<Room> rooms = new ArrayList<>();
-    private static final ArrayList<RoomType> roomTypes = new ArrayList<>();
-    private static final ArrayList<Amenity> amenities = new ArrayList<>();
-    private static final ArrayList<Reservation> reservations = new ArrayList<>();
-    private static final ArrayList<Invoice> invoices = new ArrayList<>();
 
-    public static ArrayList<Guest> getGuests() { return guests; }
-    public static ArrayList<Staff> getStaffMembers() { return staffMembers; }
-    public static ArrayList<Room> getRooms() { return rooms; }
-    public static ArrayList<RoomType> getRoomTypes() { return roomTypes; }
-    public static ArrayList<Amenity> getAmenities() { return amenities; }
-    public static ArrayList<Reservation> getReservations() { return reservations; }
-    public static ArrayList<Invoice> getInvoices() { return invoices; }
+    private static List<RoomType> roomTypes = new ArrayList<>();
+    private static List<Amenity> amenities = new ArrayList<>();
+    private static List<Room> rooms = new ArrayList<>();
+    private static List<Guest> guests = new ArrayList<>();
+    private static List<Staff> staffMembers = new ArrayList<>();
+    private static List<Reservation> reservations = new ArrayList<>();
+    private static List<Invoice> invoices = new ArrayList<>();
 
-    static {
-        // Load users from SQL database
-        loadUsersFromDatabase();
+    public static List<RoomType> getRoomTypes() { return roomTypes; }
+    public static List<Amenity> getAmenities() { return amenities; }
+    public static List<Room> getRooms() { return rooms; }
+    public static List<Guest> getGuests() { return guests; }
+    public static List<Staff> getStaffMembers() { return staffMembers; }
+    public static List<Reservation> getReservations() { return reservations; }
+    public static List<Invoice> getInvoices() { return invoices; }
 
-        // If database is empty, add demo users for testing
-        if (guests.isEmpty() && staffMembers.isEmpty()) {
-            initializeDemoUsers();
+    // --- Table Check Helper ---
+    private static boolean isTableEmpty(String tableName) {
+        try (Connection conn = database.DatabaseConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM " + tableName)) {
+            if (rs.next()) {
+                return rs.getInt(1) == 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-
-        loadAmenitiesFromDatabase();
-
-        if (amenities.isEmpty()) {
-            System.out.println("No amenities found in database. Initializing default amenities...");
-            insertAmenity(new Amenity("WiFi", 10));
-            insertAmenity(new Amenity("Smart TV", 35));
-            insertAmenity(new Amenity("Mini-bar", 75));
-            insertAmenity(new Amenity("Jacuzzi", 100));
-            insertAmenity(new Amenity("Gym", 200));
-        }
-
-        RoomType standard = new RoomType("The Mendle Classic", 500, 1);
-        RoomType deluxe = new RoomType("The Lobby Deluxe", 700, 2);
-        RoomType suite = new RoomType("The Alpine Grand Suite", 1000, 4);
-        RoomType penthouse = new RoomType("The Gustave Penthouse", 2000, 8);
-        getRoomTypes().add(standard);
-        getRoomTypes().add(deluxe);
-        getRoomTypes().add(suite);
-        getRoomTypes().add(penthouse);
-
-        // Try to load rooms from database first
-        loadRoomsFromDatabase();
-        
-        // If no rooms in database, generate and insert them
-        if (rooms.isEmpty()) {
-            System.out.println("No rooms found in database. Generating default rooms...");
-            generateAndInsertRoomRange(100, 120, standard);
-            generateAndInsertRoomRange(200, 220, standard);
-            generateAndInsertRoomRange(300, 320, deluxe);
-            generateAndInsertRoomRange(400, 420, deluxe);
-            generateAndInsertRoomRange(500, 520, suite);
-            generateAndInsertRoomRange(600, 620, penthouse);
-        }
-
-        // Load reservations from database
-        loadReservationsFromDatabase();
+        return true;
     }
 
-    private static void loadAmenitiesFromDatabase() {
-        String sql = "SELECT * FROM amenities";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+    // --- Rebuilt Startup Sync ---
+    public static void syncDefaultDataToDatabase() {
+        if (isTableEmpty("room_types")) {
+            String sql = "INSERT IGNORE INTO room_types (name, price_per_night, capacity) VALUES (?, ?, ?)";
+            try (Connection conn = database.DatabaseConnection.getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(sql)) {
+                Object[][] types = {
+                    {"The Mendle Classic", 100.0, 1},
+                    {"The Lobby Deluxe", 150.0, 2},
+                    {"The Alpine Grand Suite", 300.0, 4},
+                    {"The Gustave Penthouse", 500.0, 6}
+                };
+                for (Object[] type : types) {
+                    stmt.setString(1, (String) type[0]);
+                    stmt.setDouble(2, (Double) type[1]);
+                    stmt.setInt(3, (Integer) type[2]);
+                    stmt.executeUpdate();
+                }
+            } catch (SQLException e) { e.printStackTrace(); }
+        }
+
+        if (isTableEmpty("amenities")) {
+            String sql = "INSERT IGNORE INTO amenities (name, price) VALUES (?, ?)";
+            try (Connection conn = database.DatabaseConnection.getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(sql)) {
+                Object[][] amens = {
+                    {"WiFi", 10.0},
+                    {"Smart TV", 15.0},
+                    {"Mini-bar", 50.0},
+                    {"Jacuzzi", 100.0},
+                    {"Gym Membership", 20.0},
+                    {"Sea View", 75.0}
+                };
+                for (Object[] a : amens) {
+                    stmt.setString(1, (String) a[0]);
+                    stmt.setDouble(2, (Double) a[1]);
+                    stmt.executeUpdate();
+                }
+            } catch (SQLException e) { e.printStackTrace(); }
+        }
+
+        // Cleanup old orphans from the previous naming convention
+        try (Connection conn = database.DatabaseConnection.getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate("DELETE FROM rooms WHERE room_type_name NOT IN ('The Mendle Classic', 'The Lobby Deluxe', 'The Alpine Grand Suite', 'The Gustave Penthouse')");
+        } catch (SQLException e) { e.printStackTrace(); }
+
+        // Generate rooms according to the specific floor plan
+        String roomSql = "INSERT IGNORE INTO rooms (room_number, room_type_name) VALUES (?, ?)";
+        String amenitySql = "INSERT IGNORE INTO room_amenities (room_number, amenity_name) VALUES (?, ?)";
+        try (Connection conn = database.DatabaseConnection.getConnection();
+             PreparedStatement roomStmt = conn.prepareStatement(roomSql);
+             PreparedStatement amenityStmt = conn.prepareStatement(amenitySql)) {
+            for (int floor = 1; floor <= 6; floor++) {
+                for (int r = 0; r <= 20; r++) {
+                    String roomNumber = String.format("%d%02d", floor, r);
+                    String type = switch (floor) {
+                        case 1, 2 -> "The Mendle Classic";
+                        case 3, 4 -> "The Lobby Deluxe";
+                        case 5 -> "The Alpine Grand Suite";
+                        default -> "The Gustave Penthouse";
+                    };
+                    roomStmt.setString(1, roomNumber);
+                    roomStmt.setString(2, type);
+                    roomStmt.executeUpdate();
+
+                    List<String> assignedAmenities = new ArrayList<>();
+                    assignedAmenities.add("WiFi");
+                    assignedAmenities.add("Smart TV");
+                    if (floor >= 3) assignedAmenities.add("Mini-bar");
+                    if (floor >= 5) assignedAmenities.add("Jacuzzi");
+                    if (floor == 6) assignedAmenities.add("Gym Membership");
+
+                    for (String amenityName : assignedAmenities) {
+                        amenityStmt.setString(1, roomNumber);
+                        amenityStmt.setString(2, amenityName);
+                        amenityStmt.executeUpdate();
+                    }
+                }
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+    }
+
+    // --- Load Data Sequence ---
+    public static void loadAll() {
+        syncDefaultDataToDatabase();
+        roomTypes.clear();
+        rooms.clear();
+        amenities.clear();
+        reservations.clear();
+        // BUG FIX 2 & 3: Always load users before reservations so that
+        // refreshReservationsFromDatabase() can match guest usernames to Guest
+        // objects. Without this, every reservation is silently dropped because
+        // 'guests' is empty, producing a blank list for the receptionist and
+        // preventing cross-instance sync from delivering new reservations.
+        refreshUsersFromDatabase();
+        loadAllRoomTypes();
+        loadAllAmenities();
+        loadAllRooms();
+        loadAllReservations();
+    }
+
+    public static void loadAllRoomTypes() {
+        try (Connection conn = database.DatabaseConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM room_types")) {
+            while (rs.next()) {
+                RoomType rt = new RoomType(rs.getString("name"), rs.getDouble("price_per_night"), rs.getInt("capacity"));
+                rt.setId(rs.getInt("id"));
+                roomTypes.add(rt);
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+    }
+
+    public static void loadAllAmenities() {
+        amenities.clear();
+        try (Connection conn = database.DatabaseConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM amenities")) {
             while (rs.next()) {
                 Amenity a = new Amenity(rs.getString("name"), rs.getDouble("price"));
                 a.setId(rs.getInt("id"));
                 amenities.add(a);
             }
-        } catch (SQLException e) {
-            System.out.println("Error loading amenities from database: " + e.getMessage());
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
     }
 
-    private static void loadRoomsFromDatabase() {
-        String sql = "SELECT r.*, rt.name as room_type_name, rt.price_per_night, rt.capacity " +
-                     "FROM rooms r JOIN room_types rt ON r.room_type_name = rt.name";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+    public static void loadAllRooms() {
+        try (Connection conn = database.DatabaseConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM rooms")) {
             while (rs.next()) {
-                RoomType roomType = new RoomType(
-                    rs.getString("room_type_name"),
-                    rs.getDouble("price_per_night"),
-                    rs.getInt("capacity")
-                );
-                roomType.setId(rs.getInt("id"));
-                
-                Room room = new Room(rs.getString("room_number"), roomType);
-                room.setId(rs.getInt("id"));
-                
-                // Load amenities for this room
-                loadAmenitiesForRoom(room);
-                
-                rooms.add(room);
-            }
-        } catch (SQLException e) {
-            System.out.println("Error loading rooms from database: " + e.getMessage());
-        }
-    }
+                String roomNumber = rs.getString("room_number");
+                String typeName = rs.getString("room_type_name");
+                RoomType type = roomTypes.stream().filter(rt -> rt.getName().equals(typeName)).findFirst().orElse(null);
+                if (type != null) {
+                    Room room = new Room(roomNumber, type);
+                    room.setId(rs.getInt("id"));
+                    room.getAmenities().clear();
 
-    private static void loadAmenitiesForRoom(Room room) {
-        String sql = "SELECT a.* FROM amenities a " +
-                     "JOIN room_amenities ra ON a.id = ra.amenity_id " +
-                     "WHERE ra.room_number = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, room.getRoomNumber());
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    Amenity amenity = new Amenity(rs.getString("name"), rs.getDouble("price"));
-                    amenity.setId(rs.getInt("id"));
-                    room.addAmenity(amenity);
+                    try (PreparedStatement amStmt = conn.prepareStatement("SELECT amenity_name FROM room_amenities WHERE room_number = ?")) {
+                        amStmt.setString(1, roomNumber);
+                        try (ResultSet amRs = amStmt.executeQuery()) {
+                            while (amRs.next()) {
+                                String amName = amRs.getString("amenity_name");
+                                amenities.stream()
+                                         .filter(a -> a.getName().equals(amName))
+                                         .findFirst()
+                                         .ifPresent(room.getAmenities()::add);
+                            }
+                        }
+                    }
+                    rooms.add(room);
                 }
             }
-        } catch (SQLException e) {
-            System.out.println("Error loading amenities for room " + room.getRoomNumber() + ": " + e.getMessage());
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
     }
 
-    private static void loadUsersFromDatabase() {
-        ArrayList<User> loadedUsers = UserDatabase.loadUsersFromDatabase();
-        System.out.println("Loaded " + loadedUsers.size() + " users from database.");
-        for (User user : loadedUsers) {
-            addUser(user);
-        }
+    public static void loadAllReservations() {
+        refreshReservationsFromDatabase();
     }
 
-    private static void initializeDemoUsers() {
-        System.out.println("No users found in database. Initializing demo users...");
-        Admin admin = new Admin("Admin", "Admin@123", LocalDate.of(1964, 4, 19), 6);
-        Receptionist receptionist = new Receptionist("Manar", "Manar2002", LocalDate.of(2002, 6, 13), 8);
-        Guest defaultGuest = new Guest("Hassan", "Hassan123", LocalDate.of(2007, 4, 10), 10000, "2 haram", Gender.MALE, "");
-
-        try {
-            Authentication.register(admin);
-            Authentication.register(receptionist);
-            Authentication.register(defaultGuest);
-        } catch (InvalidCredentialsException e) {
-            System.out.println("Error: Could not initialize demo users.");
-        }
-    }
-
-    private static void generateRoomRange(int start, int end, RoomType type) {
-        Random rnd = new Random();
-        for (int i = start; i <= end; i++) {
-            Room room = new Room(String.valueOf(i), type);
-            String typeName = type.getName();
-
-            // Determine how many amenities
-            int targetCount = 2;
-            if (typeName.equalsIgnoreCase("The Lobby Deluxe")) targetCount = 3;
-            else if (typeName.equalsIgnoreCase("The Alpine Grand Suite")) targetCount = 3;
-            else if (typeName.equalsIgnoreCase("The Gustave Penthouse")) targetCount = 4;
-
-            // Penthouse comes with gym pass
-            if (typeName.equalsIgnoreCase("The Gustave Penthouse")) {
-                room.addAmenity(getAmenities().get(4));
-            }
-
-            int extrasNeeded = Math.max(0, targetCount - room.getAmenities().size());
-
-            ArrayList<Integer> candidates = new ArrayList<>();
-            if (!typeName.equalsIgnoreCase("The Mendle Classic")) {
-                candidates.add(2); // Mini-bar
-            }
-
-            // Jacuzzi is allowed only for Suite and Penthouse
-            if (typeName.equalsIgnoreCase("The Alpine Grand Suite") || typeName.equalsIgnoreCase("The Gustave Penthouse")) {
-                candidates.add(3); // Jacuzzi
-            }
-
-            // Shuffle candidates and pick the needed number without repeats
-            Collections.shuffle(candidates, rnd);
-            for (int j = 0; j < extrasNeeded && j < candidates.size(); j++) {
-                int amenityIndex = candidates.get(j);
-                room.addAmenity(getAmenities().get(amenityIndex));
-            }
-
-            getRooms().add(room);
-        }
-    }
-
-    private static void generateAndInsertRoomRange(int start, int end, RoomType type) {
-        Random rnd = new Random();
-        for (int i = start; i <= end; i++) {
-            Room room = new Room(String.valueOf(i), type);
-            String typeName = type.getName();
-
-            // Determine how many amenities
-            int targetCount = 2;
-            if (typeName.equalsIgnoreCase("The Lobby Deluxe")) targetCount = 3;
-            else if (typeName.equalsIgnoreCase("The Alpine Grand Suite")) targetCount = 3;
-            else if (typeName.equalsIgnoreCase("The Gustave Penthouse")) targetCount = 4;
-
-            // Penthouse comes with gym pass
-            if (typeName.equalsIgnoreCase("The Gustave Penthouse")) {
-                room.addAmenity(getAmenities().get(4));
-            }
-
-            int extrasNeeded = Math.max(0, targetCount - room.getAmenities().size());
-
-            ArrayList<Integer> candidates = new ArrayList<>();
-            if (!typeName.equalsIgnoreCase("The Mendle Classic")) {
-                candidates.add(2); // Mini-bar
-            }
-
-            // Jacuzzi is allowed only for Suite and Penthouse
-            if (typeName.equalsIgnoreCase("The Alpine Grand Suite") || typeName.equalsIgnoreCase("The Gustave Penthouse")) {
-                candidates.add(3); // Jacuzzi
-            }
-
-            // Shuffle candidates and pick the needed number without repeats
-            Collections.shuffle(candidates, rnd);
-            for (int j = 0; j < extrasNeeded && j < candidates.size(); j++) {
-                int amenityIndex = candidates.get(j);
-                room.addAmenity(getAmenities().get(amenityIndex));
-            }
-
-            getRooms().add(room);
-            insertRoom(room);
-            
-            // Save room amenities to database
-            if (!room.getAmenities().isEmpty()) {
-                updateRoomAmenities(room.getId(), room.getAmenities());
-            }
-        }
+    public static List<Reservation> getTodaysReservations() {
+        loadAllReservations();
+        return reservations.stream()
+                .filter(r -> r.getCheckInDate().isEqual(SystemTime.getToday()))
+                .toList();
     }
 
     public static void addUser(User user) {
         if (user instanceof Guest) {
-            getGuests().add((Guest)user);
-        } else {
-            getStaffMembers().add((Staff)user);
+            guests.add((Guest) user);
+        } else if (user instanceof Staff) {
+            staffMembers.add((Staff) user);
         }
     }
 
-    public static User findUser(String username) {
-        for (Staff staff : getStaffMembers()) {
-            if (staff.getUsername().equalsIgnoreCase(username)) return staff;
-        }
-        for (Guest guest : getGuests()) {
-            if (guest.getUsername().equalsIgnoreCase(username)) return guest;
-        }
-        return null;
-    }
-
-    public static void notifyDataChanged() {
-        String sql = "UPDATE system_settings SET setting_value = setting_value + 1 WHERE setting_key = 'last_update'";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.executeUpdate();
-        } catch (Exception e) {}
-    }
-
-    public static long getLatestDataVersion() {
-        String sql = "SELECT setting_value FROM system_settings WHERE setting_key = 'last_update'";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            if (rs.next()) {
-                return rs.getLong("setting_value");
-            }
-        } catch (Exception e) {}
-        return 0;
-    }
-
-    public static boolean isFirstInstance() {
-        String updateSql = "UPDATE system_settings SET setting_value = setting_value + 1 WHERE setting_key = 'active_instances'";
-        String selectSql = "SELECT setting_value FROM system_settings WHERE setting_key = 'active_instances'";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement updateStmt = conn.prepareStatement(updateSql);
-             PreparedStatement selectStmt = conn.prepareStatement(selectSql)) {
-            updateStmt.executeUpdate();
-            ResultSet rs = selectStmt.executeQuery();
-            if (rs.next()) {
-                return rs.getInt("setting_value") <= 1;
-            }
-        } catch (Exception e) {}
-        return true; // Default to true if something fails
-    }
-
-    public static void unregisterInstance() {
-        String selectSql = "SELECT setting_value FROM system_settings WHERE setting_key = 'active_instances'";
-        String updateSql = "UPDATE system_settings SET setting_value = ? WHERE setting_key = 'active_instances'";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement selectStmt = conn.prepareStatement(selectSql);
-             PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
-            ResultSet rs = selectStmt.executeQuery();
-            if (rs.next()) {
-                int current = rs.getInt("setting_value");
-                int next = Math.max(0, current - 1);
-                updateStmt.setString(1, String.valueOf(next));
-                updateStmt.executeUpdate();
-                
-                // Automatically reset time when the last instance closes!
-                if (next == 0) {
-                    SystemTime.resetToRealToday();
-                }
-            }
-        } catch (Exception e) {}
-    }
-
-    public static void refreshUsersFromDatabase() {
-        // Clear current in-memory users
-        getGuests().clear();
-        getStaffMembers().clear();
-
-        // Reload from database
-        ArrayList<User> loadedUsers = UserDatabase.loadUsersFromDatabase();
-        System.out.println("Refreshed " + loadedUsers.size() + " users from database.");
-        for (User user : loadedUsers) {
-            addUser(user);
-        }
-    }
-
+    // BUG FIX 2 & 3: If the guests list is empty when this is called (e.g. from
+    // the auto-refresh timeline on a second instance, or on first receptionist
+    // login), we reload users first so reservations are never silently dropped.
     public static void refreshReservationsFromDatabase() {
-        SystemTime.syncFromDatabase();
-        refreshUsersFromDatabase(); // Ensure newly registered guests are loaded
-        getReservations().clear();
-        loadReservationsFromDatabase();
-    }
+        if (guests.isEmpty() && staffMembers.isEmpty()) {
+            refreshUsersFromDatabase();
+        }
 
-    private static void loadReservationsFromDatabase() {
+        reservations.clear();
         String sql = "SELECT * FROM reservations";
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = database.DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
-
             while (rs.next()) {
                 String resId = rs.getString("reservation_id");
                 String guestUsername = rs.getString("guest_username");
                 String roomNumber = rs.getString("room_number");
-                LocalDate checkIn = rs.getDate("check_in_date").toLocalDate();
-                LocalDate checkOut = rs.getDate("check_out_date").toLocalDate();
+                java.sql.Date checkInSql = rs.getDate("check_in_date");
+                java.sql.Date checkOutSql = rs.getDate("check_out_date");
                 String statusStr = rs.getString("status");
+
+                if (checkInSql == null || checkOutSql == null) continue;
+
+                java.time.LocalDate checkIn = checkInSql.toLocalDate();
+                java.time.LocalDate checkOut = checkOutSql.toLocalDate();
                 ReservationStatus status = ReservationStatus.valueOf(statusStr.toUpperCase());
 
-                User user = findUser(guestUsername);
-                Room room = null;
-                for (Room r : rooms) {
-                    if (r.getRoomNumber().equalsIgnoreCase(roomNumber)) {
-                        room = r;
-                        break;
+                // BUG FIX 3: If the guest still isn't in memory (registered on
+                // another instance after our last user-load), fetch them live
+                // from the DB rather than silently dropping the reservation.
+                Guest guest = guests.stream()
+                        .filter(g -> g.getUsername().equals(guestUsername))
+                        .findFirst()
+                        .orElse(null);
+
+                if (guest == null) {
+                    // Guest was created on another instance — load them now.
+                    User freshUser = UserDatabase.findUser(guestUsername);
+                    if (freshUser instanceof Guest freshGuest) {
+                        guests.add(freshGuest);
+                        guest = freshGuest;
                     }
                 }
 
-                if (user instanceof Guest guest && room != null && resId != null) {
-                    Reservation res = new Reservation(resId, guest, room, checkIn, checkOut, status, false);
-                    res.setTotalPrice();
+                Room room = rooms.stream()
+                        .filter(r -> r.getRoomNumber().equals(roomNumber))
+                        .findFirst()
+                        .orElse(null);
 
-                    if (status == ReservationStatus.CONFIRMED || status == ReservationStatus.ONGOING || status == ReservationStatus.COMPLETED) {
-                        res.setDepositPaid(true);
-                    }
-                    if (status == ReservationStatus.COMPLETED) {
-                        res.setFullPaid(true);
-                    }
-
-                    reservations.add(res);
+                if (guest != null && room != null) {
+                    Reservation r = new Reservation(resId, guest, room, checkIn, checkOut, status, false);
+                    r.setTotalPrice();
+                    reservations.add(r);
                 }
             }
-            System.out.println("Loaded " + reservations.size() + " reservations from database.");
-        } catch (SQLException e) {
-            System.out.println("Error loading reservations from database: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Error refreshing reservations: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
-    public static void updateAmenity(Amenity a) {
-        String sql = "UPDATE amenities SET name = ?, price = ? WHERE id = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, a.getName());
-            stmt.setDouble(2, a.getPrice());
-            stmt.setInt(3, a.getId());
-            int rows = stmt.executeUpdate();
-            if (rows > 0) {
-                for (int i = 0; i < getAmenities().size(); i++) {
-                    if (getAmenities().get(i).getId() == a.getId() || getAmenities().get(i).getName().equals(a.getName())) {
-                        getAmenities().set(i, a);
-                        break;
-                    }
-                }
+    public static void refreshUsersFromDatabase() {
+        guests.clear();
+        staffMembers.clear();
+        List<User> users = UserDatabase.loadUsersFromDatabase();
+        for (User u : users) {
+            if (u instanceof Guest) {
+                guests.add((Guest) u);
+            } else if (u instanceof Staff) {
+                staffMembers.add((Staff) u);
             }
-        } catch (SQLException e) {
-            System.out.println("Error updating amenity: " + e.getMessage());
         }
     }
 
-    public static void insertAmenity(Amenity a) {
-        String sql = "INSERT INTO amenities (name, price) VALUES (?, ?)";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
-            stmt.setString(1, a.getName());
-            stmt.setDouble(2, a.getPrice());
-            stmt.executeUpdate();
-            
-            try (ResultSet rs = stmt.getGeneratedKeys()) {
-                if (rs.next()) {
-                    a.setId(rs.getInt(1));
-                }
-            }
-            
-            // Check if amenity with same ID already exists in the list
-            boolean exists = false;
-            for (Amenity existing : getAmenities()) {
-                if (existing.getId() == a.getId()) {
-                    exists = true;
-                    break;
-                }
-            }
-            if (!exists) getAmenities().add(a);
-        } catch (SQLException e) {
-            System.out.println("Error inserting amenity: " + e.getMessage());
-        }
-    }
-
+    // --- CRUD Methods ---
     public static void updateRoomType(RoomType rt) {
         String sql = "UPDATE room_types SET name = ?, price_per_night = ?, capacity = ? WHERE id = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = database.DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, rt.getName());
             stmt.setDouble(2, rt.getPricePerNight());
             stmt.setInt(3, rt.getCapacity());
             stmt.setInt(4, rt.getId());
-            int rows = stmt.executeUpdate();
-            if (rows > 0) {
-                for (int i = 0; i < getRoomTypes().size(); i++) {
-                    if (getRoomTypes().get(i).getId() == rt.getId() || getRoomTypes().get(i).getName().equals(rt.getName())) {
-                        getRoomTypes().set(i, rt);
-                        break;
-                    }
+            if (stmt.executeUpdate() == 0) {
+                try (PreparedStatement fallback = conn.prepareStatement("UPDATE room_types SET price_per_night = ?, capacity = ? WHERE name = ?")) {
+                    fallback.setDouble(1, rt.getPricePerNight());
+                    fallback.setInt(2, rt.getCapacity());
+                    fallback.setString(3, rt.getName());
+                    fallback.executeUpdate();
                 }
             }
-        } catch (SQLException e) {
+            notifyDataChanged();
+        } catch (Exception e) {
             System.out.println("Error updating room type: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
-    public static void insertRoomType(RoomType rt) {
-        String sql = "INSERT INTO room_types (name, price_per_night, capacity) VALUES (?, ?, ?)";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, rt.getName());
-            stmt.setDouble(2, rt.getPricePerNight());
-            stmt.setInt(3, rt.getCapacity());
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            System.out.println("Error inserting room type: " + e.getMessage());
-        }
-    }
-
     public static void updateRoom(Room r) {
         String sql = "UPDATE rooms SET room_number = ?, room_type_name = ? WHERE id = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = database.DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, r.getRoomNumber());
             stmt.setString(2, r.getRoomType().getName());
             stmt.setInt(3, r.getId());
-            stmt.executeUpdate();
-        } catch (SQLException e) {
+            if (stmt.executeUpdate() == 0) {
+                try (PreparedStatement fallback = conn.prepareStatement("UPDATE rooms SET room_type_name = ? WHERE room_number = ?")) {
+                    fallback.setString(1, r.getRoomType().getName());
+                    fallback.setString(2, r.getRoomNumber());
+                    fallback.executeUpdate();
+                }
+            }
+            notifyDataChanged();
+        } catch (Exception e) {
             System.out.println("Error updating room: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
-    public static void insertRoom(Room r) {
-        String sql = "INSERT INTO rooms (room_number, room_type_name) VALUES (?, ?)";
-        try (Connection conn = DatabaseConnection.getConnection();
+    public static void insertAmenity(Amenity a) {
+        String sql = "INSERT INTO amenities (name, price) VALUES (?, ?)";
+        try (Connection conn = database.DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, r.getRoomNumber());
-            stmt.setString(2, r.getRoomType().getName());
+            stmt.setString(1, a.getName());
+            stmt.setDouble(2, a.getPrice());
             stmt.executeUpdate();
-        } catch (SQLException e) {
-            System.out.println("Error inserting room: " + e.getMessage());
+            notifyDataChanged();
+        } catch (Exception e) {
+            System.out.println("Error inserting amenity: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
-    public static void updateRoomAmenities(int roomId, List<Amenity> updatedAmenities) {
-        // First, get the room number for this room ID
+    public static void updateAmenity(Amenity a) {
+        String sql = "UPDATE amenities SET name = ?, price = ? WHERE id = ?";
+        try (Connection conn = database.DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, a.getName());
+            stmt.setDouble(2, a.getPrice());
+            stmt.setInt(3, a.getId());
+            if (stmt.executeUpdate() == 0) {
+                try (PreparedStatement fallback = conn.prepareStatement("UPDATE amenities SET price = ? WHERE name = ?")) {
+                    fallback.setDouble(1, a.getPrice());
+                    fallback.setString(2, a.getName());
+                    fallback.executeUpdate();
+                }
+            }
+            notifyDataChanged();
+        } catch (Exception e) {
+            System.out.println("Error updating amenity: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public static boolean isFirstInstance() {
+        String checkSql = "SELECT setting_value FROM system_settings WHERE setting_key = 'active_instances'";
+        String updateSql = "UPDATE system_settings SET setting_value = ? WHERE setting_key = 'active_instances'";
+        String insertSql = "INSERT IGNORE INTO system_settings (setting_key, setting_value) VALUES ('active_instances', '1')";
+        try (Connection conn = database.DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(checkSql);
+             ResultSet rs = stmt.executeQuery()) {
+             if (rs.next()) {
+                 int instances = Integer.parseInt(rs.getString("setting_value"));
+                 try (PreparedStatement update = conn.prepareStatement(updateSql)) {
+                     update.setString(1, String.valueOf(instances + 1));
+                     update.executeUpdate();
+                 }
+                 return instances == 0;
+             } else {
+                 try (PreparedStatement ins = conn.prepareStatement(insertSql)) {
+                     ins.executeUpdate();
+                 }
+                 return true;
+             }
+        } catch (Exception e) {
+            return true;
+        }
+    }
+
+    public static void unregisterInstance() {
+        String checkSql = "SELECT setting_value FROM system_settings WHERE setting_key = 'active_instances'";
+        String updateSql = "UPDATE system_settings SET setting_value = ? WHERE setting_key = 'active_instances'";
+        try (Connection conn = database.DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(checkSql);
+             ResultSet rs = stmt.executeQuery()) {
+             if (rs.next()) {
+                 int instances = Integer.parseInt(rs.getString("setting_value"));
+                 if (instances > 0) {
+                     try (PreparedStatement update = conn.prepareStatement(updateSql)) {
+                         update.setString(1, String.valueOf(instances - 1));
+                         update.executeUpdate();
+                     }
+                 }
+             }
+        } catch (Exception e) {
+            System.out.println("Could not unregister instance: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public static long getLatestDataVersion() {
+        String sql = "SELECT setting_value FROM system_settings WHERE setting_key = 'last_update'";
+        try (Connection conn = database.DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+             if (rs.next()) {
+                 return Long.parseLong(rs.getString("setting_value"));
+             }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public static void notifyDataChanged() {
+        String sql = "UPDATE system_settings SET setting_value = setting_value + 1 WHERE setting_key = 'last_update'";
+        try (Connection conn = database.DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void updateRoomAmenities(int roomId, List<Amenity> amenities) {
         String roomNumber = null;
-        for (Room room : getRooms()) {
-            if (room.getId() == roomId) {
-                roomNumber = room.getRoomNumber();
+        for (Room r : rooms) {
+            if (r.getId() == roomId) {
+                roomNumber = r.getRoomNumber();
                 break;
             }
         }
-        if (roomNumber == null) {
-            System.out.println("Error: Room with ID " + roomId + " not found.");
-            return;
-        }
-        
+
         String deleteSql = "DELETE FROM room_amenities WHERE room_number = ?";
-        String insertSql = "INSERT INTO room_amenities (room_number, amenity_name) VALUES (?, ?)";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement deleteStmt = conn.prepareStatement(deleteSql);
-             PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
-            deleteStmt.setString(1, roomNumber);
-            deleteStmt.executeUpdate();
-            for (Amenity amenity : updatedAmenities) {
-                insertStmt.setString(1, roomNumber);
-                insertStmt.setString(2, amenity.getName()); 
-                insertStmt.executeUpdate();
+        String insertSql = "INSERT IGNORE INTO room_amenities (room_number, amenity_name) VALUES (?, ?)";
+
+        try (Connection conn = database.DatabaseConnection.getConnection()) {
+            if (roomNumber == null) {
+                try (PreparedStatement stmt = conn.prepareStatement("SELECT room_number FROM rooms WHERE id = ?")) {
+                    stmt.setInt(1, roomId);
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        if (rs.next()) roomNumber = rs.getString("room_number");
+                    }
+                }
+            }
+
+            if (roomNumber != null) {
+                try (PreparedStatement delStmt = conn.prepareStatement(deleteSql)) {
+                    delStmt.setString(1, roomNumber);
+                    delStmt.executeUpdate();
+                }
+
+                if (amenities != null && !amenities.isEmpty()) {
+                    try (PreparedStatement insStmt = conn.prepareStatement(insertSql)) {
+                        for (Amenity amenity : amenities) {
+                            insStmt.setString(1, roomNumber);
+                            insStmt.setString(2, amenity.getName());
+                            insStmt.executeUpdate();
+                        }
+                    }
+                }
+                notifyDataChanged();
+            }
+        } catch (Exception e) {
+            System.out.println("Error updating room amenities: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public static List<String> getActiveGuests() {
+        List<String> activeGuests = new ArrayList<>();
+        // BUG FIX 1: Query for role = 'Guest' (mixed-case) to match how
+        // UserDatabase saves the role via getClass().getSimpleName().
+        // The original query used 'GUEST' (uppercase) which never matched.
+        String sql = "SELECT username FROM users WHERE LOWER(role) = 'guest'";
+        try (Connection conn = database.DatabaseConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                activeGuests.add(rs.getString("username"));
             }
         } catch (SQLException e) {
-            System.out.println("Error syncing room amenities: " + e.getMessage());
+            System.out.println("Error fetching active guests: " + e.getMessage());
+            e.printStackTrace();
+            return guests.stream().map(Guest::getUsername).toList();
         }
+        return activeGuests;
+    }
+
+    public static void updateChatStatus(String username, boolean isChatting) {
+        // Empty — no is_chatting column in the schema
     }
 }
