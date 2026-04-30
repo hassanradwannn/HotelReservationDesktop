@@ -1,5 +1,5 @@
 /* =====================================================
-   GRAND BUDAPEST HOTEL — styles.css
+   GRAND BUDAPEST HOTEL — styles.css  (Revamped)
    Palette:
      Blush:       #F7D6D9
      Rose:        #E8879A
@@ -8,259 +8,550 @@
      Cream:       #F9F3EA
      Gold:        #C8A97E
      Dark:        #2C2523
+     Warm BG:     #EDE4D8
    ===================================================== */
 
-/* ---------- Root / Background ---------- */
+/* ─── Root ──────────────────────────────────────────── */
 .root-pane {
     -fx-background-color: #EDE4D8;
 }
 
-/* ---------- Card container (Login split panel) ---------- */
-.card-container {
-    -fx-background-color: #F9F3EA;
-    -fx-background-radius: 24;
-    -fx-effect: dropshadow(gaussian, rgba(44,37,35,0.18), 28, 0.22, 0, 8);
+/* ─── Login / Register Split Panels ─────────────────── */
+.login-left-panel {
+    -fx-background-color: #C4415D;
+    -fx-pref-width: 520;
 }
 
-.left-panel {
-    -fx-background-color: #F9F3EA;
-    -fx-background-radius: 24 0 0 24;
+.login-right-panel {
+    -fx-background-color: #F5EDE3;
+    -fx-pref-width: 760;
 }
 
-.right-panel {
-    -fx-background-color: #EFE4D6;
-    -fx-background-radius: 0 24 24 0;
+/* Greek meander border — left (crimson bg, lighter marks) */
+
+/* Greek meander border — right (cream bg, rose marks) */
+
+/* Hero typography on left panel */
+.hero-text-light {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 52px;
+    -fx-text-fill: #F9F3EA;
+    -fx-wrap-text: true;
 }
 
-/* ---------- Input fields ---------- */
-.input-field {
+.hero-text-italic {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 52px;
+    -fx-font-style: italic;
+    -fx-text-fill: #C8B8B0;
+    -fx-wrap-text: true;
+}
+
+.hero-subtext {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #D4C4BC;
+    -fx-wrap-text: true;
+}
+
+.hotel-footer-label {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 12px;
+    -fx-text-fill: #B8A89E;
+}
+
+/* Form typography on right panel */
+.form-eyebrow {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #C4415D;
+    -fx-letter-spacing: 2;
+}
+
+.form-title {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 36px;
+    -fx-text-fill: #2C2523;
+}
+
+.form-link-label {
+    -fx-font-family: "Georgia";
+    -fx-font-style: italic;
+    -fx-font-size: 14px;
+    -fx-text-fill: #2C2523;
+}
+
+.form-link-italic {
+    -fx-font-family: "Georgia";
+    -fx-font-style: italic;
+    -fx-font-size: 14px;
+    -fx-text-fill: #2C2523;
+}
+
+.form-link {
+    -fx-font-family: "Georgia";
+    -fx-font-style: italic;
+    -fx-font-size: 14px;
+    -fx-text-fill: #C4415D;
+    -fx-border-color: transparent;
+    -fx-underline: false;
+}
+
+.form-link:hover {
+    -fx-text-fill: #8B2040;
+    -fx-underline: true;
+}
+
+.form-sep {
+    -fx-background-color: #C8A97E;
+    -fx-pref-height: 1;
+}
+
+.demo-hint {
+    -fx-font-size: 11px;
+    -fx-text-fill: #b0978a;
+    -fx-wrap-text: true;
+}
+
+/* ─── Elegant Input (used across forms) ─────────────── */
+.elegant-input {
+    -fx-background-color: #EFD9DF;
+    -fx-background-radius: 0;
+    -fx-border-color: #C4415D;
+    -fx-border-radius: 0;
+    -fx-border-width: 0 0 1.5 0;
+    -fx-padding: 12 14 12 14;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 14px;
+    -fx-text-fill: #2C2523;
+    -fx-prompt-text-fill: #b09090;
+    -fx-pref-height: 48px;
+    -fx-max-width: Infinity;
+}
+
+.elegant-input:focused {
+    -fx-background-color: #F7D6D9;
+    -fx-border-color: #8B2040;
+    -fx-effect: none;
+}
+
+/* ComboBox styled as elegant-input */
+.elegant-input.combo-box {
+    -fx-background-color: #EFD9DF;
+    -fx-border-color: #C4415D;
+    -fx-border-width: 0 0 1.5 0;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+}
+
+.elegant-input.combo-box:focused {
+    -fx-border-color: #8B2040;
+}
+
+.elegant-input.combo-box .list-cell {
+    -fx-font-family: "Georgia";
+    -fx-text-fill: #2C2523;
+    -fx-background-color: #EFD9DF;
+}
+
+.elegant-radio {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 14px;
+    -fx-text-fill: #2C2523;
+}
+
+.elegant-check {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 14px;
+    -fx-text-fill: #2C2523;
+}
+
+/* ─── Primary Action Button ──────────────────────────── */
+.primary-action-btn {
+    -fx-background-color: #8B2040;
+    -fx-text-fill: #F9F3EA;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 0;
+    -fx-cursor: hand;
+    -fx-letter-spacing: 1;
+}
+
+.primary-action-btn:hover {
+    -fx-background-color: #C4415D;
+}
+
+.primary-action-btn:pressed {
+    -fx-background-color: #6d1832;
+}
+
+/* ─── Outline Action Button ──────────────────────────── */
+.outline-action-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #8B2040;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-border-color: #8B2040;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-cursor: hand;
+}
+
+.outline-action-btn:hover {
+    -fx-background-color: #F7D6D9;
+    -fx-text-fill: #C4415D;
+    -fx-border-color: #C4415D;
+}
+
+/* ─── Danger Button ───────────────────────────────────── */
+.danger-action-btn {
+    -fx-background-color: #C4415D;
+    -fx-text-fill: #F9F3EA;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 0;
+    -fx-cursor: hand;
+}
+
+.danger-action-btn:hover {
+    -fx-background-color: #8B2040;
+}
+
+/* ─── Message label ──────────────────────────────────── */
+.message-label {
+    -fx-text-fill: #C4415D;
+    -fx-font-family: "Georgia";
+    -fx-font-style: italic;
+    -fx-font-size: 13px;
+}
+
+/* ─── Panel inner content (Dashboard content panes) ─── */
+.panel-eyebrow {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #C4415D;
+    -fx-letter-spacing: 2;
+}
+
+.panel-title {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 30px;
+    -fx-text-fill: #2C2523;
+}
+
+.profile-field {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 15px;
+    -fx-text-fill: #2C2523;
+    -fx-wrap-text: true;
+}
+
+/* ─── Form card (content panel grouping) ─────────────── */
+.form-card {
     -fx-background-color: #FFFFFF;
-    -fx-background-radius: 8;
+    -fx-background-radius: 0;
     -fx-border-color: #C8A97E;
-    -fx-border-radius: 8;
-    -fx-border-width: 1.2;
+    -fx-border-width: 0 0 0 3;
+    -fx-padding: 22 24 22 24;
+    -fx-effect: dropshadow(gaussian, rgba(44,37,35,0.08), 10, 0.10, 0, 3);
+}
+
+/* ─── Elegant ListView ───────────────────────────────── */
+.elegant-list {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 14px;
+    -fx-background-color: #FFFFFF;
+    -fx-control-inner-background: #FFFFFF;
+    -fx-text-fill: #2C2523;
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+}
+
+.elegant-list .list-cell {
+    -fx-background-color: #F9F3EA;
+    -fx-text-fill: #2C2523;
     -fx-padding: 10 14 10 14;
+    -fx-border-color: transparent transparent #EFE4D6 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.elegant-list .list-cell:odd {
+    -fx-background-color: #FFFFFF;
+}
+
+.elegant-list .list-cell:selected {
+    -fx-background-color: #F7D6D9;
+    -fx-text-fill: #8B2040;
+}
+
+/* ─── Topbar (Dashboard header) ─────────────────────── */
+.topbar {
+    -fx-background-color: #8B2040;
+}
+
+.topbar-title {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 22px;
+    -fx-text-fill: #F9F3EA;
+}
+
+.topbar-user {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-text-fill: #D8CCC6;
+}
+
+/* ─── Sidebar ────────────────────────────────────────── */
+.sidebar {
+    -fx-background-color: #F9F3EA;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 2, 0);
+}
+
+/* ─── Content area ───────────────────────────────────── */
+.content-area {
+    -fx-background-color: #EDE4D8;
+}
+
+/* ─── Room Browser ───────────────────────────────────── */
+.room-hero-banner {
+    -fx-background-color: #C4415D;
+    -fx-min-height: 210;
+    -fx-max-height: 210;
+}
+
+.hero-room-text {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 46px;
+    -fx-text-fill: #F9F3EA;
+    -fx-font-weight: bold;
+}
+
+.hero-room-italic {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 46px;
+    -fx-font-style: italic;
+    -fx-text-fill: #D4C4BC;
+}
+
+.hero-room-sub {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #D4C4BC;
+}
+
+.search-bar-wrapper {
+    -fx-background-color: #F5EDE3;
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+}
+
+.search-bar-inner {
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+    -fx-background-color: #F9F3EA;
+    -fx-background-radius: 0;
+    -fx-padding: 0;
+}
+
+.search-bar-label {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 11px;
+    -fx-letter-spacing: 2;
+    -fx-text-fill: #C8A97E;
+    -fx-padding: 14 18 14 18;
+}
+
+.search-btn {
+    -fx-background-color: #C8A97E;
+    -fx-text-fill: #F9F3EA;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-letter-spacing: 2;
+    -fx-background-radius: 0;
+    -fx-cursor: hand;
+    -fx-padding: 14 22 14 22;
+}
+
+.search-btn:hover {
+    -fx-background-color: #8B2040;
+}
+
+.search-fields-row {
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 0;
+}
+
+.search-field-group {
+    -fx-padding: 10 18 10 18;
+    -fx-border-color: transparent #C8A97E transparent transparent;
+    -fx-border-width: 0 1 0 0;
+}
+
+.search-field-label {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 10px;
+    -fx-letter-spacing: 2;
+    -fx-text-fill: #8a726b;
+}
+
+.search-field-input {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-font-family: "Georgia";
     -fx-font-size: 14px;
     -fx-text-fill: #2C2523;
     -fx-prompt-text-fill: #b0978a;
-    -fx-pref-height: 44px;
+    -fx-padding: 4 0 4 0;
 }
 
-.input-field:focused {
-    -fx-border-color: #8B2040;
-    -fx-effect: dropshadow(gaussian, rgba(139,32,64,0.18), 6, 0.2, 0, 0);
-}
-
-/* ---------- Primary / Main Button  (filled burgundy) ---------- */
-.main-btn {
-    -fx-background-color: #8B2040;
-    -fx-text-fill: #F9F3EA;
-    -fx-font-size: 14px;
-    -fx-background-radius: 8;
-    -fx-border-radius: 8;
-    -fx-cursor: hand;
-    -fx-effect: dropshadow(gaussian, rgba(139,32,64,0.30), 8, 0.25, 0, 3);
-    -fx-letter-spacing: 1px;
-}
-
-.main-btn:hover {
-    -fx-background-color: #C4415D;
-    -fx-effect: dropshadow(gaussian, rgba(196,65,93,0.38), 12, 0.3, 0, 4);
-}
-
-.main-btn:pressed {
-    -fx-background-color: #6d1832;
+.search-field-input:focused {
+    -fx-border-color: transparent;
     -fx-effect: none;
 }
 
-/* ---------- Global Label Default ---------- */
-.label {
-    -fx-text-fill: #2B2421;
-}
-
-/* ---------- General Text & Labels ---------- */
-.section-title {
-    -fx-text-fill: #2B2421; /* Dark Text */
-}
-
-.info-label {
-    -fx-text-fill: #2B2421; /* Dark Text */
-    -fx-font-size: 15px;
-}
-
-.message-label {
-    -fx-text-fill: #C74261; /* Rose color for status/error messages */
-    -fx-font-size: 13px;
-}
-
-.chat-title {
-    -fx-text-fill: #2B2421; /* Dark Text */
-}
-
-.chat-status {
-    -fx-text-fill: #8A726B; /* Muted Text */
-}
-
-.chat-area {
-    -fx-control-inner-background: #F9F3EA;
-    -fx-text-fill: #2B2421;
-}
-
-.chat-area .content {
-     -fx-background-color: -fx-control-inner-background;
-}
-
-/* ---------- Restored Original Button Styles ---------- */
-.main-button {
-    -fx-background-color: #8B2040;
-    -fx-text-fill: white;
-    -fx-font-weight: bold;
-    -fx-background-radius: 7;
-    -fx-font-size: 13px;
-    -fx-cursor: hand;
-}
-
-.main-button:hover {
-    -fx-background-color: #C4415D;
-}
-
-.outline-button {
+.search-field-combo {
     -fx-background-color: transparent;
-    -fx-border-color: #8B2040;
-    -fx-border-radius: 7;
-    -fx-text-fill: #8B2040;
-    -fx-font-weight: bold;
-    -fx-cursor: hand;
-}
-
-.outline-button:hover {
-    -fx-background-color: #F7D6D9;
-}
-
-/* ---------- Outline / Secondary Button ---------- */
-.outline-btn {
-    -fx-background-color: transparent;
-    -fx-text-fill: #8B2040;
+    -fx-border-color: transparent;
+    -fx-font-family: "Georgia";
     -fx-font-size: 14px;
-    -fx-border-color: #8B2040;
-    -fx-border-width: 1.5;
-    -fx-border-radius: 8;
-    -fx-background-radius: 8;
-    -fx-cursor: hand;
 }
 
-.outline-btn:hover {
-    -fx-background-color: #F7D6D9;
-    -fx-border-color: #C4415D;
+.rooms-section {
+    -fx-background-color: #EDE4D8;
+}
+
+.section-eyebrow {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 11px;
+    -fx-letter-spacing: 2;
     -fx-text-fill: #C4415D;
+    -fx-font-weight: bold;
 }
 
-.outline-btn:pressed {
-    -fx-background-color: #E8879A;
-    -fx-text-fill: #FFFFFF;
-    -fx-border-color: #E8879A;
-}
-
-.book-btn {
-    -fx-background-color: #C4415D;
-    -fx-text-fill: #FFFFFF;
-    -fx-font-size: 14px;
-    -fx-background-radius: 8;
-    -fx-border-radius: 8;
-    -fx-cursor: hand;
-    -fx-effect: dropshadow(gaussian, rgba(234, 58, 99, 0.35), 8, 0.25, 0, 3);
-}
-
-.book-btn:hover {
-    -fx-background-color: #8B2040;
-    -fx-effect: dropshadow(gaussian, rgba(244, 81, 81, 0.45), 12, 0.3, 0, 4);
-}
-
-.book-btn:pressed {
-    -fx-background-color: #a07d56;
-    -fx-effect: none;
-}
-
-/* ---------- Danger / Delete Button ---------- */
-.danger-btn {
-    -fx-background-color: #C4415D;
-    -fx-text-fill: #F9F3EA;
-    -fx-font-size: 13px;
-    -fx-background-radius: 8;
-    -fx-border-radius: 8;
-    -fx-cursor: hand;
-}
-
-.danger-btn:hover {
-    -fx-background-color: #8B2040;
-}
-
-/* ---------- Sidebar menu buttons (Dashboard) ---------- */
-.side-btn {
-    -fx-background-color: transparent;
+.section-heading {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 32px;
     -fx-text-fill: #2C2523;
-    -fx-font-size: 14px;
-    -fx-alignment: CENTER_LEFT;
-    -fx-background-radius: 8;
-    -fx-border-radius: 8;
-    -fx-cursor: hand;
-    -fx-pref-width: 210px;
-    -fx-pref-height: 42px;
-    -fx-padding: 0 0 0 12;
 }
 
-.side-btn:hover {
-    -fx-background-color: #F7D6D9;
+/* ─── Room card (created in Java) ────────────────────── */
+.room-card {
+    -fx-background-color: #F9F3EA;
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 0 0 0 0;
+    -fx-effect: dropshadow(gaussian, rgba(44,37,35,0.10), 10, 0.12, 0, 3);
+    -fx-cursor: hand;
+}
+
+.room-card-image {
+    -fx-background-radius: 0;
+    -fx-min-height: 160;
+}
+
+.room-card-title {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 20px;
+    -fx-text-fill: #2C2523;
+}
+
+.room-card-desc {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 12px;
+    -fx-text-fill: #8a726b;
+    -fx-wrap-text: true;
+}
+
+.room-card-price {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
     -fx-text-fill: #8B2040;
 }
 
-.side-btn-active {
+.room-card-book-btn {
     -fx-background-color: #8B2040;
     -fx-text-fill: #F9F3EA;
-    -fx-background-radius: 8;
-    -fx-border-radius: 8;
-    -fx-alignment: CENTER_LEFT;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 0;
     -fx-cursor: hand;
-    -fx-pref-width: 210px;
-    -fx-pref-height: 42px;
-    -fx-padding: 0 0 0 12;
+    -fx-padding: 10 18 10 18;
 }
 
-/* ---------- ComboBox ---------- */
-.combo-box {
+.room-card-book-btn:hover {
+    -fx-background-color: #C4415D;
+}
+
+/* ─── Room image placeholder ─────────────────────────── */
+.room-image-placeholder {
+    -fx-background-color: linear-gradient(to bottom right, #EFE4D6, #E6A4B4);
+    -fx-background-radius: 0;
+    -fx-border-color: #C9AA7C;
+    -fx-border-width: 1;
+}
+
+.room-image-text {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 30px;
+    -fx-text-fill: #8F1D3F;
+    -fx-font-style: italic;
+}
+
+/* ─── Chat card ──────────────────────────────────────── */
+.chat-card {
     -fx-background-color: #FFFFFF;
     -fx-border-color: #C8A97E;
-    -fx-border-radius: 8;
-    -fx-background-radius: 8;
-    -fx-border-width: 1.2;
-    -fx-font-size: 14px;
+    -fx-border-width: 1;
+    -fx-padding: 20;
+    -fx-effect: dropshadow(gaussian, rgba(80,45,35,0.10), 14, 0.20, 0, 4);
 }
 
-.combo-box:focused {
-    -fx-border-color: #8B2040;
-}
-
-.combo-box .list-cell {
+.chat-name {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 18px;
     -fx-text-fill: #2C2523;
 }
 
-/* ---------- TableView ---------- */
+/* ─── Scroll pane ────────────────────────────────────── */
+.transparent-scroll {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+}
+
+.transparent-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+/* ─── TableView ──────────────────────────────────────── */
 .table-view {
     -fx-background-color: #F9F3EA;
     -fx-border-color: #C8A97E;
-    -fx-border-radius: 8;
-    -fx-background-radius: 8;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
 }
 
 .table-view .column-header-background {
     -fx-background-color: #8B2040;
-    -fx-background-radius: 8 8 0 0;
+    -fx-background-radius: 0;
 }
 
 .table-view .column-header .label {
     -fx-text-fill: #F9F3EA;
-    -fx-font-size: 13px;
     -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
 }
 
 .table-row-cell:odd {
@@ -276,7 +567,212 @@
     -fx-text-fill: #2C2523;
 }
 
-/* ---------- ScrollPane ---------- */
+/* ─── Sidebar nav buttons ────────────────────────────── */
+.side-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #2C2523;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 14px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+    -fx-cursor: hand;
+    -fx-pref-width: 212px;
+    -fx-pref-height: 44px;
+    -fx-padding: 0 0 0 16;
+}
+
+.side-btn:hover {
+    -fx-background-color: #F7D6D9;
+    -fx-text-fill: #8B2040;
+}
+
+.side-btn-active {
+    -fx-background-color: #8B2040;
+    -fx-text-fill: #F9F3EA;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 14px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-background-radius: 0;
+    -fx-cursor: hand;
+    -fx-pref-width: 212px;
+    -fx-pref-height: 44px;
+    -fx-padding: 0 0 0 16;
+}
+
+/* ─── Legacy classes preserved for compatibility ─────── */
+.root-pane { -fx-background-color: #EDE4D8; }
+
+.card-container {
+    -fx-background-color: #F9F3EA;
+    -fx-background-radius: 0;
+    -fx-effect: dropshadow(gaussian, rgba(44,37,35,0.18), 28, 0.22, 0, 8);
+}
+
+.left-panel {
+    -fx-background-color: #F9F3EA;
+    -fx-background-radius: 0;
+}
+
+.right-panel {
+    -fx-background-color: #EFE4D6;
+    -fx-background-radius: 0;
+}
+
+.input-field {
+    -fx-background-color: #EFD9DF;
+    -fx-background-radius: 0;
+    -fx-border-color: #C4415D;
+    -fx-border-radius: 0;
+    -fx-border-width: 0 0 1.5 0;
+    -fx-padding: 12 14 12 14;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 14px;
+    -fx-text-fill: #2C2523;
+    -fx-prompt-text-fill: #b0978a;
+    -fx-pref-height: 48px;
+}
+
+.input-field:focused {
+    -fx-background-color: #F7D6D9;
+    -fx-border-color: #8B2040;
+    -fx-effect: none;
+}
+
+.main-btn {
+    -fx-background-color: #8B2040;
+    -fx-text-fill: #F9F3EA;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-background-radius: 0;
+    -fx-cursor: hand;
+    -fx-font-weight: bold;
+}
+
+.main-btn:hover { -fx-background-color: #C4415D; }
+.main-btn:pressed { -fx-background-color: #6d1832; }
+
+.outline-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #8B2040;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-border-color: #8B2040;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-cursor: hand;
+}
+
+.outline-btn:hover {
+    -fx-background-color: #F7D6D9;
+    -fx-border-color: #C4415D;
+    -fx-text-fill: #C4415D;
+}
+
+.book-btn {
+    -fx-background-color: #C4415D;
+    -fx-text-fill: #F9F3EA;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-background-radius: 0;
+    -fx-cursor: hand;
+    -fx-font-weight: bold;
+}
+
+.book-btn:hover { -fx-background-color: #8B2040; }
+
+.danger-btn {
+    -fx-background-color: #C4415D;
+    -fx-text-fill: #F9F3EA;
+    -fx-font-size: 13px;
+    -fx-background-radius: 0;
+    -fx-cursor: hand;
+}
+
+.danger-btn:hover { -fx-background-color: #8B2040; }
+
+.main-button {
+    -fx-background-color: #8B2040;
+    -fx-text-fill: white;
+    -fx-font-family: "Georgia";
+    -fx-font-weight: bold;
+    -fx-background-radius: 0;
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+}
+
+.main-button:hover { -fx-background-color: #C4415D; }
+
+.outline-button {
+    -fx-background-color: transparent;
+    -fx-border-color: #8B2040;
+    -fx-border-radius: 0;
+    -fx-text-fill: #8B2040;
+    -fx-font-family: "Georgia";
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
+.outline-button:hover { -fx-background-color: #F7D6D9; }
+
+/* .label global removed — was overriding all label colors */
+
+.section-title {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 30px;
+    -fx-text-fill: #2B2421;
+}
+
+.info-label {
+    -fx-text-fill: #2B2421;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 15px;
+}
+
+.chat-title {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 18px;
+    -fx-text-fill: #2B2421;
+}
+
+.chat-status {
+    -fx-font-size: 12px;
+    -fx-text-fill: #8A726B;
+}
+
+.chat-area {
+    -fx-control-inner-background: #F9F3EA;
+    -fx-text-fill: #2B2421;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 14px;
+    -fx-background-radius: 0;
+    -fx-border-color: #EFE4D6;
+    -fx-border-width: 1;
+    -fx-padding: 10;
+}
+
+.chat-area .content {
+    -fx-background-color: -fx-control-inner-background;
+}
+
+.combo-box {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #C8A97E;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-border-width: 0 0 1.5 0;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 14px;
+}
+
+.combo-box:focused { -fx-border-color: #8B2040; }
+
+.combo-box .list-cell {
+    -fx-text-fill: #2C2523;
+    -fx-font-family: "Georgia";
+}
+
 .scroll-pane {
     -fx-background-color: transparent;
     -fx-background: transparent;
@@ -286,15 +782,13 @@
     -fx-background-color: transparent;
 }
 
-/* ---------- Section card (content panels) ---------- */
 .section-card {
     -fx-background-color: #FFFFFF;
-    -fx-background-radius: 14;
+    -fx-background-radius: 0;
     -fx-effect: dropshadow(gaussian, rgba(44,37,35,0.10), 12, 0.15, 0, 4);
     -fx-padding: 20;
 }
 
-/* ---------- Separator ---------- */
 .separator .line {
     -fx-border-color: #C8A97E;
     -fx-border-width: 1;

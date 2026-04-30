@@ -9,25 +9,26 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane prefHeight="720.0" prefWidth="1280.0" style="-fx-background-color: #EDE4D8;" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="DashboardController">
+<BorderPane prefHeight="720.0" prefWidth="1280.0" styleClass="root-pane" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="DashboardController">
     <top>
-        <HBox alignment="CENTER_LEFT" prefHeight="70.0" style="-fx-background-color: #8B2040; -fx-padding: 0 20 0 20;" BorderPane.alignment="CENTER">
-            <Label fx:id="titleLabel" text="Dashboard" style="-fx-text-fill: #F9F3EA;">
-                <font><Font name="Georgia" size="24.0" /></font>
-            </Label>
-            <Region HBox.hgrow="ALWAYS" />
-            <Label fx:id="userLabel" text="Logged in as: " style="-fx-text-fill: #F9F3EA;">
-                <font><Font name="System" size="14.0" /></font>
-            </Label>
+        <HBox alignment="CENTER_LEFT" prefHeight="66.0" styleClass="topbar" BorderPane.alignment="CENTER">
+            <padding><Insets left="28" right="28"/></padding>
+            <Label fx:id="titleLabel" text="Dashboard" styleClass="topbar-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="userLabel" text="Logged in as: " styleClass="topbar-user"/>
         </HBox>
     </top>
     <left>
-        <VBox fx:id="sideMenu" prefWidth="250.0" spacing="5.0" style="-fx-background-color: #F9F3EA; -fx-padding: 15; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 2, 0);" BorderPane.alignment="CENTER" />
+        <VBox fx:id="sideMenu" prefWidth="240.0" spacing="4.0" styleClass="sidebar" BorderPane.alignment="CENTER">
+            <padding><Insets top="20" left="14" right="14" bottom="20"/></padding>
+        </VBox>
     </left>
     <center>
-        <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-background: transparent;" BorderPane.alignment="CENTER">
+        <ScrollPane fitToWidth="true" styleClass="transparent-scroll" BorderPane.alignment="CENTER">
             <content>
-                <VBox fx:id="contentArea" alignment="TOP_CENTER" spacing="20.0" style="-fx-padding: 30;" />
+                <VBox fx:id="contentArea" alignment="TOP_CENTER" spacing="20.0" styleClass="content-area">
+                    <padding><Insets top="30" left="32" right="32" bottom="30"/></padding>
+                </VBox>
             </content>
         </ScrollPane>
     </center>

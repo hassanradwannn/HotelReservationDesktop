@@ -3,13 +3,14 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.text.Font?>
 
-<VBox spacing="10" style="-fx-padding: 20; -fx-background-color: #F7EFE5;" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GenericListController">
+<VBox spacing="0" style="-fx-padding: 10;" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GenericListController">
     <children>
-        <Label fx:id="titleLabel" text="List" styleClass="section-title">
-            <font><Font name="Georgia" size="29.0" /></font>
-        </Label>
-        <ListView fx:id="listView" prefHeight="470.0" style="-fx-font-size: 14px; -fx-background-color: #FFFFFF; -fx-control-inner-background: #FFFFFF; -fx-text-fill: #2B2421; -fx-border-color: #C9AA7C; -fx-border-radius: 8;" />
+       <Label fx:id="eyebrowLabel" text="RECORDS" styleClass="panel-eyebrow"/>
+       <Label fx:id="titleLabel" text="List" styleClass="panel-title"/>
+       <Region prefHeight="18"/>
+       <ListView fx:id="listView" prefHeight="470.0" styleClass="elegant-list"/>
     </children>
 </VBox>

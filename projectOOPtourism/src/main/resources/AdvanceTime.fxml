@@ -1,25 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.VBox?>
-<?import javafx.scene.text.Font?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 
-<VBox alignment="TOP_CENTER" spacing="20.0" style="-fx-background-color: #F7EFE5; -fx-padding: 20;" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="AdvanceTimeController">
+<VBox spacing="0" style="-fx-padding: 10;" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="AdvanceTimeController">
     <children>
-        <Label text="Advance System Time" styleClass="section-title">
-            <font>
-                <Font name="Georgia" size="29.0" />
-            </font>
-        </Label>
-        <Label fx:id="todayLabel" styleClass="info-label" text="Current date: YYYY-MM-DD" />
-        <TextField fx:id="daysField" maxWidth="360.0" promptText="Days to advance" styleClass="input-field" />
-        <Button onAction="#handleAdvanceTime" prefHeight="42.0" prefWidth="190.0" text="ADVANCE TIME" styleClass="main-button" />
-        <Button onAction="#handleResetTime" prefHeight="42.0" prefWidth="220.0" text="RESET TO REAL TODAY" styleClass="outline-button" />
+       <Label styleClass="panel-eyebrow" text="SYSTEM" />
+       <Label styleClass="panel-title" text="Advance System Time" />
+       <Region prefHeight="18" />
+
+       <VBox maxWidth="500" spacing="14" styleClass="form-card">
+          <children>
+             <Label fx:id="todayLabel" styleClass="profile-field" text="Current date: DD-MM-YYYY" />
+             <TextField fx:id="daysField" maxWidth="420.0" promptText="Days to advance" styleClass="elegant-input" />
+             <Button onAction="#handleAdvanceTime" prefHeight="44.0" prefWidth="200.0" styleClass="primary-action-btn" text="ADVANCE TIME" />
+             <Button onAction="#handleResetTime" prefHeight="44.0" prefWidth="230.0" styleClass="outline-action-btn" text="RESET DATE" />
+          </children>
+       </VBox>
     </children>
-    <padding>
-        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
-    </padding>
 </VBox>

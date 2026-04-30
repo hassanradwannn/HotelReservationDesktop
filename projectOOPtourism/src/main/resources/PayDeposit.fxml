@@ -4,15 +4,21 @@
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.text.Font?>
 
-<VBox spacing="15" style="-fx-padding: 20;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="PayDepositController">
+<VBox spacing="0" style="-fx-padding: 10;" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="PayDepositController">
     <children>
-        <Label text="Pay Deposit" textFill="#2b2421">
-            <font><Font name="Georgia" size="29.0" /></font>
-        </Label>
-        <ComboBox fx:id="pendingCombo" maxWidth="420.0" onAction="#handleSelection" promptText="Select Pending Reservation" style="-fx-background-color: #FFFFFF; -fx-border-color: #C9AA7C; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 5; -fx-font-size: 14px;" />
-        <Label fx:id="detailsLabel" text="Choose a reservation." textFill="#2b2421"><font><Font name="Arial" size="15.0" /></font></Label>
-        <Button mnemonicParsing="false" onAction="#handlePay" prefHeight="42.0" prefWidth="180.0" style="-fx-background-color: #C74261; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 7; -fx-font-size: 13px; -fx-cursor: hand;" text="PAY DEPOSIT" />
+       <Label text="BILLING" styleClass="panel-eyebrow"/>
+       <Label text="Pay Deposit" styleClass="panel-title"/>
+       <Region prefHeight="18"/>
+
+       <VBox spacing="14" styleClass="form-card" maxWidth="500">
+          <children>
+             <ComboBox fx:id="pendingCombo" maxWidth="420.0" onAction="#handleSelection" promptText="Select Pending Reservation" styleClass="elegant-input"/>
+             <Label fx:id="detailsLabel" text="Choose a reservation." styleClass="profile-field"/>
+             <Button mnemonicParsing="false" onAction="#handlePay" prefHeight="44.0" prefWidth="180.0" text="PAY DEPOSIT" styleClass="primary-action-btn"/>
+          </children>
+       </VBox>
     </children>
 </VBox>

@@ -7,19 +7,64 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.geometry.Insets?>
 
-<VBox spacing="15" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="RoomBrowserController">
-    <Label style="-fx-font-family: 'Georgia'; -fx-font-size: 29;" text="Browse Available Rooms" />
-    
-    <HBox alignment="CENTER_LEFT" spacing="12">
-        <ComboBox fx:id="typeFilter" prefWidth="260" promptText="Filter by Room Type" style="-fx-background-color: #FFFFFF; -fx-background-radius: 8; -fx-border-color: #C9AA7C; -fx-border-radius: 8;" />
-        <TextField fx:id="maxPrice" prefWidth="220" promptText="Max price per night" style="-fx-background-color: #FFFFFF; -fx-background-radius: 8; -fx-border-color: #C9AA7C; -fx-border-radius: 8; -fx-padding: 10; -fx-font-size: 14px; -fx-text-fill: #2B2421;" />
-        <Button onAction="#loadRooms" prefHeight="40" prefWidth="120" style="-fx-background-color: #C74261; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 7; -fx-font-size: 13px; -fx-cursor: hand;" text="FILTER" />
-    </HBox>
+<VBox spacing="0" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="RoomBrowserController">
 
-    <ScrollPane fitToWidth="true" prefHeight="520" style="-fx-background-color: transparent; -fx-background: transparent;">
-        <content>
-            <VBox fx:id="roomCards" spacing="15" style="-fx-padding: 10;" />
-        </content>
-    </ScrollPane>
+   <!-- Hero Banner -->
+   <VBox styleClass="room-hero-banner" prefHeight="220" alignment="BOTTOM_LEFT">
+      <padding><Insets top="0" left="60" right="60" bottom="0"/></padding>
+      <children>
+         <HBox alignment="BOTTOM_LEFT" spacing="6">
+            <Label text="A most " styleClass="hero-room-text" textFill="#F9F3EA" style="-fx-text-fill: #F9F3EA;"/>
+            <Label text="distinguished" styleClass="hero-room-italic" textFill="#D4C4BC" style="-fx-text-fill: #D4C4BC;"/>
+         </HBox>
+         <Label text="stay awaits you" styleClass="hero-room-text" textFill="#F9F3EA" style="-fx-text-fill: #F9F3EA;"/>
+         <Label text="Begin curating your stay and exploring our finest offerings" styleClass="hero-room-sub" textFill="#D4C4BC" style="-fx-text-fill: #D4C4BC;"/>
+         <Region prefHeight="28"/>
+      </children>
+   </VBox>
+
+   <!-- Search / Filter Bar -->
+   <VBox styleClass="search-bar-wrapper">
+      <padding><Insets top="22" left="60" right="60" bottom="22"/></padding>
+      <children>
+         <HBox alignment="CENTER_LEFT" spacing="0" styleClass="search-bar-inner">
+            <Label text="RESERVE YOUR SUITE" styleClass="search-bar-label">
+               <padding><Insets left="18" right="18"/></padding>
+            </Label>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button onAction="#loadRooms" text="SEARCH" styleClass="search-btn"/>
+         </HBox>
+
+         <HBox alignment="CENTER_LEFT" spacing="0" styleClass="search-fields-row">
+            <VBox styleClass="search-field-group" HBox.hgrow="ALWAYS">
+               <Label text="ROOM TYPE" styleClass="search-field-label"/>
+               <ComboBox fx:id="typeFilter" promptText="Any Type" styleClass="search-field-combo" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+            </VBox>
+            <VBox styleClass="search-field-group" HBox.hgrow="ALWAYS">
+               <Label text="PRICE / NIGHT" styleClass="search-field-label"/>
+               <TextField fx:id="maxPrice" promptText="Max price" styleClass="search-field-input"/>
+            </VBox>
+         </HBox>
+      </children>
+   </VBox>
+
+   <!-- Rooms Section -->
+   <VBox VBox.vgrow="ALWAYS" styleClass="rooms-section">
+      <padding><Insets top="28" left="60" right="60" bottom="30"/></padding>
+      <children>
+         <Label text="ACCOMMODATIONS" styleClass="section-eyebrow" textFill="#C4415D" style="-fx-text-fill: #C4415D;"/>
+         <Label text="Our finest suites" styleClass="section-heading" textFill="#2C2523" style="-fx-text-fill: #2C2523;"/>
+         <Region prefHeight="18"/>
+
+         <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="transparent-scroll" prefHeight="380">
+            <content>
+               <VBox fx:id="roomCards" spacing="0"/>
+            </content>
+         </ScrollPane>
+      </children>
+   </VBox>
+
 </VBox>

@@ -4,14 +4,20 @@
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.text.Font?>
 
-<VBox spacing="15" style="-fx-padding: 20;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="CancelReservationController">
+<VBox spacing="0" style="-fx-padding: 10;" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="CancelReservationController">
     <children>
-        <Label text="Cancel Reservation" textFill="#2b2421">
-            <font><Font name="Georgia" size="29.0" /></font>
-        </Label>
-        <ComboBox fx:id="reservationCombo" maxWidth="420.0" promptText="Select Reservation" style="-fx-background-color: #FFFFFF; -fx-border-color: #C9AA7C; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 5; -fx-font-size: 14px;" />
-        <Button mnemonicParsing="false" onAction="#handleCancel" prefHeight="42.0" prefWidth="220.0" style="-fx-background-color: #C74261; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 7; -fx-font-size: 13px; -fx-cursor: hand;" text="CANCEL RESERVATION" />
+       <Label text="RESERVATIONS" styleClass="panel-eyebrow"/>
+       <Label text="Cancel Reservation" styleClass="panel-title"/>
+       <Region prefHeight="18"/>
+
+       <VBox spacing="14" styleClass="form-card" maxWidth="500">
+          <children>
+             <ComboBox fx:id="reservationCombo" maxWidth="420.0" promptText="Select Reservation" styleClass="elegant-input"/>
+             <Button mnemonicParsing="false" onAction="#handleCancel" prefHeight="44.0" prefWidth="240.0" text="CANCEL RESERVATION" styleClass="danger-action-btn"/>
+          </children>
+       </VBox>
     </children>
 </VBox>

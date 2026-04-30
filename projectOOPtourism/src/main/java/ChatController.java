@@ -1,3 +1,5 @@
+import java.util.List;
+
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -7,7 +9,6 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
-import java.util.List;
 
 public class ChatController implements DashboardContentController {
 
@@ -40,7 +41,6 @@ public class ChatController implements DashboardContentController {
     private void setupUserSelector() {
         userSelector = new ComboBox<>();
         userSelector.getStyleClass().add("combo-box");
-        userSelector.setStyle("-fx-padding: 5; -fx-font-size: 13px;");
 
         if (currentUser instanceof Guest) {
             userSelector.setPromptText("Select Receptionist...");

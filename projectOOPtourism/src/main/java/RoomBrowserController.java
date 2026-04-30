@@ -1,3 +1,5 @@
+import java.util.List;
+
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -9,10 +11,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
-import java.util.List;
 
 public class RoomBrowserController implements DashboardContentController {
     @FXML private ComboBox<RoomType> typeFilter;
@@ -53,7 +51,7 @@ public class RoomBrowserController implements DashboardContentController {
 
         if (rooms.isEmpty()) {
             Label noRooms = new Label("No available rooms found.");
-            noRooms.setStyle("-fx-text-fill: #2B2421; -fx-font-size: 15px;");
+            noRooms.getStyleClass().add("no-rooms-label");
             roomCards.getChildren().add(noRooms);
             return;
         }
@@ -67,29 +65,27 @@ public class RoomBrowserController implements DashboardContentController {
         HBox card = new HBox(20);
         card.setAlignment(Pos.CENTER_LEFT);
         card.setPadding(new Insets(18));
-        card.setStyle("-fx-background-color: #FFFFFF; -fx-background-radius: 14; -fx-border-color: #C9AA7C; -fx-border-radius: 14; -fx-effect: dropshadow(gaussian, rgba(80,45,35,0.10), 12, 0.2, 0, 4);");
+        card.getStyleClass().add("room-card");
 
         StackPane imageBox = new StackPane();
         imageBox.setPrefSize(170, 120);
-        imageBox.setStyle("-fx-background-color: linear-gradient(to bottom right, #EFE4D6, #E6A4B4); -fx-background-radius: 12; -fx-border-color: #C9AA7C; -fx-border-radius: 12;");
+        imageBox.getStyleClass().add("room-image-box");
 
         Label imageText = new Label("ROOM\n" + room.getRoomNumber());
-        imageText.setFont(Font.font("Georgia", FontWeight.NORMAL, 22));
-        imageText.setStyle("-fx-text-fill: #2B2421;");
+        imageText.getStyleClass().add("room-image-text");
         imageText.setAlignment(Pos.CENTER);
         imageBox.getChildren().add(imageText);
 
         VBox details = new VBox(7);
         details.setPrefWidth(560);
         Label roomTitle = new Label("Room " + room.getRoomNumber() + " — " + room.getRoomType().getName());
-        roomTitle.setFont(Font.font("Georgia", FontWeight.NORMAL, 22));
-        roomTitle.setStyle("-fx-text-fill: #2B2421;");
+        roomTitle.getStyleClass().add("room-title");
         Label price = new Label("Price per night: $" + mainApp.money(room.getRoomType().getPricePerNight()));
-        price.setStyle("-fx-text-fill: #8F1D3F; -fx-font-weight: bold; -fx-font-size: 14px;");
+        price.getStyleClass().add("room-price");
         Label capacity = new Label("Capacity: " + room.getRoomType().getCapacity() + " guests");
-        capacity.setStyle("-fx-text-fill: #2B2421; -fx-font-size: 14px;");
+        capacity.getStyleClass().add("room-capacity");
         Label amenities = new Label("Amenities: " + room.getAmenities());
-        amenities.setStyle("-fx-text-fill: #8A726B; -fx-font-size: 13px;");
+        amenities.getStyleClass().add("room-amenities");
         amenities.setWrapText(true);
         details.getChildren().addAll(roomTitle, price, capacity, amenities);
 

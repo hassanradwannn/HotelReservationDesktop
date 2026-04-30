@@ -1,13 +1,14 @@
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.List;
+
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.util.List;
 
 public class MakeReservationController implements DashboardContentController {
 
@@ -35,7 +36,8 @@ public class MakeReservationController implements DashboardContentController {
             roomBox.setItems(FXCollections.observableArrayList(selectedRoom));
             roomBox.setValue(selectedRoom);
             msgLabel.setText("Selected Room " + selectedRoom.getRoomNumber() + " automatically.");
-            msgLabel.setStyle("-fx-text-fill: #8F1D3F;");
+            msgLabel.getStyleClass().removeAll("error-message", "success-message");
+            msgLabel.getStyleClass().add("success-message");
         }
     }
 
@@ -45,7 +47,8 @@ public class MakeReservationController implements DashboardContentController {
         try {
             if (typeBox.getValue() == null) {
                 msgLabel.setText("Please select a room type.");
-                msgLabel.setStyle("-fx-text-fill: #C74261;");
+                msgLabel.getStyleClass().removeAll("error-message", "success-message");
+                msgLabel.getStyleClass().add("error-message");
                 return;
             }
 
@@ -56,7 +59,8 @@ public class MakeReservationController implements DashboardContentController {
 
             if (!ReservationService.isDateRangeValid(in, out)) {
                 msgLabel.setText("Invalid dates. Check-out must be after check-in.");
-                msgLabel.setStyle("-fx-text-fill: #C74261;");
+                msgLabel.getStyleClass().removeAll("error-message", "success-message");
+                msgLabel.getStyleClass().add("error-message");
                 return;
             }
 
@@ -69,11 +73,13 @@ public class MakeReservationController implements DashboardContentController {
             }
 
             msgLabel.setText(available.isEmpty() ? "No rooms available." : available.size() + " rooms found.");
-            msgLabel.setStyle(available.isEmpty() ? "-fx-text-fill: #C74261;" : "-fx-text-fill: #8F1D3F;");
+            msgLabel.getStyleClass().removeAll("error-message", "success-message");
+            msgLabel.getStyleClass().add(available.isEmpty() ? "error-message" : "success-message");
 
         } catch (NumberFormatException | DateTimeParseException ex) {
             msgLabel.setText("Check guest number and date format (DD-MM-YYYY).");
-            msgLabel.setStyle("-fx-text-fill: #C74261;");
+            msgLabel.getStyleClass().removeAll("error-message", "success-message");
+            msgLabel.getStyleClass().add("error-message");
         }
     }
 
@@ -82,7 +88,8 @@ public class MakeReservationController implements DashboardContentController {
         try {
             if (roomBox.getValue() == null) {
                 msgLabel.setText("Please choose a room first.");
-                msgLabel.setStyle("-fx-text-fill: #C74261;");
+                msgLabel.getStyleClass().removeAll("error-message", "success-message");
+                msgLabel.getStyleClass().add("error-message");
                 return;
             }
 
@@ -98,7 +105,8 @@ public class MakeReservationController implements DashboardContentController {
 
         } catch (Exception ex) {
             msgLabel.setText("Reservation failed: " + ex.getMessage());
-            msgLabel.setStyle("-fx-text-fill: #C74261;");
+            msgLabel.getStyleClass().removeAll("error-message", "success-message");
+            msgLabel.getStyleClass().add("error-message");
         }
     }
 }
