@@ -5,6 +5,8 @@ import database.DatabaseConnection;
 
 public class DatabaseSaver {
 
+    public static boolean silentSync = false;
+
     public static void saveUser(User user) {
         String sql = """
             INSERT IGNORE INTO users 
@@ -38,7 +40,9 @@ public class DatabaseSaver {
             // Salary is not in your current User/Staff models, safely set to null
             stmt.setNull(7, java.sql.Types.DOUBLE);
 
-            stmt.executeUpdate();
+            if (stmt.executeUpdate() > 0 && !silentSync) {
+                Database.notifyDataChanged();
+            }
 
         } catch (Exception e) {
             System.out.println("User database save failed: " + e.getMessage());
@@ -57,7 +61,9 @@ public class DatabaseSaver {
             stmt.setString(1, type.getName());
             stmt.setDouble(2, type.getPricePerNight());
             stmt.setInt(3, type.getCapacity());
-            stmt.executeUpdate();
+            if (stmt.executeUpdate() > 0 && !silentSync) {
+                Database.notifyDataChanged();
+            }
 
         } catch (Exception e) {
             System.out.println("Room type database save failed: " + e.getMessage());
@@ -75,7 +81,9 @@ public class DatabaseSaver {
 
             stmt.setString(1, room.getRoomNumber());
             stmt.setString(2, room.getRoomType().getName());
-            stmt.executeUpdate();
+            if (stmt.executeUpdate() > 0 && !silentSync) {
+                Database.notifyDataChanged();
+            }
 
         } catch (Exception e) {
             System.out.println("Room database save failed: " + e.getMessage());
@@ -93,7 +101,9 @@ public class DatabaseSaver {
 
             stmt.setString(1, amenity.getName());
             stmt.setDouble(2, amenity.getPrice());
-            stmt.executeUpdate();
+            if (stmt.executeUpdate() > 0 && !silentSync) {
+                Database.notifyDataChanged();
+            }
 
         } catch (Exception e) {
             System.out.println("Amenity database save failed: " + e.getMessage());
@@ -119,7 +129,9 @@ public class DatabaseSaver {
             stmt.setDate(4, java.sql.Date.valueOf(checkIn));
             stmt.setDate(5, java.sql.Date.valueOf(checkOut));
             stmt.setString(6, status);
-            stmt.executeUpdate();
+            if (stmt.executeUpdate() > 0 && !silentSync) {
+                Database.notifyDataChanged();
+            }
 
         } catch (Exception e) {
             System.out.println("Reservation database save failed: " + e.getMessage());
@@ -143,7 +155,9 @@ public class DatabaseSaver {
             stmt.setDouble(3, totalAmount);
             stmt.setString(4, paymentMethod);
             stmt.setBoolean(5, paid);
-            stmt.executeUpdate();
+            if (stmt.executeUpdate() > 0 && !silentSync) {
+                Database.notifyDataChanged();
+            }
 
         } catch (Exception e) {
             System.out.println("Invoice database save failed: " + e.getMessage());
@@ -158,7 +172,9 @@ public class DatabaseSaver {
 
             stmt.setDouble(1, newBalance);
             stmt.setString(2, username);
-            stmt.executeUpdate();
+            if (stmt.executeUpdate() > 0 && !silentSync) {
+                Database.notifyDataChanged();
+            }
 
         } catch (Exception e) {
             System.out.println("Failed to update user balance: " + e.getMessage());
@@ -173,7 +189,9 @@ public class DatabaseSaver {
 
             stmt.setString(1, newStatus);
             stmt.setString(2, reservationId);
-            stmt.executeUpdate();
+            if (stmt.executeUpdate() > 0 && !silentSync) {
+                Database.notifyDataChanged();
+            }
 
         } catch (Exception e) {
             System.out.println("Failed to update reservation status: " + e.getMessage());
@@ -188,7 +206,9 @@ public class DatabaseSaver {
 
             stmt.setString(1, newPassword);
             stmt.setString(2, username);
-            stmt.executeUpdate();
+            if (stmt.executeUpdate() > 0 && !silentSync) {
+                Database.notifyDataChanged();
+            }
 
         } catch (Exception e) {
             System.out.println("Failed to update user password: " + e.getMessage());

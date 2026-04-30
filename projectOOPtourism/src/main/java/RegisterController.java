@@ -69,4 +69,9 @@ public class RegisterController {
     private void handleBack() {
         mainApp.showLoginScreen();
     }
+
+    @FXML
+    private void handleSignInLink() {
+        mainApp.showLoginScreen();
+    }
 }

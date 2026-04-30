@@ -2,6 +2,8 @@ public class DatabaseSync {
 
     public static void syncDefaultDataToMySQL() {
 
+        DatabaseSaver.silentSync = true;
+
         for (RoomType type : Database.getRoomTypes()) {
             DatabaseSaver.saveRoomType(type);
         }
@@ -23,5 +25,6 @@ public class DatabaseSync {
         }
 
         System.out.println("Default memory data synced to MySQL.");
+        DatabaseSaver.silentSync = false;
     }
 }

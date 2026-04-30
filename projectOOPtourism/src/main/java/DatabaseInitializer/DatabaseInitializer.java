@@ -86,6 +86,28 @@ public class DatabaseInitializer {
                 )
             """;
             executeUpdate(conn, reservationsTable);
+            // Create invoices table
+        String invoicesTable = """
+            CREATE TABLE IF NOT EXISTS invoices (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                guest_username VARCHAR(100) NOT NULL,
+                room_number VARCHAR(50) NOT NULL,
+                total_amount DOUBLE NOT NULL,
+                payment_method VARCHAR(50) NOT NULL,
+                paid BOOLEAN DEFAULT TRUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """;
+        executeUpdate(conn, invoicesTable);
+
+        String systemSettingsTable = """
+            CREATE TABLE IF NOT EXISTS system_settings (
+                setting_key VARCHAR(50) PRIMARY KEY,
+                setting_value VARCHAR(255) NOT NULL
+            )
+        """;
+        executeUpdate(conn, systemSettingsTable);
+
 
             System.out.println("All tables created successfully.");
             
@@ -102,6 +124,30 @@ public class DatabaseInitializer {
             } catch (SQLException e) {
                 // Column already exists, safe to ignore
             }
+            try {
+                executeUpdate(conn, "ALTER TABLE invoices ADD COLUMN guest_username VARCHAR(100) NOT NULL AFTER id");
+                System.out.println("Added missing 'guest_username' column to invoices table.");
+            } catch (SQLException e) {
+                // Column already exists, safe to ignore
+            }
+        try {
+            executeUpdate(conn, "INSERT IGNORE INTO system_settings (setting_key, setting_value) VALUES ('current_date', '" + java.time.LocalDate.now().toString() + "')");
+            System.out.println("System date tracking initialized.");
+        } catch (SQLException e) {
+            // Safe to ignore
+        }
+        try {
+            executeUpdate(conn, "INSERT IGNORE INTO system_settings (setting_key, setting_value) VALUES ('last_update', '0')");
+            System.out.println("System data versioning initialized.");
+        } catch (SQLException e) {
+            // Safe to ignore
+        }
+        try {
+            executeUpdate(conn, "INSERT IGNORE INTO system_settings (setting_key, setting_value) VALUES ('active_instances', '0')");
+            System.out.println("Active instance tracking initialized.");
+        } catch (SQLException e) {
+            // Safe to ignore
+        }
         }
     }
 

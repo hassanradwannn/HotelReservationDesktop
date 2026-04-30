@@ -1,8 +1,52 @@
-import database.DatabaseConnection;
+import DatabaseInitializer.DatabaseConnection;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class ChatDatabase {
+
+    // Chat message data class
+    public static class ChatMessage {
+        private final String senderUsername;
+        private final String message;
+        private final Timestamp sentAt;
+
+        public ChatMessage(String senderUsername, String message, Timestamp sentAt) {
+            this.senderUsername = senderUsername;
+            this.message = message;
+            this.sentAt = sentAt;
+        }
+
+        public String getSenderUsername() { return senderUsername; }
+        public String getMessage() { return message; }
+        public Timestamp getSentAt() { return sentAt; }
+
+        @Override
+        public String toString() {
+            return senderUsername + ": " + message + " [" + sentAt + "]";
+        }
+    }
+
+    // Chat info data class
+    public static class ChatInfo {
+        private final int chatId;
+        private final String guestUsername;
+        private final String receptionistUsername;
+        private final Timestamp createdAt;
+
+        public ChatInfo(int chatId, String guestUsername, String receptionistUsername, Timestamp createdAt) {
+            this.chatId = chatId;
+            this.guestUsername = guestUsername;
+            this.receptionistUsername = receptionistUsername;
+            this.createdAt = createdAt;
+        }
+
+        public int getChatId() { return chatId; }
+        public String getGuestUsername() { return guestUsername; }
+        public String getReceptionistUsername() { return receptionistUsername; }
+        public Timestamp getCreatedAt() { return createdAt; }
+    }
 
     public static int getOrCreateChat(String guestUsername, String receptionistUsername) {
         String findSql = """
@@ -86,9 +130,9 @@ public class ChatDatabase {
                 hasMessages = true;
                 System.out.println(
                         rs.getString("sender_username")
-                        + ": "
-                        + rs.getString("message")
-                        + " [" + rs.getTimestamp("sent_at") + "]"
+                                + ": "
+                                + rs.getString("message")
+                                + " [" + rs.getTimestamp("sent_at") + "]"
                 );
             }
 
@@ -101,6 +145,101 @@ public class ChatDatabase {
         } catch (Exception e) {
             System.out.println("Could not load messages: " + e.getMessage());
         }
+    }
+
+    // Load chat messages as a list for UI display
+    public static List<ChatMessage> loadChatMessages(int chatId) {
+        List<ChatMessage> messages = new ArrayList<>();
+        String sql = """
+            SELECT sender_username, message, sent_at
+            FROM chat_messages
+            WHERE chat_id = ?
+            ORDER BY sent_at ASC
+        """;
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, chatId);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                messages.add(new ChatMessage(
+                        rs.getString("sender_username"),
+                        rs.getString("message"),
+                        rs.getTimestamp("sent_at")
+                ));
+            }
+
+        } catch (Exception e) {
+            System.out.println("Could not load messages: " + e.getMessage());
+        }
+
+        return messages;
+    }
+
+    // Get all chats for a specific user (guest or receptionist)
+    public static List<ChatInfo> getUserChats(String username) {
+        List<ChatInfo> chats = new ArrayList<>();
+        String sql = """
+            SELECT id, guest_username, receptionist_username, created_at
+            FROM chats
+            WHERE guest_username = ? OR receptionist_username = ?
+            ORDER BY created_at DESC
+        """;
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, username);
+            stmt.setString(2, username);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                chats.add(new ChatInfo(
+                        rs.getInt("id"),
+                        rs.getString("guest_username"),
+                        rs.getString("receptionist_username"),
+                        rs.getTimestamp("created_at")
+                ));
+            }
+
+        } catch (Exception e) {
+            System.out.println("Could not load user chats: " + e.getMessage());
+        }
+
+        return chats;
+    }
+
+    // Get chat between specific guest and receptionist
+    public static ChatInfo getChatBetweenUsers(String guestUsername, String receptionistUsername) {
+        String sql = """
+            SELECT id, guest_username, receptionist_username, created_at
+            FROM chats
+            WHERE guest_username = ? AND receptionist_username = ?
+        """;
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, guestUsername);
+            stmt.setString(2, receptionistUsername);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return new ChatInfo(
+                        rs.getInt("id"),
+                        rs.getString("guest_username"),
+                        rs.getString("receptionist_username"),
+                        rs.getTimestamp("created_at")
+                );
+            }
+
+        } catch (Exception e) {
+            System.out.println("Could not find chat: " + e.getMessage());
+        }
+
+        return null;
     }
 
     public static void guestChatMenu(Scanner input, String guestUsername) {
@@ -193,8 +332,8 @@ public class ChatDatabase {
                 hasChats = true;
                 System.out.println(
                         "Chat ID: " + rs.getInt("id")
-                        + " | Guest: " + rs.getString("guest_username")
-                        + " | Created: " + rs.getTimestamp("created_at")
+                                + " | Guest: " + rs.getString("guest_username")
+                                + " | Created: " + rs.getTimestamp("created_at")
                 );
             }
 

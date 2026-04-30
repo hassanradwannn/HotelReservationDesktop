@@ -1,36 +1,36 @@
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import database.DatabaseConnection;
 
 public class UserDatabase {
-
-    private static final String URL = "jdbc:mysql://localhost:3306/hotel_db";
-    private static final String USER = "root";
-    private static final String PASSWORD = "password";
-
-    public static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(URL, USER, PASSWORD);
-    }
 
     public static ArrayList<User> loadUsersFromDatabase() {
         ArrayList<User> users = new ArrayList<>();
 
         String sql = "SELECT * FROM users";
 
-        try (Connection conn = getConnection();
+        try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
+                try {
                 String username = rs.getString("username");
                 String password = rs.getString("password");
                 String role = rs.getString("role");
-                LocalDate dateOfBirth = rs.getDate("date_of_birth") != null ?
-                    rs.getDate("date_of_birth").toLocalDate() : LocalDate.now();
+
+                LocalDate dateOfBirth = LocalDate.now();
+                try {
+                    if (rs.getDate("date_of_birth") != null) {
+                        dateOfBirth = rs.getDate("date_of_birth").toLocalDate();
+                    }
+                } catch (SQLException ex) {
+                    System.out.println("Warning: Invalid date for user " + username);
+                }
 
                 User user;
 
@@ -48,14 +48,26 @@ public class UserDatabase {
                     // Guest constructor: (username, password, dateOfBirth, balance, address, gender, roomPreferences)
                     double balance = rs.getDouble("balance");
                     String address = rs.getString("address") != null ? rs.getString("address") : "";
-                    Gender gender = rs.getString("gender") != null ?
-                        Gender.valueOf(rs.getString("gender").toUpperCase()) : Gender.MALE;
+                    
+                    Gender gender = Gender.MALE;
+                    String genderStr = rs.getString("gender");
+                    if (genderStr != null && !genderStr.trim().isEmpty()) {
+                        try {
+                            gender = Gender.valueOf(genderStr.trim().toUpperCase());
+                        } catch (IllegalArgumentException ex) {
+                            System.out.println("Warning: Invalid gender '" + genderStr + "' for user " + username);
+                        }
+                    }
+                    
                     String roomPreferences = ""; // Default since we don't store it
 
                     user = new Guest(username, password, dateOfBirth, balance, address, gender, roomPreferences);
                 }
 
                 users.add(user);
+                } catch (Exception e) {
+                    System.out.println("Skipped a user due to error: " + e.getMessage());
+                }
             }
 
         } catch (SQLException e) {
@@ -69,7 +81,7 @@ public class UserDatabase {
     public static User findUser(String username) {
         String sql = "SELECT * FROM users WHERE username = ?";
 
-        try (Connection conn = getConnection();
+        try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, username);
@@ -79,8 +91,15 @@ public class UserDatabase {
             if (rs.next()) {
                 String password = rs.getString("password");
                 String role = rs.getString("role");
-                LocalDate dateOfBirth = rs.getDate("date_of_birth") != null ?
-                    rs.getDate("date_of_birth").toLocalDate() : LocalDate.now();
+                
+                LocalDate dateOfBirth = LocalDate.now();
+                try {
+                    if (rs.getDate("date_of_birth") != null) {
+                        dateOfBirth = rs.getDate("date_of_birth").toLocalDate();
+                    }
+                } catch (SQLException ex) {
+                    System.out.println("Warning: Invalid date for user " + username);
+                }
 
                 User user;
 
@@ -93,8 +112,17 @@ public class UserDatabase {
                 else {
                     double balance = rs.getDouble("balance");
                     String address = rs.getString("address") != null ? rs.getString("address") : "";
-                    Gender gender = rs.getString("gender") != null ?
-                        Gender.valueOf(rs.getString("gender").toUpperCase()) : Gender.MALE;
+                    
+                    Gender gender = Gender.MALE;
+                    String genderStr = rs.getString("gender");
+                    if (genderStr != null && !genderStr.trim().isEmpty()) {
+                        try {
+                            gender = Gender.valueOf(genderStr.trim().toUpperCase());
+                        } catch (IllegalArgumentException ex) {
+                            System.out.println("Warning: Invalid gender '" + genderStr + "' for user " + username);
+                        }
+                    }
+                    
                     String roomPreferences = "";
 
                     user = new Guest(username, password, dateOfBirth, balance, address, gender, roomPreferences);

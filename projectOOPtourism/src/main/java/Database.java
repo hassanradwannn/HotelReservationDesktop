@@ -151,6 +151,62 @@ public class Database {
         return null;
     }
 
+    public static void notifyDataChanged() {
+        String sql = "UPDATE system_settings SET setting_value = setting_value + 1 WHERE setting_key = 'last_update'";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.executeUpdate();
+        } catch (Exception e) {}
+    }
+
+    public static long getLatestDataVersion() {
+        String sql = "SELECT setting_value FROM system_settings WHERE setting_key = 'last_update'";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                return rs.getLong("setting_value");
+            }
+        } catch (Exception e) {}
+        return 0;
+    }
+
+    public static boolean isFirstInstance() {
+        String updateSql = "UPDATE system_settings SET setting_value = setting_value + 1 WHERE setting_key = 'active_instances'";
+        String selectSql = "SELECT setting_value FROM system_settings WHERE setting_key = 'active_instances'";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement updateStmt = conn.prepareStatement(updateSql);
+             PreparedStatement selectStmt = conn.prepareStatement(selectSql)) {
+            updateStmt.executeUpdate();
+            ResultSet rs = selectStmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("setting_value") <= 1;
+            }
+        } catch (Exception e) {}
+        return true; // Default to true if something fails
+    }
+
+    public static void unregisterInstance() {
+        String selectSql = "SELECT setting_value FROM system_settings WHERE setting_key = 'active_instances'";
+        String updateSql = "UPDATE system_settings SET setting_value = ? WHERE setting_key = 'active_instances'";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement selectStmt = conn.prepareStatement(selectSql);
+             PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
+            ResultSet rs = selectStmt.executeQuery();
+            if (rs.next()) {
+                int current = rs.getInt("setting_value");
+                int next = Math.max(0, current - 1);
+                updateStmt.setString(1, String.valueOf(next));
+                updateStmt.executeUpdate();
+                
+                // Automatically reset time when the last instance closes!
+                if (next == 0) {
+                    SystemTime.resetToRealToday();
+                }
+            }
+        } catch (Exception e) {}
+    }
+
     public static void refreshUsersFromDatabase() {
         // Clear current in-memory users
         getGuests().clear();
@@ -162,6 +218,13 @@ public class Database {
         for (User user : loadedUsers) {
             addUser(user);
         }
+    }
+
+    public static void refreshReservationsFromDatabase() {
+        SystemTime.syncFromDatabase();
+        refreshUsersFromDatabase(); // Ensure newly registered guests are loaded
+        getReservations().clear();
+        loadReservationsFromDatabase();
     }
 
     private static void loadReservationsFromDatabase() {
