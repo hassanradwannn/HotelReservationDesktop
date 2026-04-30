@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Button?>
+
+<VBox alignment="CENTER" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="AddAmenityController">
+    <VBox styleClass="form-card" maxWidth="500" spacing="15">
+        <Label text="ADMINISTRATION" styleClass="section-eyebrow"/>
+        <Label text="Add Amenity" styleClass="section-heading"/>
+        <TextField fx:id="nameField" promptText="Amenity Name" styleClass="elegant-input"/>
+        <TextField fx:id="priceField" promptText="Price" styleClass="elegant-input"/>
+        <Button text="Add" onAction="#handleAdd" styleClass="primary-action-btn"/>
+        <Button text="Cancel" onAction="#handleCancel" styleClass="outline-action-btn"/>
+    </VBox>
+</VBox>

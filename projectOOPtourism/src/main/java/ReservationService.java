@@ -224,7 +224,7 @@ public abstract class ReservationService {
     }
 
     public static List<Room> searchAvailableRooms(LocalDate checkIn, LocalDate checkOut,
-            RoomType requestedType, int guests) {
+            RoomType requestedType, int guests, List<Amenity> requestedAmenities) {
         ArrayList<Room> availableRooms = new ArrayList<>();
         if (!isDateRangeValid(checkIn, checkOut)) {
             return availableRooms;
@@ -237,6 +237,19 @@ public abstract class ReservationService {
 
             if (room.getRoomType().getCapacity() < guests) {
                 continue;
+            }
+
+            // Filter by requested amenities
+            if (requestedAmenities != null && !requestedAmenities.isEmpty()) {
+                boolean hasAll = true;
+                List<String> roomAmenityNames = room.getAmenities().stream().map(Amenity::getName).toList();
+                for (Amenity reqAm : requestedAmenities) {
+                    if (!roomAmenityNames.contains(reqAm.getName())) {
+                        hasAll = false;
+                        break;
+                    }
+                }
+                if (!hasAll) continue;
             }
 
             if (isRoomAvailable(room, checkIn, checkOut)) {

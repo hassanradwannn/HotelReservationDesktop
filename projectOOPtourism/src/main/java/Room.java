@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 
 public class Room {
+    private int id;
     private String roomNumber;
     private RoomType roomType;
     private ArrayList<Amenity> amenities = new ArrayList<>();
@@ -10,6 +11,14 @@ public class Room {
         this.roomNumber = roomNumber;
         this.roomType = roomType;
         addAmenity(Database.getAmenities().get(0), Database.getAmenities().get(1));
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getRoomNumber() {

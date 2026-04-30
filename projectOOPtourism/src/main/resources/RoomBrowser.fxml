@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.geometry.Insets?>
@@ -17,11 +19,11 @@
       <padding><Insets top="0" left="60" right="60" bottom="0"/></padding>
       <children>
          <HBox alignment="BOTTOM_LEFT" spacing="6">
-            <Label text="A most " styleClass="hero-room-text" textFill="#F9F3EA" style="-fx-text-fill: #F9F3EA;"/>
-            <Label text="distinguished" styleClass="hero-room-italic" textFill="#D4C4BC" style="-fx-text-fill: #D4C4BC;"/>
+            <Label text="A most " styleClass="hero-room-text"/>
+            <Label text="distinguished" styleClass="hero-room-italic"/>
          </HBox>
-         <Label text="stay awaits you" styleClass="hero-room-text" textFill="#F9F3EA" style="-fx-text-fill: #F9F3EA;"/>
-         <Label text="Begin curating your stay and exploring our finest offerings" styleClass="hero-room-sub" textFill="#D4C4BC" style="-fx-text-fill: #D4C4BC;"/>
+         <Label text="stay awaits you" styleClass="hero-room-text"/>
+         <Label text="Begin curating your stay and exploring our finest offerings" styleClass="hero-room-sub"/>
          <Region prefHeight="28"/>
       </children>
    </VBox>
@@ -47,6 +49,15 @@
                <Label text="PRICE / NIGHT" styleClass="search-field-label"/>
                <TextField fx:id="maxPrice" promptText="Max price" styleClass="search-field-input"/>
             </VBox>
+            <VBox styleClass="search-field-group" HBox.hgrow="ALWAYS">
+               <Label text="REQUIRED AMENITIES" styleClass="search-field-label"/>
+               <HBox spacing="15" alignment="CENTER_LEFT">
+                  <padding><Insets top="5" bottom="5"/></padding>
+                  <CheckBox fx:id="minibarBox" text="Mini-bar" styleClass="elegant-check"/>
+                  <CheckBox fx:id="jacuzziBox" text="Jacuzzi" styleClass="elegant-check"/>
+                  <CheckBox fx:id="gymBox" text="Gym" styleClass="elegant-check"/>
+               </HBox>
+            </VBox>
          </HBox>
       </children>
    </VBox>
@@ -55,13 +66,13 @@
    <VBox VBox.vgrow="ALWAYS" styleClass="rooms-section">
       <padding><Insets top="28" left="60" right="60" bottom="30"/></padding>
       <children>
-         <Label text="ACCOMMODATIONS" styleClass="section-eyebrow" textFill="#C4415D" style="-fx-text-fill: #C4415D;"/>
-         <Label text="Our finest suites" styleClass="section-heading" textFill="#2C2523" style="-fx-text-fill: #2C2523;"/>
+         <Label text="ACCOMMODATIONS" styleClass="section-eyebrow"/>
+         <Label text="Our finest suites" styleClass="section-heading"/>
          <Region prefHeight="18"/>
 
-         <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="transparent-scroll" prefHeight="380">
+         <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="transparent-scroll">
             <content>
-               <VBox fx:id="roomCards" spacing="0"/>
+               <FlowPane fx:id="roomCards" hgap="30" vgap="30" alignment="TOP_LEFT"/>
             </content>
          </ScrollPane>
       </children>

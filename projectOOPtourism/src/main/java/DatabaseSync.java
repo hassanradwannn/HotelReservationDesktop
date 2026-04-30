@@ -14,6 +14,7 @@ public class DatabaseSync {
 
         for (Room room : Database.getRooms()) {
             DatabaseSaver.saveRoom(room);
+            DatabaseSaver.saveRoomAmenities(room);
         }
 
         for (Guest guest : Database.getGuests()) {

@@ -70,6 +70,18 @@ public class DatabaseInitializer {
             """;
             executeUpdate(conn, amenitiesTable);
 
+            // Create room_amenities junction table
+            String roomAmenitiesTable = """
+                CREATE TABLE IF NOT EXISTS room_amenities (
+                    room_number VARCHAR(50) NOT NULL,
+                    amenity_name VARCHAR(100) NOT NULL,
+                    PRIMARY KEY (room_number, amenity_name),
+                    FOREIGN KEY (room_number) REFERENCES rooms(room_number) ON DELETE CASCADE,
+                    FOREIGN KEY (amenity_name) REFERENCES amenities(name) ON DELETE CASCADE
+                )
+            """;
+            executeUpdate(conn, roomAmenitiesTable);
+
             // Create reservations table
             String reservationsTable = """
                 CREATE TABLE IF NOT EXISTS reservations (

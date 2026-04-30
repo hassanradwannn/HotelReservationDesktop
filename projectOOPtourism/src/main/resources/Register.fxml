@@ -51,10 +51,7 @@
 
                            <HBox spacing="16" alignment="CENTER_LEFT" maxWidth="480">
                               <TextField fx:id="dobField" promptText="date of birth  YYYY-MM-DD" styleClass="elegant-input" HBox.hgrow="ALWAYS"/>
-                              <HBox spacing="16" alignment="CENTER">
-                                 <RadioButton text="Male" fx:id="maleBtn" styleClass="elegant-radio"/>
-                                 <RadioButton text="Female" fx:id="femaleBtn" styleClass="elegant-radio"/>
-                              </HBox>
+                              <ComboBox fx:id="genderBox" promptText="Gender" styleClass="elegant-input combo-box" prefWidth="150"/>
                            </HBox>
 
                            <TextField fx:id="prefsField" promptText="room preferences" styleClass="elegant-input" maxWidth="480"/>

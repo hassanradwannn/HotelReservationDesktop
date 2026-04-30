@@ -17,7 +17,6 @@ public class MakeReservationController implements DashboardContentController {
     @FXML private TextField checkInField;
     @FXML private TextField checkOutField;
     @FXML private CheckBox gymBox;
-    @FXML private ComboBox<Room> roomBox;
     @FXML private Label msgLabel;
 
     private Main mainApp;
@@ -33,11 +32,28 @@ public class MakeReservationController implements DashboardContentController {
         Room selectedRoom = mainApp.getSelectedRoomForReservation();
         if (selectedRoom != null) {
             typeBox.setValue(selectedRoom.getRoomType());
-            roomBox.setItems(FXCollections.observableArrayList(selectedRoom));
-            roomBox.setValue(selectedRoom);
             msgLabel.setText("Selected Room " + selectedRoom.getRoomNumber() + " automatically.");
             msgLabel.getStyleClass().removeAll("error-message", "success-message");
             msgLabel.getStyleClass().add("success-message");
+        } else if (mainApp.getSelectedRoomTypeForReservation() != null) {
+            typeBox.setValue(mainApp.getSelectedRoomTypeForReservation());
+            msgLabel.setText("Selected " + mainApp.getSelectedRoomTypeForReservation().getName() + " type. Select dates and guests, then search.");
+            msgLabel.getStyleClass().removeAll("error-message", "success-message");
+            msgLabel.getStyleClass().add("success-message");
+        }
+        
+        // Automatically handle the Gym Pass for the Gustave Penthouse
+        typeBox.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && newVal.getName().equalsIgnoreCase("The Gustave Penthouse")) {
+                gymBox.setSelected(true);
+                gymBox.setDisable(true);
+            } else {
+                gymBox.setDisable(false);
+            }
+        });
+        if (typeBox.getValue() != null && typeBox.getValue().getName().equalsIgnoreCase("The Gustave Penthouse")) {
+            gymBox.setSelected(true);
+            gymBox.setDisable(true);
         }
     }
 
@@ -64,47 +80,21 @@ public class MakeReservationController implements DashboardContentController {
                 return;
             }
 
-            List<Room> available = ReservationService.searchAvailableRooms(in, out, typeBox.getValue(), numGuests);
-            roomBox.setItems(FXCollections.observableArrayList(available));
+            List<Room> available = ReservationService.searchAvailableRooms(in, out, typeBox.getValue(), numGuests, null);
 
-            Room selectedRoom = mainApp.getSelectedRoomForReservation();
-            if (selectedRoom != null && available.contains(selectedRoom)) {
-                roomBox.setValue(selectedRoom);
-            }
-
-            msgLabel.setText(available.isEmpty() ? "No rooms available." : available.size() + " rooms found.");
-            msgLabel.getStyleClass().removeAll("error-message", "success-message");
-            msgLabel.getStyleClass().add(available.isEmpty() ? "error-message" : "success-message");
-
-        } catch (NumberFormatException | DateTimeParseException ex) {
-            msgLabel.setText("Check guest number and date format (DD-MM-YYYY).");
-            msgLabel.getStyleClass().removeAll("error-message", "success-message");
-            msgLabel.getStyleClass().add("error-message");
-        }
-    }
-
-    @FXML
-    private void handleCreate() {
-        try {
-            if (roomBox.getValue() == null) {
-                msgLabel.setText("Please choose a room first.");
+            if (available.isEmpty()) {
+                msgLabel.setText("No rooms available for the selected dates.");
                 msgLabel.getStyleClass().removeAll("error-message", "success-message");
                 msgLabel.getStyleClass().add("error-message");
                 return;
             }
 
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d-M-yyyy");
-            LocalDate in = LocalDate.parse(checkInField.getText().trim(), formatter);
-            LocalDate out = LocalDate.parse(checkOutField.getText().trim(), formatter);
+            // Package the booking info and pass it to the new available rooms selection view
+            Object[] bookingData = new Object[]{ guest, in, out, gymBox.isSelected(), available };
+            mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/AvailableRooms.fxml", bookingData);
 
-            Reservation res = ReservationService.createReservation(guest, roomBox.getValue(), in, out, gymBox.isSelected());
-            mainApp.setSelectedRoomForReservation(null);
-
-            mainApp.alert("Reservation Created", "ID: " + res.getReservationId() + "\nTotal: $" + mainApp.money(res.getTotalPrice()) + "\nDeposit: $" + mainApp.money(ReservationService.getDepositAmount(res)));
-            mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GuestReservations.fxml", guest);
-
-        } catch (Exception ex) {
-            msgLabel.setText("Reservation failed: " + ex.getMessage());
+        } catch (NumberFormatException | DateTimeParseException ex) {
+            msgLabel.setText("Check guest number and date format (DD-MM-YYYY).");
             msgLabel.getStyleClass().removeAll("error-message", "success-message");
             msgLabel.getStyleClass().add("error-message");
         }

@@ -1,44 +1,21 @@
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.util.List;
-import javafx.util.Duration;
-
 import DatabaseInitializer.DatabaseInitializer;
-import javafx.application.Application;
-import javafx.collections.FXCollections;
-import javafx.fxml.FXMLLoader;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 public class Main extends Application {
 
     private Stage stage;
     private User currentUser;
     private Room selectedRoomForReservation;
+    private RoomType selectedRoomTypeForReservation;
     private VBox currentContentArea;
     private DashboardController currentDashboardController;
     private Timeline autoRefreshTimeline;
@@ -158,6 +135,14 @@ public class Main extends Application {
 
     public void setSelectedRoomForReservation(Room room) {
         this.selectedRoomForReservation = room;
+    }
+
+    public RoomType getSelectedRoomTypeForReservation() {
+        return selectedRoomTypeForReservation;
+    }
+
+    public void setSelectedRoomTypeForReservation(RoomType type) {
+        this.selectedRoomTypeForReservation = type;
     }
 
     public void setCurrentUser(User user) {

@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 
 import database.DatabaseConnection;
@@ -39,35 +40,103 @@ public class Database {
             initializeDemoUsers();
         }
 
-        Amenity wifi = new Amenity("WiFi", 10);
-        Amenity tv = new Amenity("Smart TV", 35);
-        Amenity minibar = new Amenity("Mini-bar", 75);
-        Amenity jacuzzi = new Amenity("Jacuzzi", 100);
-        Amenity gym = new Amenity("Gym", 200);
-        getAmenities().add(wifi);
-        getAmenities().add(tv);
-        getAmenities().add(minibar);
-        getAmenities().add(jacuzzi);
-        getAmenities().add(gym);
+        loadAmenitiesFromDatabase();
 
-        RoomType standard = new RoomType("Standard", 500, 1);
-        RoomType deluxe = new RoomType("Deluxe", 700, 2);
-        RoomType suite = new RoomType("Suite", 1000, 4);
-        RoomType penthouse = new RoomType("Penthouse", 2000, 8);
+        if (amenities.isEmpty()) {
+            System.out.println("No amenities found in database. Initializing default amenities...");
+            insertAmenity(new Amenity("WiFi", 10));
+            insertAmenity(new Amenity("Smart TV", 35));
+            insertAmenity(new Amenity("Mini-bar", 75));
+            insertAmenity(new Amenity("Jacuzzi", 100));
+            insertAmenity(new Amenity("Gym", 200));
+        }
+
+        RoomType standard = new RoomType("The Mendle Classic", 500, 1);
+        RoomType deluxe = new RoomType("The Lobby Deluxe", 700, 2);
+        RoomType suite = new RoomType("The Alpine Grand Suite", 1000, 4);
+        RoomType penthouse = new RoomType("The Gustave Penthouse", 2000, 8);
         getRoomTypes().add(standard);
         getRoomTypes().add(deluxe);
         getRoomTypes().add(suite);
         getRoomTypes().add(penthouse);
 
-        generateRoomRange(100, 120, standard);
-        generateRoomRange(200, 220, standard);
-        generateRoomRange(300, 320, deluxe);
-        generateRoomRange(400, 420, deluxe);
-        generateRoomRange(500, 520, suite);
-        generateRoomRange(600, 620, penthouse);
+        // Try to load rooms from database first
+        loadRoomsFromDatabase();
+        
+        // If no rooms in database, generate and insert them
+        if (rooms.isEmpty()) {
+            System.out.println("No rooms found in database. Generating default rooms...");
+            generateAndInsertRoomRange(100, 120, standard);
+            generateAndInsertRoomRange(200, 220, standard);
+            generateAndInsertRoomRange(300, 320, deluxe);
+            generateAndInsertRoomRange(400, 420, deluxe);
+            generateAndInsertRoomRange(500, 520, suite);
+            generateAndInsertRoomRange(600, 620, penthouse);
+        }
 
         // Load reservations from database
         loadReservationsFromDatabase();
+    }
+
+    private static void loadAmenitiesFromDatabase() {
+        String sql = "SELECT * FROM amenities";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                Amenity a = new Amenity(rs.getString("name"), rs.getDouble("price"));
+                a.setId(rs.getInt("id"));
+                amenities.add(a);
+            }
+        } catch (SQLException e) {
+            System.out.println("Error loading amenities from database: " + e.getMessage());
+        }
+    }
+
+    private static void loadRoomsFromDatabase() {
+        String sql = "SELECT r.*, rt.name as room_type_name, rt.price_per_night, rt.capacity " +
+                     "FROM rooms r JOIN room_types rt ON r.room_type_name = rt.name";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                RoomType roomType = new RoomType(
+                    rs.getString("room_type_name"),
+                    rs.getDouble("price_per_night"),
+                    rs.getInt("capacity")
+                );
+                roomType.setId(rs.getInt("id"));
+                
+                Room room = new Room(rs.getString("room_number"), roomType);
+                room.setId(rs.getInt("id"));
+                
+                // Load amenities for this room
+                loadAmenitiesForRoom(room);
+                
+                rooms.add(room);
+            }
+        } catch (SQLException e) {
+            System.out.println("Error loading rooms from database: " + e.getMessage());
+        }
+    }
+
+    private static void loadAmenitiesForRoom(Room room) {
+        String sql = "SELECT a.* FROM amenities a " +
+                     "JOIN room_amenities ra ON a.id = ra.amenity_id " +
+                     "WHERE ra.room_number = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, room.getRoomNumber());
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Amenity amenity = new Amenity(rs.getString("name"), rs.getDouble("price"));
+                    amenity.setId(rs.getInt("id"));
+                    room.addAmenity(amenity);
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error loading amenities for room " + room.getRoomNumber() + ": " + e.getMessage());
+        }
     }
 
     private static void loadUsersFromDatabase() {
@@ -101,24 +170,24 @@ public class Database {
 
             // Determine how many amenities
             int targetCount = 2;
-            if (typeName.equalsIgnoreCase("Deluxe")) targetCount = 3;
-            else if (typeName.equalsIgnoreCase("Suite")) targetCount = 3;
-            else if (typeName.equalsIgnoreCase("Penthouse")) targetCount = 4;
+            if (typeName.equalsIgnoreCase("The Lobby Deluxe")) targetCount = 3;
+            else if (typeName.equalsIgnoreCase("The Alpine Grand Suite")) targetCount = 3;
+            else if (typeName.equalsIgnoreCase("The Gustave Penthouse")) targetCount = 4;
 
             // Penthouse comes with gym pass
-            if (typeName.equalsIgnoreCase("Penthouse")) {
+            if (typeName.equalsIgnoreCase("The Gustave Penthouse")) {
                 room.addAmenity(getAmenities().get(4));
             }
 
             int extrasNeeded = Math.max(0, targetCount - room.getAmenities().size());
 
             ArrayList<Integer> candidates = new ArrayList<>();
-            if (!typeName.equalsIgnoreCase("Standard")) {
+            if (!typeName.equalsIgnoreCase("The Mendle Classic")) {
                 candidates.add(2); // Mini-bar
             }
 
             // Jacuzzi is allowed only for Suite and Penthouse
-            if (typeName.equalsIgnoreCase("Suite") || typeName.equalsIgnoreCase("Penthouse")) {
+            if (typeName.equalsIgnoreCase("The Alpine Grand Suite") || typeName.equalsIgnoreCase("The Gustave Penthouse")) {
                 candidates.add(3); // Jacuzzi
             }
 
@@ -130,6 +199,52 @@ public class Database {
             }
 
             getRooms().add(room);
+        }
+    }
+
+    private static void generateAndInsertRoomRange(int start, int end, RoomType type) {
+        Random rnd = new Random();
+        for (int i = start; i <= end; i++) {
+            Room room = new Room(String.valueOf(i), type);
+            String typeName = type.getName();
+
+            // Determine how many amenities
+            int targetCount = 2;
+            if (typeName.equalsIgnoreCase("The Lobby Deluxe")) targetCount = 3;
+            else if (typeName.equalsIgnoreCase("The Alpine Grand Suite")) targetCount = 3;
+            else if (typeName.equalsIgnoreCase("The Gustave Penthouse")) targetCount = 4;
+
+            // Penthouse comes with gym pass
+            if (typeName.equalsIgnoreCase("The Gustave Penthouse")) {
+                room.addAmenity(getAmenities().get(4));
+            }
+
+            int extrasNeeded = Math.max(0, targetCount - room.getAmenities().size());
+
+            ArrayList<Integer> candidates = new ArrayList<>();
+            if (!typeName.equalsIgnoreCase("The Mendle Classic")) {
+                candidates.add(2); // Mini-bar
+            }
+
+            // Jacuzzi is allowed only for Suite and Penthouse
+            if (typeName.equalsIgnoreCase("The Alpine Grand Suite") || typeName.equalsIgnoreCase("The Gustave Penthouse")) {
+                candidates.add(3); // Jacuzzi
+            }
+
+            // Shuffle candidates and pick the needed number without repeats
+            Collections.shuffle(candidates, rnd);
+            for (int j = 0; j < extrasNeeded && j < candidates.size(); j++) {
+                int amenityIndex = candidates.get(j);
+                room.addAmenity(getAmenities().get(amenityIndex));
+            }
+
+            getRooms().add(room);
+            insertRoom(room);
+            
+            // Save room amenities to database
+            if (!room.getAmenities().isEmpty()) {
+                updateRoomAmenities(room.getId(), room.getAmenities());
+            }
         }
     }
 
@@ -268,6 +383,147 @@ public class Database {
             System.out.println("Loaded " + reservations.size() + " reservations from database.");
         } catch (SQLException e) {
             System.out.println("Error loading reservations from database: " + e.getMessage());
+        }
+    }
+
+    public static void updateAmenity(Amenity a) {
+        String sql = "UPDATE amenities SET name = ?, price = ? WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, a.getName());
+            stmt.setDouble(2, a.getPrice());
+            stmt.setInt(3, a.getId());
+            int rows = stmt.executeUpdate();
+            if (rows > 0) {
+                for (int i = 0; i < getAmenities().size(); i++) {
+                    if (getAmenities().get(i).getId() == a.getId() || getAmenities().get(i).getName().equals(a.getName())) {
+                        getAmenities().set(i, a);
+                        break;
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error updating amenity: " + e.getMessage());
+        }
+    }
+
+    public static void insertAmenity(Amenity a) {
+        String sql = "INSERT INTO amenities (name, price) VALUES (?, ?)";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setString(1, a.getName());
+            stmt.setDouble(2, a.getPrice());
+            stmt.executeUpdate();
+            
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    a.setId(rs.getInt(1));
+                }
+            }
+            
+            // Check if amenity with same ID already exists in the list
+            boolean exists = false;
+            for (Amenity existing : getAmenities()) {
+                if (existing.getId() == a.getId()) {
+                    exists = true;
+                    break;
+                }
+            }
+            if (!exists) getAmenities().add(a);
+        } catch (SQLException e) {
+            System.out.println("Error inserting amenity: " + e.getMessage());
+        }
+    }
+
+    public static void updateRoomType(RoomType rt) {
+        String sql = "UPDATE room_types SET name = ?, price_per_night = ?, capacity = ? WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, rt.getName());
+            stmt.setDouble(2, rt.getPricePerNight());
+            stmt.setInt(3, rt.getCapacity());
+            stmt.setInt(4, rt.getId());
+            int rows = stmt.executeUpdate();
+            if (rows > 0) {
+                for (int i = 0; i < getRoomTypes().size(); i++) {
+                    if (getRoomTypes().get(i).getId() == rt.getId() || getRoomTypes().get(i).getName().equals(rt.getName())) {
+                        getRoomTypes().set(i, rt);
+                        break;
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error updating room type: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public static void insertRoomType(RoomType rt) {
+        String sql = "INSERT INTO room_types (name, price_per_night, capacity) VALUES (?, ?, ?)";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, rt.getName());
+            stmt.setDouble(2, rt.getPricePerNight());
+            stmt.setInt(3, rt.getCapacity());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println("Error inserting room type: " + e.getMessage());
+        }
+    }
+
+    public static void updateRoom(Room r) {
+        String sql = "UPDATE rooms SET room_number = ?, room_type_name = ? WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, r.getRoomNumber());
+            stmt.setString(2, r.getRoomType().getName());
+            stmt.setInt(3, r.getId());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println("Error updating room: " + e.getMessage());
+        }
+    }
+
+    public static void insertRoom(Room r) {
+        String sql = "INSERT INTO rooms (room_number, room_type_name) VALUES (?, ?)";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, r.getRoomNumber());
+            stmt.setString(2, r.getRoomType().getName());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println("Error inserting room: " + e.getMessage());
+        }
+    }
+
+    public static void updateRoomAmenities(int roomId, List<Amenity> updatedAmenities) {
+        // First, get the room number for this room ID
+        String roomNumber = null;
+        for (Room room : getRooms()) {
+            if (room.getId() == roomId) {
+                roomNumber = room.getRoomNumber();
+                break;
+            }
+        }
+        if (roomNumber == null) {
+            System.out.println("Error: Room with ID " + roomId + " not found.");
+            return;
+        }
+        
+        String deleteSql = "DELETE FROM room_amenities WHERE room_number = ?";
+        String insertSql = "INSERT INTO room_amenities (room_number, amenity_name) VALUES (?, ?)";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement deleteStmt = conn.prepareStatement(deleteSql);
+             PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
+            deleteStmt.setString(1, roomNumber);
+            deleteStmt.executeUpdate();
+            for (Amenity amenity : updatedAmenities) {
+                insertStmt.setString(1, roomNumber);
+                insertStmt.setString(2, amenity.getName()); 
+                insertStmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            System.out.println("Error syncing room amenities: " + e.getMessage());
         }
     }
 }

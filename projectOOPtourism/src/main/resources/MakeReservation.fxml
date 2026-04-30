@@ -1,32 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.CheckBox?>
-<?import javafx.scene.control.ComboBox?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.VBox?>
-<?import javafx.scene.layout.Region?>
-<?import javafx.geometry.Insets?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 
-<VBox spacing="0" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="MakeReservationController">
-    <padding><Insets top="10" left="10" right="10" bottom="10"/></padding>
+<VBox spacing="0" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="MakeReservationController">
+    <padding><Insets bottom="10" left="10" right="10" top="10" /></padding>
     <children>
-       <Label text="RESERVATIONS" styleClass="panel-eyebrow"/>
-       <Label text="Make a Reservation" styleClass="panel-title"/>
-       <Region prefHeight="18"/>
+       <Label styleClass="panel-eyebrow" text="RESERVATIONS" />
+       <Label styleClass="panel-title" text="Make a Reservation" />
+       <Region prefHeight="18" />
 
-       <VBox spacing="14" styleClass="form-card" maxWidth="500">
+       <VBox maxWidth="500" spacing="14" styleClass="form-card">
           <children>
-             <ComboBox fx:id="typeBox" maxWidth="420" promptText="Select Room Type" styleClass="elegant-input"/>
-             <TextField fx:id="guestsField" maxWidth="420" promptText="Number of Guests" styleClass="elegant-input"/>
-             <TextField fx:id="checkInField" maxWidth="420" promptText="Check-in  DD-MM-YYYY" styleClass="elegant-input"/>
-             <TextField fx:id="checkOutField" maxWidth="420" promptText="Check-out  DD-MM-YYYY" styleClass="elegant-input"/>
-             <CheckBox fx:id="gymBox" text="Add Gym Pass ($200)" styleClass="elegant-check"/>
-             <Button onAction="#handleSearch" prefHeight="44" prefWidth="200" styleClass="primary-action-btn" text="SEARCH ROOMS"/>
-             <ComboBox fx:id="roomBox" maxWidth="420" promptText="Search first, then choose room" styleClass="elegant-input"/>
-             <Button onAction="#handleCreate" prefHeight="44" prefWidth="240" styleClass="primary-action-btn" text="CREATE RESERVATION"/>
-             <Label fx:id="msgLabel" styleClass="message-label" wrapText="true"/>
+             <ComboBox fx:id="typeBox" maxWidth="420" promptText="Select Room Type" styleClass="elegant-input" />
+             <TextField fx:id="guestsField" maxWidth="420" promptText="Number of Guests" styleClass="elegant-input" />
+             <TextField fx:id="checkInField" maxWidth="420" promptText="Check-in  DD-MM-YYYY" styleClass="elegant-input" />
+             <TextField fx:id="checkOutField" maxWidth="420" promptText="Check-out  DD-MM-YYYY" styleClass="elegant-input" />
+             <CheckBox fx:id="gymBox" styleClass="elegant-check" text="Add Gym Pass ($200)" />
+
+             <Button onAction="#handleSearch" prefHeight="44" prefWidth="200" styleClass="primary-action-btn" text="SEARCH ROOMS" />
+             <Label fx:id="msgLabel" styleClass="message-label" wrapText="true" />
           </children>
        </VBox>
     </children>

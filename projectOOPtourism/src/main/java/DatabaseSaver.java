@@ -110,6 +110,31 @@ public class DatabaseSaver {
         }
     }
 
+    public static void saveRoomAmenities(Room room) {
+        String deleteSql = "DELETE FROM room_amenities WHERE room_number = ?";
+        String insertSql = "INSERT INTO room_amenities (room_number, amenity_name) VALUES (?, ?)";
+
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            // Clear existing amenities first to prevent duplicates/sync updates
+            try (PreparedStatement delStmt = conn.prepareStatement(deleteSql)) {
+                delStmt.setString(1, room.getRoomNumber());
+                delStmt.executeUpdate();
+            }
+            try (PreparedStatement insStmt = conn.prepareStatement(insertSql)) {
+                for (Amenity amenity : room.getAmenities()) {
+                    insStmt.setString(1, room.getRoomNumber());
+                    insStmt.setString(2, amenity.getName());
+                    insStmt.executeUpdate();
+                }
+            }
+            if (!silentSync) {
+                Database.notifyDataChanged();
+            }
+        } catch (Exception e) {
+            System.out.println("Room amenities database save failed: " + e.getMessage());
+        }
+    }
+
     public static void saveReservation(String reservationId, String guestUsername, String roomNumber,
                                        java.time.LocalDate checkIn,
                                        java.time.LocalDate checkOut,
