@@ -19,20 +19,6 @@ public class PayDepositController implements DashboardContentController {
             this.guest = g;
             loadPendingReservations();
         }
-
-        javafx.application.Platform.runLater(() -> {
-            if (pendingCombo.getScene() != null) {
-                for (javafx.scene.Node node : pendingCombo.getScene().getRoot().lookupAll(".label")) {
-                    if (node instanceof Label label && label.getText() != null && 
-                       (label.getText().toLowerCase().contains("deposit") || label.getText().toLowerCase().contains("choose"))) {
-                        String currentStyle = label.getStyle() == null ? "" : label.getStyle();
-                        label.setStyle(currentStyle + "; -fx-text-fill: #2B2421;");
-                    }
-                }
-                String detailsStyle = detailsLabel.getStyle() == null ? "" : detailsLabel.getStyle();
-                detailsLabel.setStyle(detailsStyle + "; -fx-text-fill: #2B2421;");
-            }
-        });
     }
 
     private void loadPendingReservations() {

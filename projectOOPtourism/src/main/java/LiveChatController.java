@@ -27,17 +27,6 @@ public class LiveChatController implements DashboardContentController {
             chatStatus.setText("Offline — start ChatServer.java first");
             chatArea.setText("Cannot connect to server.\nMake sure ChatServer.java is running first.");
         }
-
-        javafx.application.Platform.runLater(() -> {
-            if (inputField.getScene() != null) {
-                for (javafx.scene.Node node : inputField.getScene().getRoot().lookupAll(".label")) {
-                    if (node instanceof Label label && label.getText() != null && label.getText().toLowerCase().contains("chat")) {
-                        String currentStyle = label.getStyle() == null ? "" : label.getStyle();
-                        label.setStyle(currentStyle + "; -fx-text-fill: #2B2421;");
-                    }
-                }
-            }
-        });
     }
 
     @FXML
