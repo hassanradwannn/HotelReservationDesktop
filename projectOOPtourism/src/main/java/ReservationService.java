@@ -78,6 +78,7 @@ public abstract class ReservationService {
                 room.getRoomNumber(),
                 checkIn,
                 checkOut,
+                addGym,
                 reservation.getStatus().toString());
 
           // deprecated check for check in date

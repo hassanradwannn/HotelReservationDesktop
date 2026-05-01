@@ -1,4 +1,5 @@
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import javafx.fxml.FXML;
@@ -37,14 +38,30 @@ public class RoomDetailsController implements DashboardContentController {
         mainApp.setSelectedRoomForReservation(room); // Ensure it's set for the reserve button
         imageTextLabel.setText(room.getRoomType().getName() + "\nLuxury Suite Preview");
 
-        String amenityText = String.join(", ", room.getAmenities().stream().map(Amenity::getName).toList());
+        String amenityText = String.join(", ", getDisplayAmenityNames());
+        double total = Reservation.calculateTotalPrice(room, checkIn, checkOut, hasGymPass);
         detailsLabel.setText(
                 "Room Number: " + room.getRoomNumber()
                         + "\nRoom Type: " + room.getRoomType().getName()
                         + "\nCapacity: " + room.getRoomType().getCapacity()
                         + "\nPrice per night: $" + mainApp.money(room.getRoomType().getPricePerNight())
                         + "\nAmenities: " + amenityText
+                        + "\nTotal: $" + mainApp.money(total)
         );
+    }
+
+    private List<String> getDisplayAmenityNames() {
+        List<String> names = new ArrayList<>();
+        for (Amenity amenity : room.getAmenities()) {
+            if (hasGymPass && Reservation.isGymAmenity(amenity)) {
+                continue;
+            }
+            names.add(amenity.getName());
+        }
+        if (hasGymPass) {
+            names.add(Reservation.GYM_PASS_NAME);
+        }
+        return names;
     }
 
     @FXML

@@ -1,20 +1,23 @@
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 
 import javafx.fxml.FXML;
+import javafx.scene.control.DateCell;
+import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.util.StringConverter;
 
 public class ForgotPasswordController {
     @FXML private TextField usernameField;
-    @FXML private TextField dobField;
+    @FXML private DatePicker dobPicker;
     @FXML private PasswordField newPasswordField;
     @FXML private PasswordField confirmPasswordField;
     @FXML private Label messageLabel;
 
     private Main mainApp;
+    private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public void setMainApp(Main mainApp) {
         this.mainApp = mainApp;
@@ -22,17 +25,38 @@ public class ForgotPasswordController {
 
     @FXML
     public void initialize() {
-        dobField.setPromptText("DOB DD-MM-YYYY");
+        dobPicker.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(LocalDate date) {
+                return date == null ? "" : dtf.format(date);
+            }
+
+            @Override
+            public LocalDate fromString(String text) {
+                if (text == null || text.trim().isEmpty()) {
+                    return null;
+                }
+                return LocalDate.parse(text.trim(), dtf);
+            }
+        });
+
+        dobPicker.setDayCellFactory(picker -> new DateCell() {
+            @Override
+            public void updateItem(LocalDate date, boolean empty) {
+                super.updateItem(date, empty);
+                setDisable(empty || date.isAfter(SystemTime.getToday()));
+            }
+        });
     }
 
     @FXML
     private void handleResetPassword() {
         String username = usernameField.getText().trim();
-        String dobStr = dobField.getText().trim();
+        LocalDate dob = dobPicker.getValue();
         String newPass = newPasswordField.getText().trim();
         String confPass = confirmPasswordField.getText().trim();
 
-        if (username.isEmpty() || dobStr.isEmpty() || newPass.isEmpty() || confPass.isEmpty()) {
+        if (username.isEmpty() || dob == null || newPass.isEmpty() || confPass.isEmpty()) {
             messageLabel.setText("Please fill all fields.");
             return;
         }
@@ -45,23 +69,17 @@ public class ForgotPasswordController {
         try {
             Authentication.validatePasswordStrength(newPass);
 
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d-M-yyyy");
-            LocalDate dob = LocalDate.parse(dobStr, formatter);
-
             User user = UserDatabase.findUser(username);
             if (user == null || !user.getDateOfBirth().isEqual(dob)) {
                 messageLabel.setText("Invalid Username or Date of Birth.");
                 return;
             }
 
-            // Real-time update in MySQL
             DatabaseSaver.updateUserPassword(username, newPass);
 
             mainApp.alert("Success", "Password reset successfully. You can now log in.");
             mainApp.showLoginScreen();
 
-        } catch (DateTimeParseException ex) {
-            messageLabel.setText("Invalid date format. Use DD-MM-YYYY.");
         } catch (Exception ex) {
             messageLabel.setText(ex.getMessage() != null ? ex.getMessage() : "Failed to reset password.");
         }

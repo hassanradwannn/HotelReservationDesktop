@@ -1,6 +1,5 @@
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -13,25 +12,14 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.DateCell;
-import javafx.scene.control.DatePicker;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.Spinner;
-import javafx.scene.control.TextField;
-import javafx.scene.control.ToggleButton;
-import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
 import javafx.util.StringConverter;
 
 public class GuestHomeController implements DashboardContentController {
 
+    @FXML private VBox heroArea;
+    @FXML private VBox searchArea;
     @FXML private DatePicker checkInPicker;
     @FXML private DatePicker checkOutPicker;
     @FXML private Spinner<Integer> guestsSpinner;
@@ -39,7 +27,6 @@ public class GuestHomeController implements DashboardContentController {
     @FXML private ComboBox<RoomType> typeCombo;
     @FXML private FlowPane amenityPillsPane;
     @FXML private Label msgLabel;
-    @FXML private VBox heroArea;
     @FXML private VBox resultsArea;
     @FXML private VBox resultsPane;
     @FXML private HBox quickCardsArea;
@@ -47,7 +34,7 @@ public class GuestHomeController implements DashboardContentController {
     @FXML private Label summaryCheckInLabel;
     @FXML private Label summaryCheckOutLabel;
     @FXML private Label summaryGuestsLabel;
-    @FXML private Label summaryPriceLabel;
+    @FXML private Label summaryBudgetLabel;
     @FXML private Label summaryTypeLabel;
     @FXML private Label summaryAmenitiesLabel;
     @FXML private Label resultsCountLabel;
@@ -55,87 +42,46 @@ public class GuestHomeController implements DashboardContentController {
     private Main mainApp;
     private Guest guest;
     private final Set<String> selectedAmenities = new HashSet<>();
-
-    private static final DateTimeFormatter DISPLAY_FMT = DateTimeFormatter.ofPattern("d/M/yyyy");
-    private static final DateTimeFormatter SUMMARY_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-    private static final List<DateTimeFormatter> ACCEPTED_DATE_FORMATS = List.of(
-            DateTimeFormatter.ofPattern("d/M/yyyy"),
-            DateTimeFormatter.ofPattern("d-M-yyyy"),
-            DateTimeFormatter.ISO_LOCAL_DATE
-    );
+    private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     @Override
     public void initData(Main mainApp, Object data) {
         this.mainApp = mainApp;
-        ReservationSearchContext returnContext = null;
-        if (data instanceof ReservationSearchContext context) {
-            returnContext = context;
-            this.guest = context.getGuest();
+
+        ReservationSearchContext context = null;
+        if (data instanceof ReservationSearchContext searchContext) {
+            context = searchContext;
+            this.guest = searchContext.getGuest();
         } else {
             this.guest = (Guest) data;
         }
 
-        if (guest != null) {
-            heroSubLabel.setText("Welcome back, " + guest.getUsername() + ". Begin curating your stay.");
-        }
+        heroSubLabel.setText("Welcome back, " + guest.getUsername() + ". Begin curating your stay.");
 
+        setupDatePickerFormat(checkInPicker);
+        setupDatePickerFormat(checkOutPicker);
+        setupBlackoutDates();
         setupRoomTypeCombo();
-        setupDatePickers();
-        refreshRoomTypeChoices();
-        applySearchContext(returnContext);
+
+        guestsSpinner.setValueFactory(
+                new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 20, 2)
+        );
+
         buildAmenityPills();
 
         mainApp.setCurrentViewRefresher(() -> {
-            refreshCatalogData();
-            refreshDatePickers();
-            refreshRoomTypeChoices();
             buildAmenityPills();
+            setupRoomTypeCombo();
         });
 
-        if (returnContext != null) {
+        if (context != null) {
+            applySearchContext(context);
             handleSearch();
         }
     }
 
-    private void applySearchContext(ReservationSearchContext context) {
-        if (context == null) {
-            checkInPicker.setValue(SystemTime.getToday());
-            return;
-        }
-
-        checkInPicker.setValue(context.getCheckIn());
-        checkOutPicker.setValue(context.getCheckOut());
-        if (guestsSpinner.getValueFactory() != null) {
-            guestsSpinner.getValueFactory().setValue(context.getGuests());
-        }
-        if (context.getMaxPrice() == null) {
-            maxPriceField.clear();
-        } else {
-            maxPriceField.setText(formatWholeMoney(context.getMaxPrice()));
-        }
-
-        selectedAmenities.clear();
-        selectedAmenities.addAll(context.getRequestedAmenities().stream().map(Amenity::getName).toList());
-
-        RoomType searchType = context.getSearchRoomType();
-        if (searchType == null) {
-            typeCombo.setValue(null);
-        } else {
-            Database.getRoomTypes().stream()
-                    .filter(type -> type.getName().equals(searchType.getName()))
-                    .findFirst()
-                    .ifPresentOrElse(typeCombo::setValue, () -> typeCombo.setValue(searchType));
-        }
-    }
-
-    private void refreshCatalogData() {
-        Database.loadAllRoomTypes();
-        Database.loadAllAmenities();
-        Database.loadAllRooms();
-    }
-
     private void setupRoomTypeCombo() {
-        typeCombo.setPromptText("Any type");
+        typeCombo.setItems(FXCollections.observableArrayList(Database.getRoomTypes()));
         typeCombo.setConverter(new StringConverter<>() {
             @Override
             public String toString(RoomType roomType) {
@@ -143,18 +89,48 @@ public class GuestHomeController implements DashboardContentController {
             }
 
             @Override
-            public RoomType fromString(String value) {
-                return CatalogService.findRoomType(value);
+            public RoomType fromString(String text) {
+                return Database.getRoomTypes().stream()
+                        .filter(type -> type.getName().equals(text))
+                        .findFirst()
+                        .orElse(null);
             }
         });
-        typeCombo.setCellFactory(listView -> roomTypeCell());
-        typeCombo.setButtonCell(roomTypeCell());
+
+        typeCombo.setCellFactory(listView -> new ListCell<>() {
+            @Override
+            protected void updateItem(RoomType item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : item.getName());
+            }
+        });
+        typeCombo.setButtonCell(new ListCell<>() {
+            @Override
+            protected void updateItem(RoomType item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : item.getName());
+            }
+        });
     }
 
-    private void setupDatePickers() {
-        setupDatePickerFormat(checkInPicker);
-        setupDatePickerFormat(checkOutPicker);
+    private void setupDatePickerFormat(DatePicker picker) {
+        picker.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(LocalDate date) {
+                return date == null ? "" : FMT.format(date);
+            }
 
+            @Override
+            public LocalDate fromString(String text) {
+                if (text == null || text.trim().isEmpty()) {
+                    return null;
+                }
+                return LocalDate.parse(text.trim(), FMT);
+            }
+        });
+    }
+
+    private void setupBlackoutDates() {
         checkInPicker.setDayCellFactory(picker -> new DateCell() {
             @Override
             public void updateItem(LocalDate date, boolean empty) {
@@ -163,92 +139,60 @@ public class GuestHomeController implements DashboardContentController {
             }
         });
 
-        checkInPicker.valueProperty().addListener((obs, oldValue, newValue) -> {
-            updateCheckOutDateRules();
-            if (newValue != null
-                    && checkOutPicker.getValue() != null
-                    && !checkOutPicker.getValue().isAfter(newValue)) {
+        checkInPicker.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal == null) {
+                return;
+            }
+
+            checkOutPicker.setDayCellFactory(picker -> new DateCell() {
+                @Override
+                public void updateItem(LocalDate date, boolean empty) {
+                    super.updateItem(date, empty);
+                    setDisable(empty || date.isBefore(newVal.plusDays(1)));
+                }
+            });
+
+            if (checkOutPicker.getValue() != null && checkOutPicker.getValue().isBefore(newVal.plusDays(1))) {
                 checkOutPicker.setValue(null);
             }
         });
-        updateCheckOutDateRules();
     }
 
-    private void setupDatePickerFormat(DatePicker picker) {
-        picker.setConverter(new StringConverter<>() {
-            @Override
-            public String toString(LocalDate date) {
-                return date == null ? "" : date.format(DISPLAY_FMT);
-            }
+    private void applySearchContext(ReservationSearchContext context) {
+        checkInPicker.setValue(context.getCheckIn());
+        checkOutPicker.setValue(context.getCheckOut());
+        guestsSpinner.getValueFactory().setValue(context.getGuests());
+        maxPriceField.setText(context.getMaxPrice() == null ? "" : formatWholeMoney(context.getMaxPrice()));
+        typeCombo.setValue(findRoomType(context.getSearchRoomType()));
 
-            @Override
-            public LocalDate fromString(String value) {
-                if (value == null || value.isBlank()) {
-                    return null;
-                }
-
-                for (DateTimeFormatter formatter : ACCEPTED_DATE_FORMATS) {
-                    try {
-                        return LocalDate.parse(value.trim(), formatter);
-                    } catch (DateTimeParseException ignored) {
-                    }
-                }
-                return null;
-            }
-        });
+        selectedAmenities.clear();
+        selectedAmenities.addAll(context.getRequestedAmenities().stream().map(Amenity::getName).toList());
+        buildAmenityPills();
     }
 
-    private void updateCheckOutDateRules() {
-        LocalDate earliestCheckOut = checkInPicker.getValue() == null
-                ? SystemTime.getToday().plusDays(1)
-                : checkInPicker.getValue().plusDays(1);
-
-        checkOutPicker.setDayCellFactory(picker -> new DateCell() {
-            @Override
-            public void updateItem(LocalDate date, boolean empty) {
-                super.updateItem(date, empty);
-                setDisable(empty || date.isBefore(earliestCheckOut));
-            }
-        });
-    }
-
-    private void refreshDatePickers() {
-        LocalDate today = SystemTime.getToday();
-        if (checkInPicker.getValue() == null || checkInPicker.getValue().isBefore(today)) {
-            checkInPicker.setValue(today);
+    private RoomType findRoomType(RoomType roomType) {
+        if (roomType == null) {
+            return null;
         }
-        updateCheckOutDateRules();
-    }
-
-    private ListCell<RoomType> roomTypeCell() {
-        return new ListCell<>() {
-            @Override
-            protected void updateItem(RoomType item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? null : item.getName());
-            }
-        };
-    }
-
-    private void refreshRoomTypeChoices() {
-        String selectedName = typeCombo.getValue() == null ? null : typeCombo.getValue().getName();
-        typeCombo.setItems(FXCollections.observableArrayList(Database.getRoomTypes()));
-        if (selectedName != null) {
-            Database.getRoomTypes().stream()
-                    .filter(type -> type.getName().equals(selectedName))
-                    .findFirst()
-                    .ifPresent(typeCombo::setValue);
-        }
+        return Database.getRoomTypes().stream()
+                .filter(type -> type.getName().equals(roomType.getName()))
+                .findFirst()
+                .orElse(roomType);
     }
 
     private void buildAmenityPills() {
         amenityPillsPane.getChildren().clear();
-        selectedAmenities.retainAll(Database.getAmenities().stream().map(Amenity::getName).toList());
+        selectedAmenities.retainAll(
+                Database.getAmenities().stream().map(Amenity::getName).toList()
+        );
 
         for (Amenity amenity : Database.getAmenities()) {
             ToggleButton pill = new ToggleButton(amenity.getName());
             pill.getStyleClass().add("amenity-pill");
             pill.setSelected(selectedAmenities.contains(amenity.getName()));
+            if (pill.isSelected()) {
+                pill.getStyleClass().add("amenity-pill-active");
+            }
 
             pill.selectedProperty().addListener((obs, wasSelected, isSelected) -> {
                 if (isSelected) {
@@ -262,9 +206,6 @@ public class GuestHomeController implements DashboardContentController {
                 }
             });
 
-            if (pill.isSelected() && !pill.getStyleClass().contains("amenity-pill-active")) {
-                pill.getStyleClass().add("amenity-pill-active");
-            }
             amenityPillsPane.getChildren().add(pill);
         }
     }
@@ -272,27 +213,67 @@ public class GuestHomeController implements DashboardContentController {
     @FXML
     private void handleSearch() {
         msgLabel.setText("");
-        refreshCatalogData();
-        refreshRoomTypeChoices();
-        buildAmenityPills();
         Database.refreshReservationsFromDatabase();
 
-        LocalDate checkIn = checkInPicker.getValue();
-        LocalDate checkOut = checkOutPicker.getValue();
+        try {
+            LocalDate checkIn = checkInPicker.getValue();
+            if (checkIn == null) {
+                checkIn = SystemTime.getToday();
+                checkInPicker.setValue(checkIn);
+            }
 
-        if (checkIn == null || checkOut == null) {
-            msgLabel.setText("Please choose check-in and check-out dates.");
-            return;
+            LocalDate checkOut = checkOutPicker.getValue();
+            if (checkOut == null) {
+                msgLabel.setText("Please enter a check-out date.");
+                return;
+            }
+
+            if (!ReservationService.isDateRangeValid(checkIn, checkOut)) {
+                msgLabel.setText("Invalid dates. Check-out must be after check-in and not in the past.");
+                return;
+            }
+
+            int numGuests = guestsSpinner.getValue();
+            RoomType selectedType = typeCombo.getValue();
+            List<Amenity> amenityFilter = getSelectedAmenityObjects();
+            Double maxPrice;
+            try {
+                maxPrice = parseBudget();
+            } catch (NumberFormatException ex) {
+                msgLabel.setText("Budget must be a valid number.");
+                return;
+            }
+
+            List<RoomType> typesToSearch = selectedType != null
+                    ? List.of(selectedType)
+                    : new ArrayList<>(Database.getRoomTypes());
+
+            List<Room> available = new ArrayList<>();
+            for (RoomType type : typesToSearch) {
+                if (type.getCapacity() < numGuests) {
+                    continue;
+                }
+                if (maxPrice != null && type.getPricePerNight() > maxPrice) {
+                    continue;
+                }
+                available.addAll(ReservationService.searchAvailableRooms(
+                        checkIn, checkOut, type, numGuests, amenityFilter));
+            }
+
+            if (available.isEmpty()) {
+                msgLabel.setText("No rooms available for the selected criteria.");
+                showResults(false);
+                return;
+            }
+
+            buildRoomTypeResults(available, checkIn, checkOut, numGuests, amenityFilter, maxPrice, selectedType);
+            showResults(true);
+        } catch (RuntimeException ex) {
+            msgLabel.setText("Use date format DD/MM/YYYY (e.g. 15/06/2026).");
         }
+    }
 
-        if (!ReservationService.isDateRangeValid(checkIn, checkOut)) {
-            msgLabel.setText("Invalid dates. Check-out must be after check-in and not in the past.");
-            return;
-        }
-
-        int numGuests = guestsSpinner.getValue();
-        RoomType selectedType = typeCombo.getValue();
-
+    private List<Amenity> getSelectedAmenityObjects() {
         List<Amenity> amenityFilter = new ArrayList<>();
         for (String name : selectedAmenities) {
             Amenity amenity = CatalogService.findAmenity(name);
@@ -300,41 +281,15 @@ public class GuestHomeController implements DashboardContentController {
                 amenityFilter.add(amenity);
             }
         }
+        return amenityFilter;
+    }
 
-        Double maxPrice = null;
-        String priceText = maxPriceField.getText().trim();
-        if (!priceText.isEmpty()) {
-            try {
-                maxPrice = Double.parseDouble(priceText);
-            } catch (NumberFormatException ignored) {
-            }
+    private Double parseBudget() {
+        String budgetText = maxPriceField.getText().trim();
+        if (budgetText.isEmpty()) {
+            return null;
         }
-        final Double maxPriceFinal = maxPrice;
-
-        List<RoomType> typesToSearch = selectedType != null
-                ? List.of(selectedType)
-                : Database.getRoomTypes();
-
-        List<Room> available = new ArrayList<>();
-        for (RoomType type : typesToSearch) {
-            if (type.getCapacity() < numGuests) {
-                continue;
-            }
-            if (maxPriceFinal != null && type.getPricePerNight() > maxPriceFinal) {
-                continue;
-            }
-            available.addAll(ReservationService.searchAvailableRooms(
-                    checkIn, checkOut, type, numGuests, amenityFilter));
-        }
-
-        if (available.isEmpty()) {
-            msgLabel.setText("No rooms available for the selected criteria.");
-            showResults(false);
-            return;
-        }
-
-        buildRoomTypeResults(available, checkIn, checkOut, numGuests, amenityFilter, maxPriceFinal, selectedType);
-        showResults(true);
+        return Double.parseDouble(budgetText);
     }
 
     private void buildRoomTypeResults(
@@ -356,6 +311,7 @@ public class GuestHomeController implements DashboardContentController {
         int rowIndex = 0;
         for (List<Room> typeRooms : roomsByType.values()) {
             RoomType roomType = typeRooms.get(0).getRoomType();
+            Room pricedRoom = typeRooms.get(0);
 
             HBox row = new HBox(0);
             row.getStyleClass().add("room-type-result-row");
@@ -419,8 +375,6 @@ public class GuestHomeController implements DashboardContentController {
             priceBox.setAlignment(Pos.CENTER);
             VBox.setVgrow(priceBox, Priority.ALWAYS);
 
-            Room pricedRoom = typeRooms.get(0);
-
             Label price = new Label("$" + formatWholeMoney(roomType.getPricePerNight()));
             price.getStyleClass().add("room-type-result-price");
             Label perNight = new Label("per night");
@@ -430,12 +384,11 @@ public class GuestHomeController implements DashboardContentController {
             VBox.setMargin(total, new Insets(14, 0, 0, 0));
             priceBox.getChildren().addAll(price, perNight, total);
 
-            Button bookBtn = new Button("RESERVE");
-            bookBtn.getStyleClass().add("room-type-result-reserve-btn");
-            bookBtn.setMaxWidth(Double.MAX_VALUE);
-            bookBtn.setPrefHeight(72);
-
-            bookBtn.setOnAction(e -> {
+            Button reserveBtn = new Button("RESERVE");
+            reserveBtn.getStyleClass().add("room-type-result-reserve-btn");
+            reserveBtn.setMaxWidth(Double.MAX_VALUE);
+            reserveBtn.setPrefHeight(72);
+            reserveBtn.setOnAction(e -> {
                 mainApp.setSelectedRoomForReservation(null);
                 mainApp.setSelectedRoomTypeForReservation(roomType);
                 ReservationSearchContext context = new ReservationSearchContext(
@@ -443,7 +396,7 @@ public class GuestHomeController implements DashboardContentController {
                 mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/MakeReservation.fxml", context);
             });
 
-            pricePanel.getChildren().addAll(priceBox, bookBtn);
+            pricePanel.getChildren().addAll(priceBox, reserveBtn);
             details.getChildren().addAll(titleRow, description, amenityChips, spacer);
             row.getChildren().addAll(visual, details, pricePanel);
             resultsPane.getChildren().add(row);
@@ -459,10 +412,10 @@ public class GuestHomeController implements DashboardContentController {
             List<Amenity> amenityFilter,
             Double maxPrice,
             RoomType selectedType) {
-        summaryCheckInLabel.setText(checkIn.format(SUMMARY_FMT));
-        summaryCheckOutLabel.setText(checkOut.format(SUMMARY_FMT));
+        summaryCheckInLabel.setText(checkIn.format(FMT));
+        summaryCheckOutLabel.setText(checkOut.format(FMT));
         summaryGuestsLabel.setText(numGuests + " " + (numGuests == 1 ? "guest" : "guests"));
-        summaryPriceLabel.setText(maxPrice == null ? "ANY" : "$" + formatWholeMoney(maxPrice));
+        summaryBudgetLabel.setText(maxPrice == null ? "ANY" : "$" + formatWholeMoney(maxPrice));
         summaryTypeLabel.setText(selectedType == null ? "ANY" : selectedType.getName().toUpperCase());
         summaryAmenitiesLabel.setText(amenityFilter == null || amenityFilter.isEmpty()
                 ? "ANY"
@@ -494,7 +447,7 @@ public class GuestHomeController implements DashboardContentController {
     private String getRoomTypeDescription(RoomType roomType) {
         String name = roomType.getName().toLowerCase();
         if (name.contains("mendle")) {
-            return "Cozy single room with writing desk, garden-facing window, Smart TV, and high-speed WiFi included.";
+            return "Cozy single room with writing desk, garden-facing window. Smart TV and high-speed WiFi included";
         }
         if (name.contains("lobby")) {
             return "Elevated classic with king bed, reading alcove, copper bath fixtures, and a view of the inner courtyard fountain.";
@@ -503,7 +456,7 @@ public class GuestHomeController implements DashboardContentController {
             return "Spacious two-room suite with fireplace, velvet chaises, a private terrace, and direct mountain views.";
         }
         if (name.contains("gustave")) {
-            return "The crown jewel of the hotel. Grand parlor, two dressing rooms, rooftop terrace, and gym membership.";
+            return "The crown jewel of the hotel. Grand parlor, two dressing rooms, rooftop terrace, gym membership, and jacuzzi.";
         }
         return "A carefully appointed suite with refined finishes, attentive service, and selected hotel amenities.";
     }
@@ -527,6 +480,8 @@ public class GuestHomeController implements DashboardContentController {
     private void showResults(boolean show) {
         heroArea.setVisible(!show);
         heroArea.setManaged(!show);
+        searchArea.setVisible(!show);
+        searchArea.setManaged(!show);
         quickCardsArea.setVisible(!show);
         quickCardsArea.setManaged(!show);
         resultsArea.setVisible(show);
@@ -538,11 +493,11 @@ public class GuestHomeController implements DashboardContentController {
         showResults(false);
     }
 
-    @FXML private void showProfile() { mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GuestProfile.fxml", guest); }
+    @FXML private void showProfile()      { mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GuestProfile.fxml", guest); }
     @FXML private void showReservations() { mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GuestReservations.fxml", guest); }
-    @FXML private void showDeposit() { mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/PayDeposit.fxml", guest); }
-    @FXML private void showCancel() { mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/CancelReservation.fxml", guest); }
-    @FXML private void showTime() { mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/AdvanceTime.fxml", null); }
-    @FXML private void showChat() { mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/Chat.fxml", guest); }
-    @FXML private void doLogout() { mainApp.showLoginScreen(); }
+    @FXML private void showDeposit()      { mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/PayDeposit.fxml", guest); }
+    @FXML private void showCancel()       { mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/CancelReservation.fxml", guest); }
+    @FXML private void showTime()         { mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/AdvanceTime.fxml", null); }
+    @FXML private void showChat()         { mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/Chat.fxml", guest); }
+    @FXML private void doLogout()         { mainApp.showLoginScreen(); }
 }

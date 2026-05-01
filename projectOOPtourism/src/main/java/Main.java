@@ -3,9 +3,12 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -53,46 +56,44 @@ public class Main extends Application {
     public void start(Stage stage) {
         instance = this;
         DatabaseInitializer.initializeDatabase();
+        UserDatabase.clearLoggedInUsers();
         if (Database.isFirstInstance()) {
             SystemTime.resetToRealToday();
         } else {
             SystemTime.syncFromDatabase();
         }
-        
+
         Database.loadAll(); // Seeds empty DBs, fetches all data fresh
-        
+
         this.stage = stage;
         stage.setTitle("Grand Budapest Hotel Reservation System");
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            if (currentUser != null) {
-                Authentication.logout(currentUser);
-            }
+            Authentication.logout(currentUser);
             Database.unregisterInstance();
         }));
 
         stage.setOnCloseRequest(event -> {
-            if (currentUser != null) {
-                Authentication.logout(currentUser);
-            }
             System.exit(0);
         });
+
 
         showLoginScreen();
         stage.show();
     }
 
     public void showLoginScreen() {
+        Authentication.logout(currentUser);
+        currentUser = null;
+        selectedRoomForReservation = null;
+        selectedRoomTypeForReservation = null;
+
+        // Stop any running auto-refresh when returning to login screen
         if (autoRefreshTimeline != null) {
             autoRefreshTimeline.stop();
             autoRefreshTimeline = null;
         }
         localDataVersion = -1;
-
-        if (currentUser != null) {
-            Authentication.logout(currentUser);
-            currentUser = null;
-        }
 
         switchScene("/Login.fxml");
     }
@@ -101,10 +102,11 @@ public class Main extends Application {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlFile));
             javafx.scene.Parent root = loader.load();
-            
+
             Object controller = loader.getController();
             if (controller != null) {
                 try {
+                    // Decoupled dependency injection: Check if controller has a setMainApp method
                     controller.getClass().getMethod("setMainApp", Main.class).invoke(controller, this);
                 } catch (Exception e) {
                     // Controller doesn't require mainApp reference, safely ignore
@@ -123,12 +125,30 @@ public class Main extends Application {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlFile));
             javafx.scene.Node node = loader.load();
-            
+
             Object controller = loader.getController();
             if (controller instanceof DashboardContentController contentController) {
                 contentController.initData(this, data);
             }
-            contentArea.getChildren().setAll(node);
+
+            if (currentUser instanceof Guest && !"/GuestHome.fxml".equals(fxmlFile)) {
+                VBox guestPage = new VBox(14);
+                guestPage.getStyleClass().add("guest-subpage-shell");
+
+                Button backHome = new Button("BACK HOME");
+                backHome.getStyleClass().addAll("outline-action-btn", "guest-back-home-btn");
+                backHome.setOnAction(event ->
+                        switchDashboardContent(getCurrentContentArea(), "/GuestHome.fxml", currentUser));
+
+                HBox backRow = new HBox(backHome);
+                backRow.getStyleClass().add("guest-back-row");
+                guestPage.getChildren().addAll(backRow, node);
+                contentArea.getChildren().setAll(guestPage);
+                this.currentContentArea = contentArea;
+            } else {
+                contentArea.getChildren().setAll(node);
+                this.currentContentArea = contentArea;
+            }
         } catch (Exception e) {
             System.out.println("Could not load FXML: " + fxmlFile);
             e.printStackTrace();
@@ -165,8 +185,26 @@ public class Main extends Application {
         this.selectedRoomTypeForReservation = type;
     }
 
+    public User getCurrentUser() {
+        return currentUser;
+    }
+
     public void setCurrentUser(User user) {
         this.currentUser = user;
+    }
+
+    private String userInfoText(User user) {
+        return "Logged in as: " + user.getUsername()
+                + "   |   Date: "
+                + SystemTime.getToday().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+    }
+
+    private void refreshRuntimeDataFromDatabase() {
+        Database.refreshUsersFromDatabase();
+        Database.loadAllRoomTypes();
+        Database.loadAllAmenities();
+        Database.loadAllRooms();
+        Database.loadAllReservations();
     }
 
     public void showGuestDashboard(Guest guest) {
@@ -185,55 +223,46 @@ public class Main extends Application {
                     } else if (currentVersion > localDataVersion) {
                         System.out.println("Database changes detected! Syncing view...");
                         localDataVersion = currentVersion;
-
-                        Database.refreshUsersFromDatabase();
-                        Database.loadAllRoomTypes();
-                        Database.loadAllAmenities();
-                        Database.loadAllRooms();
-                        Database.loadAllReservations();
-
+                        refreshRuntimeDataFromDatabase();
                         SystemTime.syncFromDatabase();
-                        javafx.application.Platform.runLater(() -> {
-                            if (currentDashboardController != null && currentUser != null) {
-                                currentDashboardController.setUserInfo("Logged in as: " + currentUser.getUsername() + "   |   Date: " + SystemTime.getDate());
-                            }
-                            Main.getInstance().refreshActiveView();
-                        });
+                        javafx.application.Platform.runLater(() -> Main.getInstance().refreshActiveView());
                     }
                 }).start();
             }));
             autoRefreshTimeline.setCycleCount(Timeline.INDEFINITE);
             autoRefreshTimeline.play();
 
+            // Guest gets a full-page home screen — no sidebar dashboard
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/Dashboard.fxml"));
             BorderPane root = loader.load();
-            
+
             DashboardController controller = loader.getController();
             this.currentDashboardController = controller;
             controller.setTitle("Guest Dashboard");
             SystemTime.syncFromDatabase();
-            controller.setUserInfo("Logged in as: " + guest.getUsername() + "   |   Date: " + SystemTime.getDate());
+            controller.setUserInfo(userInfoText(guest));
 
             VBox menu = controller.getSideMenu();
             VBox content = controller.getContentArea();
+            content.setPadding(Insets.EMPTY);
             this.currentContentArea = content;
 
             FXMLLoader menuLoader = new FXMLLoader(getClass().getResource("/GuestMenu.fxml"));
             VBox menuContent = menuLoader.load();
             GuestMenuController menuController = menuLoader.getController();
             menuController.initData(this, guest);
-            
+
             menu.getChildren().setAll(menuContent);
             menuController.loadDefaultView();
-            
+
             stage.setScene(new Scene(root, WIDTH, HEIGHT));
         } catch (Exception e) { e.printStackTrace(); }
     }
-
     public void showAdminDashboard(Admin admin) {
         try {
             this.currentUser = admin;
 
+            // Stop any existing timeline before starting a new one
             if (autoRefreshTimeline != null) {
                 autoRefreshTimeline.stop();
             }
@@ -247,16 +276,12 @@ public class Main extends Application {
                         System.out.println("Database changes detected! Syncing view...");
                         localDataVersion = currentVersion;
 
-                        Database.refreshUsersFromDatabase();
-                        Database.loadAllRoomTypes();
-                        Database.loadAllAmenities();
-                        Database.loadAllRooms();
-                        Database.loadAllReservations();
+                        refreshRuntimeDataFromDatabase();
 
                         SystemTime.syncFromDatabase();
                         javafx.application.Platform.runLater(() -> {
                             if (currentDashboardController != null && currentUser != null) {
-                                currentDashboardController.setUserInfo("Logged in as: " + currentUser.getUsername() + "   |   Date: " + SystemTime.getDate());
+                                currentDashboardController.setUserInfo(userInfoText(currentUser));
                             }
                             Main.getInstance().refreshActiveView();
                         });
@@ -268,12 +293,12 @@ public class Main extends Application {
 
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/Dashboard.fxml"));
             BorderPane root = loader.load();
-            
+
             DashboardController controller = loader.getController();
             this.currentDashboardController = controller;
             controller.setTitle("Admin Dashboard");
             SystemTime.syncFromDatabase();
-            controller.setUserInfo("Logged in as: " + admin.getUsername() + "   |   Date: " + SystemTime.getDate());
+            controller.setUserInfo(userInfoText(admin));
 
             VBox menu = controller.getSideMenu();
             VBox content = controller.getContentArea();
@@ -283,18 +308,18 @@ public class Main extends Application {
             VBox menuContent = menuLoader.load();
             AdminMenuController menuController = menuLoader.getController();
             menuController.initData(this, admin);
-            
+
             menu.getChildren().setAll(menuContent);
             menuController.loadDefaultView();
-            
+
             stage.setScene(new Scene(root, WIDTH, HEIGHT));
         } catch (Exception e) { e.printStackTrace(); }
     }
-
     public void showReceptionistDashboard(Receptionist rec) {
         try {
             this.currentUser = rec;
 
+            // Stop any existing timeline before starting a new one
             if (autoRefreshTimeline != null) {
                 autoRefreshTimeline.stop();
             }
@@ -308,16 +333,13 @@ public class Main extends Application {
                         System.out.println("Database changes detected! Syncing view...");
                         localDataVersion = currentVersion;
 
-                        Database.refreshUsersFromDatabase();
-                        Database.loadAllRoomTypes();
-                        Database.loadAllAmenities();
-                        Database.loadAllRooms();
-                        Database.loadAllReservations();
+                        // Refresh in-memory data from the database in the background thread
+                        refreshRuntimeDataFromDatabase();
 
                         SystemTime.syncFromDatabase();
                         javafx.application.Platform.runLater(() -> {
                             if (currentDashboardController != null && currentUser != null) {
-                                currentDashboardController.setUserInfo("Logged in as: " + currentUser.getUsername() + "   |   Date: " + SystemTime.getDate());
+                                currentDashboardController.setUserInfo(userInfoText(currentUser));
                             }
                             Main.getInstance().refreshActiveView();
                         });
@@ -329,12 +351,12 @@ public class Main extends Application {
 
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/Dashboard.fxml"));
             BorderPane root = loader.load();
-            
+
             DashboardController controller = loader.getController();
             this.currentDashboardController = controller;
             controller.setTitle("Receptionist Dashboard");
             SystemTime.syncFromDatabase();
-            controller.setUserInfo("Logged in as: " + rec.getUsername() + "   |   Date: " + SystemTime.getDate());
+            controller.setUserInfo(userInfoText(rec));
 
             VBox menu = controller.getSideMenu();
             VBox content = controller.getContentArea();
@@ -344,10 +366,10 @@ public class Main extends Application {
             VBox menuContent = menuLoader.load();
             ReceptionistMenuController menuController = menuLoader.getController();
             menuController.initData(this, rec);
-            
+
             menu.getChildren().setAll(menuContent);
             menuController.loadDefaultView();
-            
+
             stage.setScene(new Scene(root, WIDTH, HEIGHT));
         } catch (Exception e) { e.printStackTrace(); }
     }

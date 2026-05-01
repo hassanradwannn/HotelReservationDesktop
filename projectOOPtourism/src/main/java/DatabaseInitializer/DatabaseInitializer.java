@@ -92,6 +92,7 @@ public class DatabaseInitializer {
                     room_number VARCHAR(50) NOT NULL,
                     check_in_date DATE NOT NULL,
                     check_out_date DATE NOT NULL,
+                    has_gym_pass BOOLEAN DEFAULT FALSE,
                     status VARCHAR(50) DEFAULT 'PENDING',
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (guest_username) REFERENCES users(username),
@@ -144,8 +145,20 @@ public class DatabaseInitializer {
                 // Column already exists, safe to ignore
             }
             try {
+                executeUpdate(conn, "ALTER TABLE reservations ADD COLUMN has_gym_pass BOOLEAN DEFAULT FALSE AFTER check_out_date");
+                System.out.println("Added missing 'has_gym_pass' column to reservations table.");
+            } catch (SQLException e) {
+                // Column already exists, safe to ignore
+            }
+            try {
                 executeUpdate(conn, "ALTER TABLE invoices ADD COLUMN guest_username VARCHAR(100) NOT NULL AFTER id");
                 System.out.println("Added missing 'guest_username' column to invoices table.");
+            } catch (SQLException e) {
+                // Column already exists, safe to ignore
+            }
+            try {
+                executeUpdate(conn, "ALTER TABLE invoices ADD COLUMN room_number VARCHAR(50) NOT NULL AFTER guest_username");
+                System.out.println("Added missing 'room_number' column to invoices table.");
             } catch (SQLException e) {
                 // Column already exists, safe to ignore
             }

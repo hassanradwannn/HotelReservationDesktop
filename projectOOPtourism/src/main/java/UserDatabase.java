@@ -167,4 +167,15 @@ public class UserDatabase {
             e.printStackTrace();
         }
     }
+
+    public static void clearLoggedInUsers() {
+        String sql = "UPDATE users SET is_logged_in = FALSE";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println("Error clearing logged in users:");
+            e.printStackTrace();
+        }
+    }
 }

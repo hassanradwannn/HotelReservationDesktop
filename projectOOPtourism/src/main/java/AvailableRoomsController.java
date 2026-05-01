@@ -1,4 +1,5 @@
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import javafx.fxml.FXML;
@@ -6,6 +7,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -77,15 +79,20 @@ public class AvailableRoomsController implements DashboardContentController {
         HBox.setHgrow(details, Priority.ALWAYS);
         Label roomTitle = new Label("Room " + room.getRoomNumber() + " — " + room.getRoomType().getName());
         roomTitle.getStyleClass().add("room-title");
-        Label price = new Label("Price per night: $" + mainApp.money(room.getRoomType().getPricePerNight()));
+        
+        double total = Reservation.calculateTotalPrice(room, checkIn, checkOut, hasGymPass);
+        
+        Label price = new Label("Total: $" + mainApp.money(total));
         price.getStyleClass().add("room-price");
         
-        String amenityText = String.join(", ", room.getAmenities().stream().map(Amenity::getName).toList());
-        Label amenities = new Label("Amenities: " + amenityText);
+        FlowPane amenityChips = new FlowPane(10, 8);
+        for (String amenityName : getDisplayAmenityNames(room)) {
+            Label chip = new Label(amenityName);
+            chip.getStyleClass().add("room-type-result-amenity-chip");
+            amenityChips.getChildren().add(chip);
+        }
         
-        amenities.getStyleClass().add("room-amenities");
-        amenities.setWrapText(true);
-        details.getChildren().addAll(roomTitle, price, amenities);
+        details.getChildren().addAll(roomTitle, price, amenityChips);
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -115,5 +122,19 @@ public class AvailableRoomsController implements DashboardContentController {
         actions.getChildren().addAll(detailsBtn, reserveBtn);
         card.getChildren().addAll(imageBox, details, spacer, actions);
         return card;
+    }
+
+    private List<String> getDisplayAmenityNames(Room room) {
+        List<String> names = new ArrayList<>();
+        for (Amenity amenity : room.getAmenities()) {
+            if (hasGymPass && Reservation.isGymAmenity(amenity)) {
+                continue;
+            }
+            names.add(amenity.getName());
+        }
+        if (hasGymPass) {
+            names.add(Reservation.GYM_PASS_NAME);
+        }
+        return names;
     }
 }

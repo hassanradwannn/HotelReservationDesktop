@@ -11,7 +11,7 @@
 
        <VBox maxWidth="500" spacing="14" styleClass="form-card">
           <children>
-             <Label fx:id="todayLabel" styleClass="profile-field" text="Current date: DD-MM-YYYY" />
+             <Label fx:id="todayLabel" styleClass="profile-field" text="Current date: DD/MM/YYYY" />
              <TextField fx:id="daysField" maxWidth="420.0" promptText="Days to advance" styleClass="elegant-input" />
              <Button onAction="#handleAdvanceTime" prefHeight="44.0" prefWidth="200.0" styleClass="primary-action-btn" text="ADVANCE TIME" />
              <Button onAction="#handleResetTime" prefHeight="44.0" prefWidth="230.0" styleClass="outline-action-btn" text="RESET DATE" />

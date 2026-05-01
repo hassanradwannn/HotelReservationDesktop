@@ -138,11 +138,12 @@ public class DatabaseSaver {
     public static void saveReservation(String reservationId, String guestUsername, String roomNumber,
                                        java.time.LocalDate checkIn,
                                        java.time.LocalDate checkOut,
+                                       boolean hasGymPass,
                                        String status) {
         String sql = """
             INSERT INTO reservations 
-            (reservation_id, guest_username, room_number, check_in_date, check_out_date, status)
-            VALUES (?, ?, ?, ?, ?, ?)
+            (reservation_id, guest_username, room_number, check_in_date, check_out_date, has_gym_pass, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         """;
 
         try (Connection conn = DatabaseConnection.getConnection();
@@ -153,7 +154,8 @@ public class DatabaseSaver {
             stmt.setString(3, roomNumber);
             stmt.setDate(4, java.sql.Date.valueOf(checkIn));
             stmt.setDate(5, java.sql.Date.valueOf(checkOut));
-            stmt.setString(6, status);
+            stmt.setBoolean(6, hasGymPass);
+            stmt.setString(7, status);
             if (stmt.executeUpdate() > 0 && !silentSync) {
                 Database.notifyDataChanged();
             }

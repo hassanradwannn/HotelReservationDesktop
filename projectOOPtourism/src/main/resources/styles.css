@@ -156,6 +156,96 @@
     -fx-background-color: #EFD9DF;
 }
 
+.date-picker {
+    -fx-background-color: #EFD9DF;
+    -fx-background-insets: 0;
+    -fx-border-color: #C4415D;
+    -fx-border-width: 0 0 1.5 0;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-font-family: "Georgia";
+    -fx-pref-height: 48px;
+    -fx-max-width: Infinity;
+}
+
+.date-picker > .text-field {
+    -fx-background-color: #EFD9DF;
+    -fx-text-fill: #2C2523;
+    -fx-prompt-text-fill: #b09090;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 14px;
+    -fx-padding: 12 14 12 14;
+}
+
+.date-picker > .arrow-button {
+    -fx-background-color: #C4415D;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+}
+
+.date-picker > .arrow-button > .arrow {
+    -fx-background-color: #F9F3EA;
+}
+
+.date-picker:focused {
+    -fx-border-color: #8B2040;
+}
+
+.date-picker-popup {
+    -fx-background-color: #F9F3EA;
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+}
+
+.date-picker-popup > .month-year-pane {
+    -fx-background-color: #8B2040;
+}
+
+.date-picker-popup > .month-year-pane .label {
+    -fx-text-fill: #F9F3EA;
+    -fx-font-family: "Georgia";
+    -fx-font-weight: bold;
+}
+
+.date-picker-popup > .month-year-pane .button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #F9F3EA;
+    -fx-background-radius: 0;
+}
+
+.date-picker-popup > .calendar-grid {
+    -fx-background-color: #F9F3EA;
+}
+
+.date-picker-popup .day-name-cell {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #8B2040;
+    -fx-background-color: #F9F3EA;
+}
+
+.date-picker-popup .day-cell {
+    -fx-background-color: #F9F3EA;
+    -fx-text-fill: #2C2523;
+    -fx-font-family: "Georgia";
+    -fx-border-color: transparent;
+}
+
+.date-picker-popup .day-cell:hover {
+    -fx-background-color: #F7D6D9;
+}
+
+.date-picker-popup .day-cell:selected {
+    -fx-background-color: #C4415D;
+    -fx-text-fill: #FFFFFF;
+}
+
+.date-picker-popup .day-cell:disabled {
+    -fx-opacity: 0.35;
+    -fx-background-color: #EFE4D6;
+}
+
 .elegant-radio {
     -fx-font-family: "Georgia";
     -fx-font-size: 14px;
@@ -165,7 +255,39 @@
 .elegant-check {
     -fx-font-family: "Georgia";
     -fx-font-size: 14px;
+    -fx-font-weight: bold;
     -fx-text-fill: #2C2523;
+    -fx-cursor: hand;
+    -fx-padding: 8 0 8 0;
+}
+
+.elegant-check .box {
+    -fx-background-color: #F7D6D9;
+    -fx-background-insets: 0;
+    -fx-border-color: #C4415D;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-pref-width: 18;
+    -fx-pref-height: 18;
+}
+
+.elegant-check:hover .box {
+    -fx-background-color: #E9AAB7;
+    -fx-border-color: #8B2040;
+}
+
+.elegant-check:selected .box {
+    -fx-background-color: #8B2040;
+    -fx-border-color: #8B2040;
+}
+
+.elegant-check:selected .mark {
+    -fx-background-color: #F9F3EA;
+}
+
+.elegant-check:disabled {
+    -fx-opacity: 0.72;
 }
 
 /* ─── Primary Action Button ──────────────────────────── */
@@ -206,6 +328,37 @@
     -fx-background-color: #F7D6D9;
     -fx-text-fill: #C4415D;
     -fx-border-color: #C4415D;
+}
+
+.hero-italic-link,
+.hero-italic-link:visited {
+    -fx-font-family: "Georgia";
+    -fx-font-style: italic;
+    -fx-font-size: 13px;
+    -fx-text-fill: #C4415D;
+    -fx-border-color: transparent;
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+    -fx-underline: false;
+}
+
+.hero-italic-link:hover {
+    -fx-text-fill: #8B2040;
+    -fx-underline: true;
+}
+
+.guest-subpage-shell {
+    -fx-background-color: transparent;
+    -fx-padding: 30 32 30 32;
+}
+
+.guest-back-row {
+    -fx-alignment: CENTER_LEFT;
+}
+
+.guest-back-home-btn {
+    -fx-pref-height: 38;
+    -fx-pref-width: 132;
 }
 
 /* ─── Danger Button ───────────────────────────────────── */
@@ -261,6 +414,91 @@
     -fx-border-width: 0 0 0 3;
     -fx-padding: 22 24 22 24;
     -fx-effect: dropshadow(gaussian, rgba(44,37,35,0.08), 10, 0.10, 0, 3);
+}
+
+.reservation-layout {
+    -fx-fill-height: false;
+}
+
+.reservation-field-label {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #8B2040;
+    -fx-letter-spacing: 2;
+}
+
+.reservation-selected-type {
+    -fx-background-color: #F9F3EA;
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+    -fx-padding: 12 14 12 14;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 15px;
+    -fx-text-fill: #2C2523;
+}
+
+.reservation-summary-panel {
+    -fx-background-color: #8B2040;
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+    -fx-padding: 26 26 26 26;
+    -fx-effect: dropshadow(gaussian, rgba(44,37,35,0.14), 12, 0.18, 0, 4);
+}
+
+.reservation-summary-title {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #C8A97E;
+    -fx-letter-spacing: 2;
+}
+
+.reservation-summary-label {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 12px;
+    -fx-text-fill: #E9AAB7;
+}
+
+.reservation-summary-value {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #F9F3EA;
+}
+
+.reservation-summary-rule {
+    -fx-background-color: #C4415D;
+    -fx-min-height: 1;
+    -fx-pref-height: 1;
+    -fx-max-height: 1;
+}
+
+.reservation-amenity-line {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #F9F3EA;
+}
+
+.reservation-total-box {
+    -fx-background-color: #C4415D;
+    -fx-padding: 16 16 16 16;
+}
+
+.reservation-total-label {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #C8A97E;
+    -fx-letter-spacing: 1;
+}
+
+.reservation-total-value {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #FFFFFF;
 }
 
 /* ─── Elegant ListView ───────────────────────────────── */
@@ -388,44 +626,128 @@
 }
 
 .search-fields-row {
-    -fx-border-color: #C8A97E;
-    -fx-border-width: 1 0 0 0;
-    -fx-padding: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 10 0 0 0;
 }
 
 .search-field-group {
-    -fx-padding: 10 18 10 18;
-    -fx-border-color: transparent #C8A97E transparent transparent;
-    -fx-border-width: 0 1 0 0;
+    -fx-padding: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-spacing: 6;
 }
 
 .search-field-label {
     -fx-font-family: "Georgia";
-    -fx-font-size: 10px;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
     -fx-letter-spacing: 2;
-    -fx-text-fill: #8a726b;
+    -fx-text-fill: #8B2040;
 }
 
-.search-field-input {
-    -fx-background-color: transparent;
-    -fx-border-color: transparent;
+.search-field-input,
+.search-field-combo,
+.search-date-picker,
+.search-spinner {
+    -fx-background-color: #F7D6D9;
+    -fx-background-insets: 0;
+    -fx-border-color: #B33A56;
+    -fx-border-insets: 0;
+    -fx-border-width: 1;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
     -fx-font-family: "Georgia";
     -fx-font-size: 14px;
     -fx-text-fill: #2C2523;
     -fx-prompt-text-fill: #b0978a;
-    -fx-padding: 4 0 4 0;
+    -fx-pref-height: 42;
+    -fx-min-height: 42;
+    -fx-max-height: 42;
+}
+
+.search-field-input {
+    -fx-padding: 8 12 8 12;
 }
 
 .search-field-input:focused {
-    -fx-border-color: transparent;
+    -fx-border-color: #8B2040;
     -fx-effect: none;
 }
 
 .search-field-combo {
-    -fx-background-color: transparent;
-    -fx-border-color: transparent;
+    -fx-padding: 0 8 0 8;
+}
+
+.search-field-combo .list-cell {
+    -fx-background-color: #F7D6D9;
+    -fx-text-fill: #2C2523;
+    -fx-font-family: "Georgia";
+}
+
+.search-field-combo > .arrow-button {
+    -fx-background-color: #F7D6D9;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+}
+
+.search-field-combo > .arrow-button > .arrow {
+    -fx-background-color: #8B2040;
+}
+
+.combo-box-popup .list-view {
+    -fx-background-color: #F9F3EA;
+    -fx-border-color: #C8A97E;
+}
+
+.combo-box-popup .list-cell {
+    -fx-background-color: #F9F3EA;
+    -fx-text-fill: #2C2523;
+    -fx-font-family: "Georgia";
+}
+
+.combo-box-popup .list-cell:hover,
+.combo-box-popup .list-cell:selected {
+    -fx-background-color: #F7D6D9;
+    -fx-text-fill: #8B2040;
+}
+
+.search-date-picker > .text-field {
+    -fx-background-color: #F7D6D9;
+    -fx-text-fill: #2C2523;
+    -fx-prompt-text-fill: #b0978a;
     -fx-font-family: "Georgia";
     -fx-font-size: 14px;
+    -fx-padding: 8 12 8 12;
+}
+
+.search-date-picker > .arrow-button {
+    -fx-background-color: #8B2040;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+    -fx-padding: 0 12 0 12;
+}
+
+.search-date-picker > .arrow-button > .arrow {
+    -fx-background-color: #F9F3EA;
+}
+
+.search-spinner .text-field {
+    -fx-background-color: #F7D6D9;
+    -fx-text-fill: #2C2523;
+    -fx-font-family: "Georgia";
+}
+
+.search-spinner .increment-arrow-button,
+.search-spinner .decrement-arrow-button {
+    -fx-background-color: #F7D6D9;
+    -fx-border-color: #B33A56;
+    -fx-border-width: 0 0 0 1;
+}
+
+.search-spinner .increment-arrow,
+.search-spinner .decrement-arrow {
+    -fx-background-color: #8B2040;
 }
 
 .rooms-section {
@@ -814,102 +1136,48 @@
     -fx-border-width: 1;
 }
 
-/* ─── "Picky Guest?" hyperlink on Make Reservation ──── */
-.hero-italic-link {
-    -fx-font-family: "Georgia";
-    -fx-font-style: italic;
-    -fx-font-size: 13px;
-    -fx-text-fill: #C4415D;
-    -fx-border-color: transparent;
-    -fx-underline: false;
-    -fx-padding: 0;
-}
-
-.hero-italic-link:hover {
-    -fx-text-fill: #8B2040;
-    -fx-underline: true;
-}
-
-/* ─── Elegant DatePicker (Grand Budapest Style) ─────── */
-.date-picker {
-    -fx-background-color: #EFD9DF;
-    -fx-border-color: #C4415D;
-    -fx-border-width: 0 0 1.5 0;
-    -fx-border-radius: 0;
-    -fx-background-radius: 0;
-    -fx-font-family: "Georgia";
-    -fx-max-width: Infinity;
-    -fx-pref-height: 48px;
-}
-
-.date-picker > .text-field {
-    -fx-background-color: transparent;
-    -fx-text-fill: #2C2523; /* Dark */
-    -fx-padding: 12 14 12 14;
-}
-
-.date-picker > .arrow-button {
-    -fx-background-color: #C4415D;
-    -fx-background-radius: 0;
-}
-
-.date-picker > .arrow-button > .arrow {
-    -fx-background-color: #F9F3EA; /* Cream */
-}
-
-/* Calendar Popup Styles */
-.date-picker-popup {
-    -fx-background-color: #F9F3EA;
-    -fx-border-color: #C8A97E; /* Gold */
-}
-
-.date-picker-popup > .month-year-pane {
-    -fx-background-color: #8B2040; /* Burgundy */
-}
-
-.date-picker-popup > .calendar-grid {
-    -fx-background-color: #F9F3EA;
-}
-
-/* Styling for disabled (blackout) dates */
-.date-picker-popup > .calendar-grid > .day-cell:disabled {
-    -fx-opacity: 0.3;
+/* ─── Guest Home Page ────────────────────────────────── */
+.guest-home-root {
     -fx-background-color: #EDE4D8;
 }
 
-/* Guest home */
-.guest-home-root {
-    -fx-background-color: #F5EDE3;
-}
-
+/* Hero banner */
 .guest-hero {
     -fx-background-color: #C4415D;
+    -fx-min-height: 200;
+    -fx-max-height: 200;
 }
 
 .hero-bold {
     -fx-font-family: "Georgia";
-    -fx-font-size: 42px;
+    -fx-font-size: 46px;
     -fx-font-weight: bold;
-    -fx-text-fill: #FFFFFF;
+    -fx-text-fill: #F9F3EA;
 }
 
 .hero-italic {
     -fx-font-family: "Georgia";
-    -fx-font-size: 42px;
+    -fx-font-size: 46px;
     -fx-font-style: italic;
-    -fx-font-weight: bold;
-    -fx-text-fill: #E9AAB7;
+    -fx-text-fill: #D4B8C0;
 }
 
 .hero-sub {
     -fx-font-family: "Georgia";
-    -fx-font-size: 14px;
-    -fx-text-fill: #F0C8CE;
+    -fx-font-size: 13px;
+    -fx-text-fill: #E8CDD4;
+    -fx-font-weight: bold;
 }
 
-.guest-search-card {
+/* Search card wrapper sits on top of the hero colour break */
+.guest-search-card-wrapper {
+    -fx-background-color: #C4415D;
+    -fx-padding: 0 0 38 0;
+}
+
+.search-card-inner {
     -fx-background-color: #F9F3EA;
-    -fx-border-color: #C8A97E;
+    -fx-border-color: #C4415D;
     -fx-border-width: 1;
     -fx-background-radius: 6;
     -fx-border-radius: 6;
@@ -917,160 +1185,52 @@
 
 .search-card-eyebrow {
     -fx-font-family: "Georgia";
-    -fx-font-size: 12px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #B99C72;
+    -fx-font-size: 10px;
     -fx-letter-spacing: 2;
-}
-
-.guest-search-fields {
-    -fx-fill-height: true;
-}
-
-.guest-search-field {
-    -fx-min-width: 118;
-}
-
-.guest-search-field-date {
-    -fx-min-width: 190;
-    -fx-pref-width: 190;
-    -fx-max-width: 190;
-}
-
-.guest-search-field-compact {
-    -fx-min-width: 92;
-    -fx-pref-width: 92;
-    -fx-max-width: 92;
-}
-
-.guest-search-field-price {
-    -fx-min-width: 170;
-    -fx-pref-width: 170;
-    -fx-max-width: 170;
-}
-
-.guest-search-field-type {
-    -fx-min-width: 300;
-    -fx-pref-width: 300;
-    -fx-max-width: 300;
-}
-
-.guest-search-action-field {
-    -fx-min-width: 130;
-    -fx-pref-width: 130;
-    -fx-max-width: 130;
-}
-
-.guest-search-card .search-field-label {
-    -fx-font-family: "Georgia";
-    -fx-font-size: 11px;
-    -fx-font-weight: bold;
-    -fx-letter-spacing: 2;
-    -fx-text-fill: #8B2040;
-}
-
-.search-action-spacer {
-    -fx-opacity: 0;
-}
-
-.guest-search-card .search-field-input,
-.guest-search-card .search-field-combo,
-.guest-search-card .guest-date-picker,
-.search-spinner {
-    -fx-background-color: #F7D6D9;
-    -fx-background-insets: 0;
-    -fx-border-color: #B33A56;
-    -fx-border-insets: 0;
-    -fx-border-width: 1;
-    -fx-border-radius: 0;
-    -fx-background-radius: 0;
-    -fx-font-family: "Georgia";
-    -fx-font-size: 14px;
-    -fx-pref-height: 42;
-    -fx-min-height: 42;
-    -fx-max-height: 42;
-}
-
-.guest-search-card .search-field-input,
-.guest-search-card .guest-date-picker > .text-field {
-    -fx-padding: 8 12 8 12;
-}
-
-.guest-search-card .guest-date-picker > .text-field {
-    -fx-background-color: #F7D6D9;
-    -fx-text-fill: #2C2523;
-    -fx-prompt-text-fill: #9B6C78;
-    -fx-font-family: "Georgia";
-    -fx-font-size: 14px;
-}
-
-.guest-search-card .guest-date-picker > .arrow-button {
-    -fx-background-color: #8B2040;
-    -fx-background-radius: 0;
-}
-
-.guest-search-card .guest-date-picker > .arrow-button > .arrow {
-    -fx-background-color: #F9F3EA;
-}
-
-.guest-search-card .search-field-combo .list-cell {
-    -fx-font-family: "Georgia";
-    -fx-font-size: 14px;
-    -fx-text-fill: #2C2523;
-}
-
-.guest-search-card .search-field-combo {
-    -fx-pref-width: 300;
-    -fx-min-width: 300;
-    -fx-max-width: 300;
-}
-
-.search-spinner .text-field {
-    -fx-background-color: #F7D6D9;
-    -fx-text-fill: #2C2523;
-    -fx-font-family: "Georgia";
-}
-
-.search-spinner .increment-arrow-button,
-.search-spinner .decrement-arrow-button {
-    -fx-background-color: #F7D6D9;
-    -fx-border-color: #B33A56;
+    -fx-text-fill: #C8A97E;
+    -fx-padding: 0 0 10 0;
 }
 
 .hero-search-btn {
     -fx-background-color: #8B2040;
     -fx-background-insets: 0;
     -fx-border-color: #8B2040;
-    -fx-border-insets: 0;
     -fx-border-width: 1;
-    -fx-text-fill: #FFFFFF;
+    -fx-border-insets: 0;
+    -fx-text-fill: #F9F3EA;
     -fx-font-family: "Georgia";
-    -fx-font-size: 13px;
+    -fx-font-size: 12px;
     -fx-font-weight: bold;
+    -fx-letter-spacing: 2;
     -fx-background-radius: 0;
     -fx-border-radius: 0;
-    -fx-padding: 0 16 0 16;
+    -fx-padding: 0 24 0 24;
     -fx-alignment: CENTER;
     -fx-cursor: hand;
-    -fx-pref-height: 42;
-    -fx-min-height: 42;
-    -fx-max-height: 42;
 }
 
 .hero-search-btn:hover {
     -fx-background-color: #C4415D;
 }
 
-.amenity-pill {
-    -fx-background-color: #F9F3EA;
-    -fx-border-color: #C8A97E;
-    -fx-border-width: 1;
-    -fx-border-radius: 15;
-    -fx-background-radius: 15;
-    -fx-padding: 5 18 5 18;
-    -fx-text-fill: #8B2040;
+.search-error-label {
     -fx-font-family: "Georgia";
-    -fx-font-size: 12px;
+    -fx-font-size: 13px;
+    -fx-text-fill: #C4415D;
+    -fx-font-style: italic;
+}
+
+/* Amenity toggle pills */
+.amenity-pill {
+    -fx-background-color: transparent;
+    -fx-border-color: #C4415D;
+    -fx-border-width: 1;
+    -fx-border-radius: 20;
+    -fx-background-radius: 20;
+    -fx-text-fill: #2C2523;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-padding: 5 14 5 14;
     -fx-cursor: hand;
 }
 
@@ -1079,84 +1239,112 @@
 }
 
 .amenity-pill-active {
-    -fx-background-color: #F7D6D9;
+    -fx-background-color: #C4415D;
+    -fx-text-fill: #F9F3EA;
     -fx-border-color: #C4415D;
-    -fx-text-fill: #8B2040;
 }
 
-.search-error-label {
-    -fx-font-family: "Georgia";
-    -fx-font-size: 12px;
-    -fx-text-fill: #8B2040;
+.amenity-pill:selected {
+    -fx-background-color: #C4415D;
+    -fx-text-fill: #F9F3EA;
+    -fx-border-color: #C4415D;
 }
 
-.guest-quick-cards {
-    -fx-background-color: #F3EADF;
-    -fx-border-color: #C4415D transparent transparent transparent;
-    -fx-border-width: 27 0 0 0;
-}
-
-.quick-card {
-    -fx-min-height: 170;
-    -fx-pref-height: 170;
-    -fx-padding: 0 10 14 10;
-    -fx-background-color: transparent;
-    -fx-border-color: transparent;
-    -fx-border-width: 0;
-    -fx-effect: none;
-    -fx-cursor: hand;
-}
-
+/* ─── Quick-access cards ─────────────────────────────── */
 .quick-card-rose {
-    -fx-background-color: transparent;
+    -fx-background-color: #E8879A;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+    -fx-min-height: 220;
+    -fx-pref-height: 220;
+}
+
+.quick-card-rose:hover {
+    -fx-background-color: #C4415D;
 }
 
 .quick-card-cream {
-    -fx-background-color: transparent;
+    -fx-background-color: #F5EDE3;
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+    -fx-cursor: hand;
+    -fx-min-height: 220;
+    -fx-pref-height: 220;
+}
+
+.quick-card-cream:hover {
+    -fx-background-color: #EFE4D6;
 }
 
 .quick-card-burgundy {
-    -fx-background-color: transparent;
+    -fx-background-color: #8B2040;
+    -fx-cursor: hand;
+    -fx-min-height: 220;
+    -fx-pref-height: 220;
 }
 
-.quick-card-director {
-    -fx-background-color: transparent;
-}
-
-.quick-card-link,
-.quick-card-link-dark {
-    -fx-font-family: "Georgia";
-    -fx-font-size: 14px;
-    -fx-font-weight: bold;
-    -fx-underline: true;
-    -fx-letter-spacing: 1;
+.quick-card-burgundy:hover {
+    -fx-background-color: #6d1832;
 }
 
 .quick-card-link {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
     -fx-text-fill: #F9F3EA;
+    -fx-underline: true;
+    -fx-letter-spacing: 1;
+    -fx-cursor: hand;
 }
 
 .quick-card-link-dark {
-    -fx-text-fill: #B99C72;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #C4415D;
+    -fx-underline: true;
+    -fx-letter-spacing: 1;
+    -fx-cursor: hand;
 }
 
-.quick-card-body,
-.quick-card-quote {
+.quick-card-link-light {
     -fx-font-family: "Georgia";
-    -fx-font-size: 12px;
-    -fx-line-spacing: 1;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #F7D6D9;
+    -fx-underline: true;
+    -fx-letter-spacing: 1;
+    -fx-cursor: hand;
+}
+
+.quick-card-muted {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #8a726b;
+    -fx-letter-spacing: 1;
 }
 
 .quick-card-body {
-    -fx-text-fill: #8B2040;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-text-fill: #F9F3EA;
+    -fx-wrap-text: true;
+}
+
+.quick-card-body-light {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-text-fill: #E8CDD4;
+    -fx-wrap-text: true;
 }
 
 .quick-card-quote {
-    -fx-text-fill: #8B2040;
-}
-
-.guest-results-area {
-    -fx-background-color: #F5EDE3;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-font-style: italic;
+    -fx-text-fill: #8a726b;
+    -fx-wrap-text: true;
 }
 
 .results-summary-band {
@@ -1189,7 +1377,9 @@
 
 .modify-search-btn {
     -fx-background-color: transparent;
+    -fx-background-insets: 0;
     -fx-border-color: #E8B8C0;
+    -fx-border-insets: 0;
     -fx-border-width: 1;
     -fx-border-radius: 4;
     -fx-background-radius: 4;
@@ -1225,6 +1415,10 @@
     -fx-background-color: #E8879A;
     -fx-border-color: transparent #C8A97E transparent transparent;
     -fx-border-width: 0 1 0 0;
+}
+
+.room-type-result-visual-0 {
+    -fx-background-color: #E8879A;
 }
 
 .room-type-result-visual-1 {
@@ -1358,57 +1552,59 @@
     -fx-background-color: #F7D6D9;
 }
 
-.room-type-card {
-    -fx-background-color: #FFFFFF;
-    -fx-border-color: #C8A97E;
+/* Final guest-home control overrides: keep these after generic ComboBox styles. */
+.guest-home-root .search-field-combo.combo-box {
+    -fx-background-color: #F7D6D9;
+    -fx-background-insets: 0;
+    -fx-border-color: #B33A56;
+    -fx-border-insets: 0;
     -fx-border-width: 1;
-    -fx-background-radius: 4;
-    -fx-border-radius: 4;
-    -fx-effect: dropshadow(gaussian, rgba(44,37,35,0.10), 12, 0.14, 0, 4);
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-padding: 0;
+    -fx-pref-height: 42;
+    -fx-min-height: 42;
+    -fx-max-height: 42;
 }
 
-.room-type-card:hover {
-    -fx-effect: dropshadow(gaussian, rgba(44,37,35,0.18), 16, 0.20, 0, 5);
-}
-
-.room-type-card .room-image-box,
-.room-image-box {
-    -fx-background-color: linear-gradient(to bottom right, #F7D6D9, #E8879A);
-    -fx-border-color: transparent transparent #C8A97E transparent;
-    -fx-border-width: 0 0 1 0;
-}
-
-.room-title {
-    -fx-font-family: "Georgia";
-    -fx-font-size: 17px;
-    -fx-font-weight: bold;
+.guest-home-root .search-field-combo.combo-box > .list-cell {
+    -fx-background-color: #F7D6D9;
     -fx-text-fill: #2C2523;
-}
-
-.room-price {
     -fx-font-family: "Georgia";
     -fx-font-size: 14px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #8B2040;
+    -fx-padding: 0 12 0 12;
 }
 
-.room-capacity,
-.room-amenities {
-    -fx-font-family: "Georgia";
-    -fx-font-size: 12px;
-    -fx-text-fill: #8A726B;
+.guest-home-root .search-field-combo.combo-box > .arrow-button {
+    -fx-background-color: #F7D6D9;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-border-color: transparent;
+    -fx-padding: 0 14 0 14;
 }
 
-.no-rooms-label {
-    -fx-font-family: "Georgia";
-    -fx-font-size: 16px;
-    -fx-text-fill: #8B2040;
+.guest-home-root .search-field-combo.combo-box > .arrow-button > .arrow {
+    -fx-background-color: #8B2040;
 }
 
-.error-message {
-    -fx-text-fill: #C4415D;
+.guest-home-root .search-field-combo.combo-box:focused {
+    -fx-border-color: #8B2040;
 }
 
-.success-message {
-    -fx-text-fill: #2F7D4A;
+.guest-home-root .search-date-picker.date-picker {
+    -fx-background-color: #F7D6D9;
+    -fx-background-insets: 0;
+    -fx-border-color: #B33A56;
+    -fx-border-insets: 0;
+    -fx-border-width: 1;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+}
+
+.guest-home-root .search-date-picker.date-picker > .text-field {
+    -fx-background-color: #F7D6D9;
+}
+
+.guest-home-root .search-date-picker.date-picker > .arrow-button {
+    -fx-background-color: #8B2040;
 }

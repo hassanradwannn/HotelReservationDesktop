@@ -12,23 +12,60 @@
        <Label styleClass="panel-title" text="Make a Reservation" />
        <Region prefHeight="18" />
 
-       <VBox maxWidth="500" spacing="14" styleClass="form-card">
+       <HBox alignment="TOP_LEFT" spacing="26" styleClass="reservation-layout">
           <children>
-             <ComboBox fx:id="typeBox" maxWidth="420" promptText="Select Room Type" styleClass="elegant-input" />
-             <TextField fx:id="guestsField" maxWidth="420" promptText="Number of Guests" styleClass="elegant-input" />
+             <VBox maxWidth="500" prefWidth="500" spacing="14" styleClass="form-card">
+                <children>
+                   <Label styleClass="reservation-field-label" text="SELECTED ROOM TYPE" />
+                   <Label fx:id="selectedRoomTypeLabel" maxWidth="420" styleClass="reservation-selected-type" wrapText="true" />
+                   <TextField fx:id="guestsField" maxWidth="420" promptText="Number of Guests" styleClass="elegant-input" />
 
-             <!-- Width fixed to 420 to match the boxes above -->
-             <DatePicker fx:id="checkInPicker" maxWidth="420" promptText="Check-in Date" styleClass="date-picker"/>
-             <DatePicker fx:id="checkOutPicker" maxWidth="420" promptText="Check-out Date" styleClass="date-picker"/>
+                   <!-- Width fixed to 420 to match the boxes above -->
+                   <DatePicker fx:id="checkInPicker" maxWidth="420" promptText="Check-in Date" styleClass="date-picker"/>
+                   <DatePicker fx:id="checkOutPicker" maxWidth="420" promptText="Check-out Date" styleClass="date-picker"/>
 
-             <CheckBox fx:id="gymBox" styleClass="elegant-check" text="Add Gym Pass ($200)" />
-             <HBox spacing="12">
-                <Button onAction="#handleBack" prefHeight="44" prefWidth="120" styleClass="outline-action-btn" text="BACK" />
-                <Button onAction="#handleBookNow" prefHeight="44" prefWidth="200" styleClass="primary-action-btn" text="BOOK NOW" />
-             </HBox>
-             <Label fx:id="msgLabel" styleClass="message-label" wrapText="true" />
-             <Hyperlink onAction="#handleChooseRoom" styleClass="hero-italic-link" text="Picky Guest? Choose your own room number" />
+                   <CheckBox fx:id="gymBox" styleClass="elegant-check" text="Add Gym Pass ($200)" />
+                   <HBox spacing="12">
+                      <Button onAction="#handleBack" prefHeight="44" prefWidth="120" styleClass="outline-action-btn" text="BACK" />
+                      <Button onAction="#handleBookNow" prefHeight="44" prefWidth="200" styleClass="primary-action-btn" text="BOOK NOW" />
+                   </HBox>
+                   <Label fx:id="msgLabel" styleClass="message-label" wrapText="true" />
+                   <Hyperlink onAction="#handleChooseRoom" styleClass="hero-italic-link" text="Picky Guest? Choose your own room number" />
+                </children>
+             </VBox>
+
+             <VBox prefWidth="330" spacing="16" styleClass="reservation-summary-panel">
+                <children>
+                   <Label styleClass="reservation-summary-title" text="STAY SUMMARY" />
+
+                   <VBox spacing="4">
+                      <Label styleClass="reservation-summary-label" text="TOTAL NIGHTS" />
+                      <Label fx:id="summaryNightsLabel" styleClass="reservation-summary-value" text="-" />
+                   </VBox>
+                   <Region styleClass="reservation-summary-rule" />
+
+                   <VBox spacing="4">
+                      <Label styleClass="reservation-summary-label" text="ROOM TYPE" />
+                      <Label fx:id="summaryRoomTypeLabel" styleClass="reservation-summary-value" text="-" wrapText="true" />
+                   </VBox>
+
+                   <VBox spacing="4">
+                      <Label styleClass="reservation-summary-label" text="PRICE PER NIGHT" />
+                      <Label fx:id="summaryPricePerNightLabel" styleClass="reservation-summary-value" text="-" />
+                   </VBox>
+                   <Region styleClass="reservation-summary-rule" />
+
+                   <Label styleClass="reservation-summary-title" text="INCLUDED AMENITIES" />
+                   <VBox fx:id="summaryAmenitiesBox" spacing="8" />
+
+                   <Region prefHeight="8" />
+                   <VBox spacing="4" styleClass="reservation-total-box">
+                      <Label styleClass="reservation-total-label" text="TOTAL COST" />
+                      <Label fx:id="summaryTotalCostLabel" styleClass="reservation-total-value" text="-" />
+                   </VBox>
+                </children>
+             </VBox>
           </children>
-       </VBox>
+       </HBox>
     </children>
 </VBox>

@@ -1,5 +1,6 @@
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
+import java.time.format.DateTimeFormatter;
 
 public class GuestProfileController implements DashboardContentController {
     @FXML private Label usernameLabel;
@@ -11,6 +12,7 @@ public class GuestProfileController implements DashboardContentController {
 
     private Main mainApp;
     private Guest guest;
+    private static final DateTimeFormatter DISPLAY_DATE = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     @Override
     public void initData(Main mainApp, Object data) {
@@ -23,7 +25,7 @@ public class GuestProfileController implements DashboardContentController {
         mainApp.setCurrentUser(guest);
 
         usernameLabel.setText("Username: " + guest.getUsername());
-        dobLabel.setText("Date of Birth: " + guest.getDateOfBirth());
+        dobLabel.setText("Date of Birth: " + guest.getDateOfBirth().format(DISPLAY_DATE));
         balanceLabel.setText("Balance: $" + mainApp.money(guest.getBalance()));
         addressLabel.setText("Address: " + guest.getAddress());
         genderLabel.setText("Gender: " + guest.getGender());

@@ -38,7 +38,7 @@ public class GenericListController implements DashboardContentController {
         mainApp.setCurrentViewRefresher(dataRefresher);
 
         // Add context-specific action buttons
-        if (actionBar != null) {
+        if (actionBar != null && mainApp.getCurrentUser() instanceof Admin) {
             switch (title) {
                 case "Rooms" -> {
                     Button addBtn = new Button("ADD ROOM");
@@ -70,7 +70,7 @@ public class GenericListController implements DashboardContentController {
         }
         
         listView.setOnMouseClicked(event -> {
-            if (event.getClickCount() == 2 && listView.getSelectionModel().getSelectedItem() != null) {
+            if (event.getClickCount() == 2 && listView.getSelectionModel().getSelectedItem() != null && mainApp.getCurrentUser() instanceof Admin) {
                 Object selectedItem = listView.getSelectionModel().getSelectedItem();
                 switch (title) {
                     case "Rooms" -> mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/EditRoom.fxml", selectedItem);
