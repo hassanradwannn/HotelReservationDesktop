@@ -50,7 +50,7 @@ public class PayDepositController implements DashboardContentController {
                 return;
             }
             ReservationService.payDeposit(selected, guest);
-            mainApp.alert("Success", "Deposit paid. Reservation confirmed.");
+            mainApp.alert("Success", "Deposit paid. Reservation confirmed.\nNew Balance: $" + mainApp.money(guest.getBalance()));
             pendingCombo.getItems().remove(selected);
             pendingCombo.setValue(null);
             handleSelection();

@@ -12,20 +12,18 @@
          <!-- Left Panel: Branding -->
          <VBox prefWidth="520.0" styleClass="login-left-panel" alignment="BOTTOM_LEFT">
             <children>
-
                <VBox VBox.vgrow="ALWAYS" alignment="CENTER_LEFT" spacing="18">
                   <padding><Insets top="60" left="65" right="65" bottom="60"/></padding>
                   <children>
-                     <Label text="A" styleClass="hero-text-light" textFill="#F9F3EA" style="-fx-text-fill: #F9F3EA;"/>
-                     <Label text="sanctuary" styleClass="hero-text-italic" textFill="#C8B8B0" style="-fx-text-fill: #C8B8B0;"/>
-                     <Label text="for the discerning" styleClass="hero-text-light" textFill="#F9F3EA" style="-fx-text-fill: #F9F3EA;"/>
-                     <Label text="traveler" styleClass="hero-text-light" textFill="#F9F3EA" style="-fx-text-fill: #F9F3EA;"/>
+                     <Label text="A" styleClass="hero-text-light" />
+                     <Label text="sanctuary" styleClass="hero-text-italic" />
+                     <Label text="for the discerning" styleClass="hero-text-light" />
+                     <Label text="traveler" styleClass="hero-text-light" />
                      <Region prefHeight="16"/>
-                     <Label text="A glimmer of civilization in this barbaric slaughterhouse. Dedicated to the highest standards of hospitality." styleClass="hero-subtext" textFill="#D4C4BC" style="-fx-text-fill: #D4C4BC;" wrapText="true" maxWidth="380"/>
+                     <Label text="A glimmer of civilization in this barbaric slaughterhouse. Dedicated to the highest standards of hospitality." styleClass="hero-subtext" wrapText="true" maxWidth="380"/>
                   </children>
                </VBox>
-
-               <Label text="Est. 1908  ·  Cairo, Arab Republic of Egypt" styleClass="hotel-footer-label" textFill="#B8A89E" style="-fx-text-fill: #B8A89E;">
+               <Label text="Est. 1908  ·  Cairo, Arab Republic of Egypt" styleClass="hotel-footer-label">
                   <padding><Insets left="65" bottom="35"/></padding>
                </Label>
             </children>
@@ -34,14 +32,13 @@
          <!-- Right Panel: Register Form -->
          <VBox prefWidth="760.0" styleClass="login-right-panel" alignment="TOP_LEFT">
             <children>
-
                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="transparent-scroll">
                   <content>
                      <VBox alignment="CENTER_LEFT" spacing="18">
                         <padding><Insets top="50" left="100" right="100" bottom="50"/></padding>
                         <children>
-                           <Label text="WELCOME TO THE GRAND BUDAPEST HOTEL" styleClass="form-eyebrow" textFill="#C4415D" style="-fx-text-fill: #C4415D;"/>
-                           <Label text="Begin your history with us" styleClass="form-title" textFill="#2C2523" style="-fx-text-fill: #2C2523;"/>
+                           <Label text="WELCOME TO THE GRAND BUDAPEST HOTEL" styleClass="form-eyebrow"/>
+                           <Label text="Begin your history with us" styleClass="form-title"/>
 
                            <Region prefHeight="8"/>
 
@@ -49,9 +46,12 @@
                            <PasswordField fx:id="passwordField" promptText="password" styleClass="elegant-input" maxWidth="480"/>
                            <TextField fx:id="balanceField" promptText="balance" styleClass="elegant-input" maxWidth="480"/>
 
+                           <!-- FIXED ALIGNMENT BOX -->
                            <HBox spacing="16" alignment="CENTER_LEFT" maxWidth="480">
-                              <TextField fx:id="dobField" promptText="date of birth  YYYY-MM-DD" styleClass="elegant-input" HBox.hgrow="ALWAYS"/>
-                              <ComboBox fx:id="genderBox" promptText="Gender" styleClass="elegant-input combo-box" prefWidth="150"/>
+                              <children>
+                                 <DatePicker fx:id="dobPicker" promptText="Date of Birth" styleClass="date-picker" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+                                 <ComboBox fx:id="genderBox" promptText="Gender" styleClass="elegant-input combo-box" prefWidth="150" minWidth="150"/>
+                              </children>
                            </HBox>
 
                            <TextField fx:id="prefsField" promptText="room preferences" styleClass="elegant-input" maxWidth="480"/>
@@ -73,7 +73,6 @@
                </ScrollPane>
             </children>
          </VBox>
-
       </HBox>
    </children>
 </AnchorPane>

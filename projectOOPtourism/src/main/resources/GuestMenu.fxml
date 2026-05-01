@@ -4,6 +4,7 @@
 <?import javafx.scene.layout.VBox?>
 
 <VBox spacing="5.0" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GuestMenuController">
+    <Button text="Home" onAction="#showHome" styleClass="side-btn" />
     <Button text="View Profile" onAction="#showProfile" styleClass="side-btn" />
     <Button text="Browse Rooms" onAction="#showRooms" styleClass="side-btn" />
     <Button text="Make Reservation" onAction="#showReserve" styleClass="side-btn" />

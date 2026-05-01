@@ -4,7 +4,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import database.DatabaseConnection;
 
 public class Database {
 
@@ -40,15 +42,16 @@ public class Database {
 
     // --- Rebuilt Startup Sync ---
     public static void syncDefaultDataToDatabase() {
+        // 1. Seed Room Types only if empty
         if (isTableEmpty("room_types")) {
             String sql = "INSERT IGNORE INTO room_types (name, price_per_night, capacity) VALUES (?, ?, ?)";
             try (Connection conn = database.DatabaseConnection.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(sql)) {
                 Object[][] types = {
-                    {"The Mendle Classic", 100.0, 1},
-                    {"The Lobby Deluxe", 150.0, 2},
-                    {"The Alpine Grand Suite", 300.0, 4},
-                    {"The Gustave Penthouse", 500.0, 6}
+                        {"The Mendle Classic", 100.0, 1},
+                        {"The Lobby Deluxe", 150.0, 2},
+                        {"The Alpine Grand Suite", 300.0, 4},
+                        {"The Gustave Penthouse", 500.0, 6}
                 };
                 for (Object[] type : types) {
                     stmt.setString(1, (String) type[0]);
@@ -59,17 +62,18 @@ public class Database {
             } catch (SQLException e) { e.printStackTrace(); }
         }
 
+        // 2. Seed Amenities only if empty
         if (isTableEmpty("amenities")) {
             String sql = "INSERT IGNORE INTO amenities (name, price) VALUES (?, ?)";
             try (Connection conn = database.DatabaseConnection.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(sql)) {
                 Object[][] amens = {
-                    {"WiFi", 10.0},
-                    {"Smart TV", 15.0},
-                    {"Mini-bar", 50.0},
-                    {"Jacuzzi", 100.0},
-                    {"Gym Membership", 20.0},
-                    {"Sea View", 75.0}
+                        {"WiFi", 10.0},
+                        {"Smart TV", 15.0},
+                        {"Mini-bar", 50.0},
+                        {"Jacuzzi", 100.0},
+                        {"Gym", 20.0},
+                        {"Sea View", 75.0}
                 };
                 for (Object[] a : amens) {
                     stmt.setString(1, (String) a[0]);
@@ -79,68 +83,110 @@ public class Database {
             } catch (SQLException e) { e.printStackTrace(); }
         }
 
-        // Cleanup old orphans from the previous naming convention
-        try (Connection conn = database.DatabaseConnection.getConnection();
-             Statement stmt = conn.createStatement()) {
-            stmt.executeUpdate("DELETE FROM rooms WHERE room_type_name NOT IN ('The Mendle Classic', 'The Lobby Deluxe', 'The Alpine Grand Suite', 'The Gustave Penthouse')");
-        } catch (SQLException e) { e.printStackTrace(); }
 
-        // Generate rooms according to the specific floor plan
-        String roomSql = "INSERT IGNORE INTO rooms (room_number, room_type_name) VALUES (?, ?)";
-        String amenitySql = "INSERT IGNORE INTO room_amenities (room_number, amenity_name) VALUES (?, ?)";
-        try (Connection conn = database.DatabaseConnection.getConnection();
-             PreparedStatement roomStmt = conn.prepareStatement(roomSql);
-             PreparedStatement amenityStmt = conn.prepareStatement(amenitySql)) {
-            for (int floor = 1; floor <= 6; floor++) {
-                for (int r = 0; r <= 20; r++) {
-                    String roomNumber = String.format("%d%02d", floor, r);
+        // 3. ONLY GENERATE ROOMS IF TABLE IS EMPTY
+        if (isTableEmpty("rooms")) {
+            System.out.println("Rooms table empty. Generating hotel floors...");
+
+            String roomSql    = "INSERT IGNORE INTO rooms (room_number, room_type_name) VALUES (?, ?)";
+            String amenitySql = "INSERT IGNORE INTO room_amenities (room_number, amenity_name) VALUES (?, ?)";
+
+            try (Connection conn = database.DatabaseConnection.getConnection();
+                 PreparedStatement roomStmt    = conn.prepareStatement(roomSql);
+                 PreparedStatement amenityStmt = conn.prepareStatement(amenitySql)) {
+
+                for (int floor = 1; floor <= 6; floor++) {
                     String type = switch (floor) {
                         case 1, 2 -> "The Mendle Classic";
                         case 3, 4 -> "The Lobby Deluxe";
-                        case 5 -> "The Alpine Grand Suite";
-                        default -> "The Gustave Penthouse";
+                        case 5    -> "The Alpine Grand Suite";
+                        default   -> "The Gustave Penthouse";
                     };
-                    roomStmt.setString(1, roomNumber);
-                    roomStmt.setString(2, type);
-                    roomStmt.executeUpdate();
 
-                    List<String> assignedAmenities = new ArrayList<>();
-                    assignedAmenities.add("WiFi");
-                    assignedAmenities.add("Smart TV");
-                    if (floor >= 3) assignedAmenities.add("Mini-bar");
-                    if (floor >= 5) assignedAmenities.add("Jacuzzi");
-                    if (floor == 6) assignedAmenities.add("Gym Membership");
+                    for (int r = 0; r <= 20; r++) {
+                        String roomNumber = String.format("%d%02d", floor, r);
 
-                    for (String amenityName : assignedAmenities) {
-                        amenityStmt.setString(1, roomNumber);
-                        amenityStmt.setString(2, amenityName);
-                        amenityStmt.executeUpdate();
+                        roomStmt.setString(1, roomNumber);
+                        roomStmt.setString(2, type);
+                        roomStmt.executeUpdate();
+
+                        List<String> assignedAmenities = new ArrayList<>();
+                        assignedAmenities.add("WiFi");
+                        assignedAmenities.add("Smart TV");
+                        if (floor >= 3) assignedAmenities.add("Mini-bar");
+                        if (floor >= 5) assignedAmenities.add("Jacuzzi");
+                        if (floor == 6) assignedAmenities.add("Gym");
+
+                        for (String amenityName : assignedAmenities) {
+                            amenityStmt.setString(1, roomNumber);
+                            amenityStmt.setString(2, amenityName);
+                            amenityStmt.executeUpdate();
+                        }
                     }
                 }
-            }
-        } catch (SQLException e) { e.printStackTrace(); }
+            } catch (SQLException e) { e.printStackTrace(); }
+        }
     }
 
-    // --- Load Data Sequence ---
+
+    public static void deleteAmenityFromDB(Amenity amenity) {
+        String sql = "DELETE FROM amenities WHERE name = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, amenity.getName());
+            if (stmt.executeUpdate() > 0) {
+                notifyDataChanged();
+            }
+        } catch (Exception e) {
+            System.out.println("Failed to delete amenity from DB: " + e.getMessage());
+        }
+    }
+
+    public static void deleteRoomFromDB(Room room) {
+        String sql = "DELETE FROM rooms WHERE room_number = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, room.getRoomNumber());
+            if (stmt.executeUpdate() > 0) {
+                notifyDataChanged();
+            }
+        } catch (Exception e) {
+            System.out.println("Failed to delete room from DB: " + e.getMessage());
+        }
+    }
+
+    public static void deleteRoomTypeFromDB(RoomType roomType) {
+        String sql = "DELETE FROM room_types WHERE name = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, roomType.getName());
+            if (stmt.executeUpdate() > 0) {
+                notifyDataChanged();
+            }
+        } catch (Exception e) {
+            System.out.println("Failed to delete room type from DB: " + e.getMessage());
+        }
+    }
+
     public static void loadAll() {
+        // Sync/migrate runs first — fixes DB amenities before we load into memory
         syncDefaultDataToDatabase();
+
+        // Clear local lists to prevent duplicates on refresh
         roomTypes.clear();
         rooms.clear();
         amenities.clear();
         reservations.clear();
-        // BUG FIX 2 & 3: Always load users before reservations so that
-        // refreshReservationsFromDatabase() can match guest usernames to Guest
-        // objects. Without this, every reservation is silently dropped because
-        // 'guests' is empty, producing a blank list for the receptionist and
-        // preventing cross-instance sync from delivering new reservations.
+
         refreshUsersFromDatabase();
         loadAllRoomTypes();
         loadAllAmenities();
-        loadAllRooms();
+        loadAllRooms();       // loads the already-fixed amenities from DB
         loadAllReservations();
     }
 
     public static void loadAllRoomTypes() {
+        roomTypes.clear();
         try (Connection conn = database.DatabaseConnection.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT * FROM room_types")) {
@@ -156,7 +202,7 @@ public class Database {
         amenities.clear();
         try (Connection conn = database.DatabaseConnection.getConnection();
              Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT * FROM amenities")) {
+             ResultSet rs = stmt.executeQuery("SELECT * FROM amenities ORDER BY id ASC")) {
             while (rs.next()) {
                 Amenity a = new Amenity(rs.getString("name"), rs.getDouble("price"));
                 a.setId(rs.getInt("id"));
@@ -166,6 +212,9 @@ public class Database {
     }
 
     public static void loadAllRooms() {
+        // FIX: always clear first so re-loads don't append stale data
+        rooms.clear();
+
         try (Connection conn = database.DatabaseConnection.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT * FROM rooms")) {
@@ -178,15 +227,24 @@ public class Database {
                     room.setId(rs.getInt("id"));
                     room.getAmenities().clear();
 
-                    try (PreparedStatement amStmt = conn.prepareStatement("SELECT amenity_name FROM room_amenities WHERE room_number = ?")) {
+                    // FIX: ORDER BY a.id so amenities always appear in canonical
+                    // insertion order (WiFi, Smart TV, Mini-bar, Jacuzzi, Gym)
+                    // for every room of the same type, including newly added ones.
+                    String amenityQuery =
+                        "SELECT ra.amenity_name FROM room_amenities ra " +
+                        "JOIN amenities a ON ra.amenity_name = a.name " +
+                        "WHERE ra.room_number = ? " +
+                        "ORDER BY a.id ASC";
+
+                    try (PreparedStatement amStmt = conn.prepareStatement(amenityQuery)) {
                         amStmt.setString(1, roomNumber);
                         try (ResultSet amRs = amStmt.executeQuery()) {
                             while (amRs.next()) {
                                 String amName = amRs.getString("amenity_name");
                                 amenities.stream()
-                                         .filter(a -> a.getName().equals(amName))
-                                         .findFirst()
-                                         .ifPresent(room.getAmenities()::add);
+                                        .filter(a -> a.getName().equals(amName))
+                                        .findFirst()
+                                        .ifPresent(room.getAmenities()::add);
                             }
                         }
                     }
@@ -215,9 +273,6 @@ public class Database {
         }
     }
 
-    // BUG FIX 2 & 3: If the guests list is empty when this is called (e.g. from
-    // the auto-refresh timeline on a second instance, or on first receptionist
-    // login), we reload users first so reservations are never silently dropped.
     public static void refreshReservationsFromDatabase() {
         if (guests.isEmpty() && staffMembers.isEmpty()) {
             refreshUsersFromDatabase();
@@ -242,16 +297,12 @@ public class Database {
                 java.time.LocalDate checkOut = checkOutSql.toLocalDate();
                 ReservationStatus status = ReservationStatus.valueOf(statusStr.toUpperCase());
 
-                // BUG FIX 3: If the guest still isn't in memory (registered on
-                // another instance after our last user-load), fetch them live
-                // from the DB rather than silently dropping the reservation.
                 Guest guest = guests.stream()
                         .filter(g -> g.getUsername().equals(guestUsername))
                         .findFirst()
                         .orElse(null);
 
                 if (guest == null) {
-                    // Guest was created on another instance — load them now.
                     User freshUser = UserDatabase.findUser(guestUsername);
                     if (freshUser instanceof Guest freshGuest) {
                         guests.add(freshGuest);
@@ -376,19 +427,19 @@ public class Database {
         try (Connection conn = database.DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(checkSql);
              ResultSet rs = stmt.executeQuery()) {
-             if (rs.next()) {
-                 int instances = Integer.parseInt(rs.getString("setting_value"));
-                 try (PreparedStatement update = conn.prepareStatement(updateSql)) {
-                     update.setString(1, String.valueOf(instances + 1));
-                     update.executeUpdate();
-                 }
-                 return instances == 0;
-             } else {
-                 try (PreparedStatement ins = conn.prepareStatement(insertSql)) {
-                     ins.executeUpdate();
-                 }
-                 return true;
-             }
+            if (rs.next()) {
+                int instances = Integer.parseInt(rs.getString("setting_value"));
+                try (PreparedStatement update = conn.prepareStatement(updateSql)) {
+                    update.setString(1, String.valueOf(instances + 1));
+                    update.executeUpdate();
+                }
+                return instances == 0;
+            } else {
+                try (PreparedStatement ins = conn.prepareStatement(insertSql)) {
+                    ins.executeUpdate();
+                }
+                return true;
+            }
         } catch (Exception e) {
             return true;
         }
@@ -400,15 +451,15 @@ public class Database {
         try (Connection conn = database.DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(checkSql);
              ResultSet rs = stmt.executeQuery()) {
-             if (rs.next()) {
-                 int instances = Integer.parseInt(rs.getString("setting_value"));
-                 if (instances > 0) {
-                     try (PreparedStatement update = conn.prepareStatement(updateSql)) {
-                         update.setString(1, String.valueOf(instances - 1));
-                         update.executeUpdate();
-                     }
-                 }
-             }
+            if (rs.next()) {
+                int instances = Integer.parseInt(rs.getString("setting_value"));
+                if (instances > 0) {
+                    try (PreparedStatement update = conn.prepareStatement(updateSql)) {
+                        update.setString(1, String.valueOf(instances - 1));
+                        update.executeUpdate();
+                    }
+                }
+            }
         } catch (Exception e) {
             System.out.println("Could not unregister instance: " + e.getMessage());
             e.printStackTrace();
@@ -420,9 +471,9 @@ public class Database {
         try (Connection conn = database.DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
-             if (rs.next()) {
-                 return Long.parseLong(rs.getString("setting_value"));
-             }
+            if (rs.next()) {
+                return Long.parseLong(rs.getString("setting_value"));
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -486,9 +537,6 @@ public class Database {
 
     public static List<String> getActiveGuests() {
         List<String> activeGuests = new ArrayList<>();
-        // BUG FIX 1: Query for role = 'Guest' (mixed-case) to match how
-        // UserDatabase saves the role via getClass().getSimpleName().
-        // The original query used 'GUEST' (uppercase) which never matched.
         String sql = "SELECT username FROM users WHERE LOWER(role) = 'guest'";
         try (Connection conn = database.DatabaseConnection.getConnection();
              Statement stmt = conn.createStatement();

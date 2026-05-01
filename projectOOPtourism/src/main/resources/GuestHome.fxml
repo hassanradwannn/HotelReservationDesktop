@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox spacing="0" styleClass="guest-home-root" stylesheets="@styles.css"
+      xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="GuestHomeController">
+
+    <VBox fx:id="heroArea" spacing="18" styleClass="guest-hero">
+        <padding><Insets bottom="32" left="40" right="40" top="34" /></padding>
+
+        <VBox spacing="2">
+            <HBox spacing="6">
+                <Label styleClass="hero-bold" text="A most" />
+                <Label styleClass="hero-italic" text="distinguished" />
+            </HBox>
+            <Label styleClass="hero-bold" text="stay awaits you" />
+            <Label fx:id="heroSubLabel" styleClass="hero-sub"
+                   text="Begin curating your stay and exploring our finest offerings" />
+        </VBox>
+
+        <VBox spacing="12" styleClass="guest-search-card">
+            <padding><Insets bottom="22" left="28" right="28" top="22" /></padding>
+
+            <Label styleClass="search-card-eyebrow" text="RESERVE YOUR SUITE" />
+
+            <HBox alignment="BOTTOM_LEFT" spacing="12" styleClass="guest-search-fields">
+                <VBox spacing="8" styleClass="guest-search-field guest-search-field-date">
+                    <Label styleClass="search-field-label" text="CHECK-IN" />
+                    <DatePicker fx:id="checkInPicker" maxWidth="Infinity" promptText="DD/MM/YYYY"
+                                styleClass="guest-date-picker" />
+                </VBox>
+
+                <VBox spacing="8" styleClass="guest-search-field guest-search-field-date">
+                    <Label styleClass="search-field-label" text="CHECK-OUT" />
+                    <DatePicker fx:id="checkOutPicker" maxWidth="Infinity" promptText="DD/MM/YYYY"
+                                styleClass="guest-date-picker" />
+                </VBox>
+
+                <VBox spacing="8" styleClass="guest-search-field guest-search-field-compact">
+                    <Label styleClass="search-field-label" text="GUESTS" />
+                    <Spinner fx:id="guestsSpinner" editable="true" initialValue="2" max="10" min="1"
+                             maxWidth="Infinity" styleClass="search-spinner" />
+                </VBox>
+
+                <VBox spacing="8" styleClass="guest-search-field guest-search-field-price">
+                    <Label styleClass="search-field-label" text="PRICE / NIGHT" />
+                    <TextField fx:id="maxPriceField" maxWidth="Infinity" promptText="Any" styleClass="search-field-input" />
+                </VBox>
+
+                <VBox spacing="8" styleClass="guest-search-field guest-search-field-type">
+                    <Label styleClass="search-field-label" text="ROOM TYPE" />
+                    <ComboBox fx:id="typeCombo" maxWidth="Infinity" promptText="Any type"
+                              styleClass="search-field-combo" />
+                </VBox>
+
+                <VBox alignment="BOTTOM_LEFT" spacing="0" styleClass="guest-search-field guest-search-action-field">
+                    <Button maxWidth="Infinity" onAction="#handleSearch"
+                            styleClass="hero-search-btn" text="SEARCH" />
+                </VBox>
+            </HBox>
+
+            <VBox spacing="8">
+                <Label styleClass="search-field-label" text="AMENITIES" />
+                <FlowPane fx:id="amenityPillsPane" hgap="10" vgap="8" />
+            </VBox>
+
+            <Label fx:id="msgLabel" styleClass="search-error-label" text="" wrapText="true" />
+        </VBox>
+    </VBox>
+
+    <HBox fx:id="quickCardsArea" alignment="TOP_LEFT" spacing="24" styleClass="guest-quick-cards">
+        <padding><Insets bottom="32" left="40" right="40" top="24" /></padding>
+
+        <VBox onMouseClicked="#showReservations" prefWidth="250" spacing="14" styleClass="quick-card quick-card-rose">
+            <Label styleClass="quick-card-link" text="MY RESERVATIONS" />
+            <Region VBox.vgrow="ALWAYS" />
+            <Label styleClass="quick-card-body"
+                   text="View your secure arrangements, including suite type and check-in times."
+                   wrapText="true" />
+        </VBox>
+
+        <VBox onMouseClicked="#showChat" prefWidth="250" spacing="14" styleClass="quick-card quick-card-cream">
+            <Label styleClass="quick-card-link-dark" text="THE FRONT DESK" />
+            <Region VBox.vgrow="ALWAYS" />
+            <Label styleClass="quick-card-quote"
+                   text="Good day to you. I am at your service. How may I assist in the orchestration of your stay this afternoon?"
+                   wrapText="true" />
+        </VBox>
+
+        <VBox onMouseClicked="#showProfile" prefWidth="250" spacing="14" styleClass="quick-card quick-card-burgundy">
+            <Label styleClass="quick-card-link" text="PATRON'S DOSSIER" />
+            <Region VBox.vgrow="ALWAYS" />
+            <Label styleClass="quick-card-body"
+                   text="A meticulously maintained record is the foundation of impeccable service."
+                   wrapText="true" />
+        </VBox>
+
+        <VBox prefWidth="250" spacing="14" styleClass="quick-card quick-card-director">
+            <Label styleClass="quick-card-link" text="DIRECTOR'S CABINET" />
+            <Region prefHeight="2" />
+            <Button maxWidth="Infinity" onAction="#showTime" prefHeight="40"
+                    styleClass="outline-action-btn" text="FAST FORWARD" />
+            <Button maxWidth="Infinity" onAction="#doLogout" prefHeight="40"
+                    styleClass="outline-action-btn" text="DEPART THE PREMISE" />
+        </VBox>
+    </HBox>
+
+    <VBox fx:id="resultsArea" managed="false" spacing="0" styleClass="guest-results-area"
+          visible="false" VBox.vgrow="ALWAYS">
+        <VBox spacing="22" styleClass="results-summary-band">
+            <padding><Insets bottom="22" left="48" right="48" top="26" /></padding>
+
+            <HBox alignment="TOP_LEFT" spacing="26">
+                <VBox spacing="6">
+                    <Label styleClass="summary-label" text="CHECK-IN" />
+                    <Label fx:id="summaryCheckInLabel" styleClass="summary-value" />
+                </VBox>
+                <Region styleClass="summary-divider" />
+                <VBox spacing="6">
+                    <Label styleClass="summary-label" text="CHECK-OUT" />
+                    <Label fx:id="summaryCheckOutLabel" styleClass="summary-value" />
+                </VBox>
+                <Region styleClass="summary-divider" />
+                <VBox spacing="6">
+                    <Label styleClass="summary-label" text="GUESTS" />
+                    <Label fx:id="summaryGuestsLabel" styleClass="summary-value" />
+                </VBox>
+                <Region styleClass="summary-divider" />
+                <VBox spacing="6">
+                    <Label styleClass="summary-label" text="PRICE / NIGHT" />
+                    <Label fx:id="summaryPriceLabel" styleClass="summary-value" />
+                </VBox>
+                <Region styleClass="summary-divider" />
+                <VBox spacing="6">
+                    <Label styleClass="summary-label" text="ROOM TYPE" />
+                    <Label fx:id="summaryTypeLabel" styleClass="summary-value" />
+                </VBox>
+                <Region styleClass="summary-divider" />
+                <VBox spacing="6">
+                    <Label styleClass="summary-label" text="AMENITIES" />
+                    <Label fx:id="summaryAmenitiesLabel" styleClass="summary-value" />
+                </VBox>
+            </HBox>
+
+            <Button onAction="#handleModifySearch" prefHeight="40" prefWidth="186"
+                    styleClass="modify-search-btn" text="MODIFY SEARCH" />
+        </VBox>
+
+        <VBox spacing="22" styleClass="results-list-shell" VBox.vgrow="ALWAYS">
+            <padding><Insets bottom="36" left="48" right="48" top="20" /></padding>
+            <Label fx:id="resultsCountLabel" styleClass="results-count-label" />
+            <ScrollPane fitToWidth="true" styleClass="transparent-scroll" VBox.vgrow="ALWAYS">
+                <VBox fx:id="resultsPane" spacing="14" />
+            </ScrollPane>
+        </VBox>
+    </VBox>
+</VBox>

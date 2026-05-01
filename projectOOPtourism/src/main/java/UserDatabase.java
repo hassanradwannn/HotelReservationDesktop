@@ -138,4 +138,33 @@ public class UserDatabase {
 
         return null;
     }
+
+    public static boolean isUserLoggedIn(String username) {
+        String sql = "SELECT is_logged_in FROM users WHERE username = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, username);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getBoolean("is_logged_in");
+            }
+        } catch (SQLException e) {
+            System.out.println("Error checking user logged in status:");
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public static void setUserLoggedIn(String username, boolean loggedIn) {
+        String sql = "UPDATE users SET is_logged_in = ? WHERE username = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setBoolean(1, loggedIn);
+            stmt.setString(2, username);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println("Error updating user logged in status:");
+            e.printStackTrace();
+        }
+    }
 }

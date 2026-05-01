@@ -26,11 +26,6 @@ public class ChatController implements DashboardContentController {
     @FXML private Button sendButton;
 
     // NOT @FXML — created programmatically to avoid a double-instance conflict.
-    // The original code declared guestDropdown as @FXML AND added a new one to
-    // the HBox, resulting in two separate ComboBox objects: the injected one
-    // (which the listener was attached to) and the visible one in the header
-    // (which the user was actually clicking). They were never the same object,
-    // so selections never triggered loadChatHistory.
     private ComboBox<String> guestDropdown;
 
     private Main mainApp;
@@ -64,7 +59,7 @@ public class ChatController implements DashboardContentController {
         header.getChildren().add(guestDropdown);
 
         if (!guestDropdown.getItems().isEmpty()) {
-            guestDropdown.getSelectionModel().selectFirst(); // triggers listener → loadChatHistory
+            guestDropdown.getSelectionModel().selectFirst();
         } else {
             chatArea.setText("No users available to chat with.\n");
             chatStatus.setText("No users found");
@@ -91,16 +86,18 @@ public class ChatController implements DashboardContentController {
     private void populateDropdown() {
         List<String> items;
         if (currentUser instanceof Guest) {
-            guestDropdown.setPromptText("Select Receptionist...");
+            guestDropdown.setPromptText("Select Staff...");
             // Ensure staff are loaded
             if (Database.getStaffMembers().isEmpty()) {
                 Database.refreshUsersFromDatabase();
             }
+            // Guests can chat with both Receptionists and Admins
             items = Database.getStaffMembers().stream()
-                    .filter(s -> s instanceof Receptionist)
+                    .filter(s -> s instanceof Receptionist || s instanceof Admin)
                     .map(User::getUsername)
                     .toList();
         } else {
+            // Staff (Receptionist or Admin) see all guests
             guestDropdown.setPromptText("Select Guest...");
             items = Database.getActiveGuests();
         }
@@ -114,7 +111,7 @@ public class ChatController implements DashboardContentController {
         if (currentUser instanceof Guest) {
             Database.refreshUsersFromDatabase();
             freshItems = Database.getStaffMembers().stream()
-                    .filter(s -> s instanceof Receptionist)
+                    .filter(s -> s instanceof Receptionist || s instanceof Admin)
                     .map(User::getUsername)
                     .toList();
         } else {
@@ -129,8 +126,6 @@ public class ChatController implements DashboardContentController {
             if (!guestDropdown.getItems().contains(selected)) {
                 guestDropdown.getItems().add(selected);
             }
-            // Don't rely on the listener — setValue won't fire if value hasn't changed,
-            // which leaves activeChatId at -1 and causes the "select a chat first" error.
             guestDropdown.setValue(selected);
             loadChatHistory(selected);
         } else {
@@ -148,10 +143,12 @@ public class ChatController implements DashboardContentController {
 
         String guestUser;
         String receptionistUser;
+
         if (currentUser instanceof Guest) {
             guestUser = currentUser.getUsername();
             receptionistUser = otherUsername;
         } else {
+            // Staff talking to a guest — guest is the other person
             guestUser = otherUsername;
             receptionistUser = currentUser.getUsername();
         }

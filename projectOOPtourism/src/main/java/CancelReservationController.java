@@ -22,7 +22,7 @@ public class CancelReservationController implements DashboardContentController {
         reservationCombo.setItems(FXCollections.observableArrayList(
                 Database.getReservations().stream()
                         .filter(r -> r.getGuest().getUsername().equalsIgnoreCase(guest.getUsername()))
-                        .filter(r -> r.getStatus() == ReservationStatus.PENDING || r.getStatus() == ReservationStatus.CONFIRMED)
+                        .filter(r -> r.getStatus() == ReservationStatus.PENDING)
                         .toList()
         ));
     }

@@ -10,9 +10,10 @@ public class GuestMenuController {
     }
 
     public void loadDefaultView() {
-        showProfile();
+        showHome();
     }
 
+    @FXML private void showHome() { mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GuestHome.fxml", guest); }
     @FXML private void showProfile() { mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GuestProfile.fxml", guest); }
     @FXML private void showRooms() { mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/RoomBrowser.fxml", guest); }
     @FXML private void showReserve() { mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/MakeReservation.fxml", guest); }

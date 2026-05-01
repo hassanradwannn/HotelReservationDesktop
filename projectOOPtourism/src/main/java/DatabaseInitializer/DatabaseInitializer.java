@@ -33,6 +33,7 @@ public class DatabaseInitializer {
                     address VARCHAR(255),
                     salary DOUBLE,
                 balance DOUBLE DEFAULT 0.0,
+                    is_logged_in BOOLEAN DEFAULT FALSE,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """;
@@ -127,6 +128,12 @@ public class DatabaseInitializer {
             try {
                 executeUpdate(conn, "ALTER TABLE users ADD COLUMN balance DOUBLE DEFAULT 0.0");
                 System.out.println("Added missing 'balance' column to users table.");
+            } catch (SQLException e) {
+                // Column already exists, safe to ignore
+            }
+            try {
+                executeUpdate(conn, "ALTER TABLE users ADD COLUMN is_logged_in BOOLEAN DEFAULT FALSE");
+                System.out.println("Added missing 'is_logged_in' column to users table.");
             } catch (SQLException e) {
                 // Column already exists, safe to ignore
             }

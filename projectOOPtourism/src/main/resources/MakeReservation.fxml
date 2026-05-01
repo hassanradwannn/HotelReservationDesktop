@@ -3,6 +3,7 @@
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
 
 <VBox spacing="0" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="MakeReservationController">
     <padding><Insets bottom="10" left="10" right="10" top="10" /></padding>
@@ -15,12 +16,18 @@
           <children>
              <ComboBox fx:id="typeBox" maxWidth="420" promptText="Select Room Type" styleClass="elegant-input" />
              <TextField fx:id="guestsField" maxWidth="420" promptText="Number of Guests" styleClass="elegant-input" />
-             <TextField fx:id="checkInField" maxWidth="420" promptText="Check-in  DD-MM-YYYY" styleClass="elegant-input" />
-             <TextField fx:id="checkOutField" maxWidth="420" promptText="Check-out  DD-MM-YYYY" styleClass="elegant-input" />
-             <CheckBox fx:id="gymBox" styleClass="elegant-check" text="Add Gym Pass ($200)" />
 
-             <Button onAction="#handleSearch" prefHeight="44" prefWidth="200" styleClass="primary-action-btn" text="SEARCH ROOMS" />
+             <!-- Width fixed to 420 to match the boxes above -->
+             <DatePicker fx:id="checkInPicker" maxWidth="420" promptText="Check-in Date" styleClass="date-picker"/>
+             <DatePicker fx:id="checkOutPicker" maxWidth="420" promptText="Check-out Date" styleClass="date-picker"/>
+
+             <CheckBox fx:id="gymBox" styleClass="elegant-check" text="Add Gym Pass ($200)" />
+             <HBox spacing="12">
+                <Button onAction="#handleBack" prefHeight="44" prefWidth="120" styleClass="outline-action-btn" text="BACK" />
+                <Button onAction="#handleBookNow" prefHeight="44" prefWidth="200" styleClass="primary-action-btn" text="BOOK NOW" />
+             </HBox>
              <Label fx:id="msgLabel" styleClass="message-label" wrapText="true" />
+             <Hyperlink onAction="#handleChooseRoom" styleClass="hero-italic-link" text="Picky Guest? Choose your own room number" />
           </children>
        </VBox>
     </children>

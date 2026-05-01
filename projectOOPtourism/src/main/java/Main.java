@@ -65,25 +65,34 @@ public class Main extends Application {
         stage.setTitle("Grand Budapest Hotel Reservation System");
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            if (currentUser != null) {
+                Authentication.logout(currentUser);
+            }
             Database.unregisterInstance();
         }));
 
-         stage.setOnCloseRequest(event -> {
+        stage.setOnCloseRequest(event -> {
+            if (currentUser != null) {
+                Authentication.logout(currentUser);
+            }
             System.exit(0);
         });
 
-        
         showLoginScreen();
         stage.show();
     }
 
     public void showLoginScreen() {
-        // Stop any running auto-refresh when returning to login screen
         if (autoRefreshTimeline != null) {
             autoRefreshTimeline.stop();
             autoRefreshTimeline = null;
         }
         localDataVersion = -1;
+
+        if (currentUser != null) {
+            Authentication.logout(currentUser);
+            currentUser = null;
+        }
 
         switchScene("/Login.fxml");
     }
@@ -96,7 +105,6 @@ public class Main extends Application {
             Object controller = loader.getController();
             if (controller != null) {
                 try {
-                    // Decoupled dependency injection: Check if controller has a setMainApp method
                     controller.getClass().getMethod("setMainApp", Main.class).invoke(controller, this);
                 } catch (Exception e) {
                     // Controller doesn't require mainApp reference, safely ignore
@@ -165,7 +173,6 @@ public class Main extends Application {
         try {
             this.currentUser = guest;
 
-            // Stop any existing timeline before starting a new one
             if (autoRefreshTimeline != null) {
                 autoRefreshTimeline.stop();
             }
@@ -180,6 +187,9 @@ public class Main extends Application {
                         localDataVersion = currentVersion;
 
                         Database.refreshUsersFromDatabase();
+                        Database.loadAllRoomTypes();
+                        Database.loadAllAmenities();
+                        Database.loadAllRooms();
                         Database.loadAllReservations();
 
                         SystemTime.syncFromDatabase();
@@ -216,14 +226,14 @@ public class Main extends Application {
             menu.getChildren().setAll(menuContent);
             menuController.loadDefaultView();
             
-        stage.setScene(new Scene(root, WIDTH, HEIGHT));
+            stage.setScene(new Scene(root, WIDTH, HEIGHT));
         } catch (Exception e) { e.printStackTrace(); }
     }
+
     public void showAdminDashboard(Admin admin) {
         try {
             this.currentUser = admin;
 
-            // Stop any existing timeline before starting a new one
             if (autoRefreshTimeline != null) {
                 autoRefreshTimeline.stop();
             }
@@ -238,6 +248,9 @@ public class Main extends Application {
                         localDataVersion = currentVersion;
 
                         Database.refreshUsersFromDatabase();
+                        Database.loadAllRoomTypes();
+                        Database.loadAllAmenities();
+                        Database.loadAllRooms();
                         Database.loadAllReservations();
 
                         SystemTime.syncFromDatabase();
@@ -274,14 +287,14 @@ public class Main extends Application {
             menu.getChildren().setAll(menuContent);
             menuController.loadDefaultView();
             
-        stage.setScene(new Scene(root, WIDTH, HEIGHT));
+            stage.setScene(new Scene(root, WIDTH, HEIGHT));
         } catch (Exception e) { e.printStackTrace(); }
     }
+
     public void showReceptionistDashboard(Receptionist rec) {
         try {
             this.currentUser = rec;
 
-            // Stop any existing timeline before starting a new one
             if (autoRefreshTimeline != null) {
                 autoRefreshTimeline.stop();
             }
@@ -295,8 +308,10 @@ public class Main extends Application {
                         System.out.println("Database changes detected! Syncing view...");
                         localDataVersion = currentVersion;
 
-                        // Refresh in-memory data from the database in the background thread
                         Database.refreshUsersFromDatabase();
+                        Database.loadAllRoomTypes();
+                        Database.loadAllAmenities();
+                        Database.loadAllRooms();
                         Database.loadAllReservations();
 
                         SystemTime.syncFromDatabase();
@@ -333,7 +348,7 @@ public class Main extends Application {
             menu.getChildren().setAll(menuContent);
             menuController.loadDefaultView();
             
-        stage.setScene(new Scene(root, WIDTH, HEIGHT));
+            stage.setScene(new Scene(root, WIDTH, HEIGHT));
         } catch (Exception e) { e.printStackTrace(); }
     }
 

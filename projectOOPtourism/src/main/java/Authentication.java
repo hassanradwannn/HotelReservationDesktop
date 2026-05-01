@@ -3,14 +3,20 @@ import exceptions.InvalidPasswordException;
 import exceptions.UserNotFoundException;
 import exceptions.UsernameAlreadyTakenException;
 import exceptions.WeakPasswordException;
+import exceptions.UserAlreadyLoggedInException;
 
 public class Authentication {
     public static User login(String username, String password)
-            throws InvalidCredentialsException {
+            throws InvalidCredentialsException, UserAlreadyLoggedInException {
         // Always query database directly for real-time data sharing across instances
         User user = UserDatabase.findUser(username);
         if (user != null) {
             if (user.getPassword().equals(password)) {
+                if (UserDatabase.isUserLoggedIn(username)) {
+                    throw new UserAlreadyLoggedInException();
+                }
+                UserDatabase.setUserLoggedIn(username, true);
+                
                 // Update in-memory cache with the latest user data
                 updateInMemoryCache(user);
                 return user;
@@ -18,6 +24,12 @@ public class Authentication {
             throw new InvalidPasswordException();
         }
         throw new UserNotFoundException();
+    }
+
+    public static void logout(User user) {
+        if (user != null) {
+            UserDatabase.setUserLoggedIn(user.getUsername(), false);
+        }
     }
 
     private static void updateInMemoryCache(User user) {

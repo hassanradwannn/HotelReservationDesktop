@@ -16,7 +16,8 @@
         <Label text="ADMINISTRATION" styleClass="section-eyebrow"/>
         <Label text="Manage Amenities" styleClass="section-heading"/>
     </VBox>
-    <HBox alignment="CENTER_RIGHT">
+    <HBox alignment="CENTER_RIGHT" spacing="10">
+        <Button onAction="#handleDeleteAmenity" prefHeight="40" prefWidth="160" styleClass="danger-action-btn" text="DELETE SELECTED" />
         <Button onAction="#handleAddAmenity" prefHeight="40" prefWidth="160" styleClass="primary-action-btn" text="ADD AMENITY" />
     </HBox>
 

@@ -79,12 +79,13 @@ public abstract class ReservationService {
                 checkIn,
                 checkOut,
                 reservation.getStatus().toString());
-                
-        if (checkIn.isEqual(today)) {
+
+          // deprecated check for check in date
+      /*  if (checkIn.isEqual(today)) {
             reservation.setStatus(ReservationStatus.CONFIRMED);
             reservation.setDepositPaid(true);
             DatabaseSaver.updateReservationStatus(reservation.getReservationId(), ReservationStatus.CONFIRMED.toString());
-        }
+        }*/
 
         return reservation;
     }

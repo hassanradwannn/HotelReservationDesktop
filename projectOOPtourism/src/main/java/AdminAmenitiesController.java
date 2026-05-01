@@ -1,6 +1,10 @@
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ListView;
+
+import java.util.Optional;
 
 public class AdminAmenitiesController implements DashboardContentController {
 
@@ -30,5 +34,30 @@ public class AdminAmenitiesController implements DashboardContentController {
     @FXML
     private void handleAddAmenity() {
         mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/AddAmenity.fxml", null);
+    }
+
+    @FXML
+    private void handleDeleteAmenity() {
+        Amenity selected = listView.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            mainApp.alert("No Selection", "Please select an amenity to delete.");
+            return;
+        }
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Delete Amenity");
+        confirm.setHeaderText(null);
+        confirm.setContentText("Delete amenity \"" + selected.getName() + "\"? This cannot be undone.");
+        Optional<ButtonType> result = confirm.showAndWait();
+
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            try {
+                CatalogService.deleteAmenity(selected);
+                Database.deleteAmenityFromDB(selected);
+                loadAmenities();
+            } catch (Exception ex) {
+                mainApp.alert("Error", ex.getMessage());
+            }
+        }
     }
 }
