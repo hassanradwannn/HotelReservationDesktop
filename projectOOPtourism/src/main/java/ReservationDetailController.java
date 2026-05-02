@@ -8,6 +8,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DateCell;
 import javafx.scene.control.DatePicker;
@@ -43,6 +44,7 @@ public class ReservationDetailController implements DashboardContentController {
     @FXML private Button checkOutButton;
     @FXML private ComboBox<PaymentMethod> depositPaymentCombo;
     @FXML private ComboBox<PaymentMethod> paymentCombo;
+    @FXML private CheckBox extendStayCheckBox;
 
     private Main mainApp;
     private Reservation reservation;
@@ -131,11 +133,10 @@ public class ReservationDetailController implements DashboardContentController {
         boolean showExtension = ongoing && (receptionist || guestUser);
         extendPane.setVisible(showExtension);
         extendPane.setManaged(showExtension);
-        extensionPreviewPane.setVisible(ongoing);
-        extensionPreviewPane.setManaged(ongoing);
-        boolean canExtend = showExtension;
-        newCheckOutPicker.setDisable(!canExtend);
-        extendButton.setDisable(!canExtend);
+        extensionPreviewPane.setVisible(false);
+        extensionPreviewPane.setManaged(false);
+        newCheckOutPicker.setDisable(true);
+        extendButton.setDisable(true);
         newCheckOutPicker.setValue(reservation.getCheckOutDate().plusDays(1));
         newCheckOutPicker.setDayCellFactory(picker -> new DateCell() {
             @Override
@@ -155,6 +156,15 @@ public class ReservationDetailController implements DashboardContentController {
                 && !SystemTime.getToday().isBefore(reservation.getCheckOutDate())));
         checkOutButton.setDisable(!canCheckOut);
         paymentCombo.setDisable(checkOutButton.isDisabled());
+    }
+
+    @FXML
+    private void toggleExtendStay() {
+        boolean selected = extendStayCheckBox.isSelected();
+        newCheckOutPicker.setDisable(!selected);
+        extendButton.setDisable(!selected);
+        extensionPreviewPane.setVisible(selected);
+        extensionPreviewPane.setManaged(selected);
     }
 
     private void refreshCurrentReservation() {

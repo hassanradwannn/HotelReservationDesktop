@@ -3,7 +3,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 
 public class Reservation {
-    public static final String GYM_PASS_NAME = "Gym Pass";
+    public static final String GYM_PASS_NAME = "Gym";
     public static final double GYM_PASS_PRICE = 200.0;
 
     private String reservationId;

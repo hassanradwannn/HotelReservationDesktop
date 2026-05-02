@@ -25,9 +25,12 @@
                         <Label fx:id="statusLabel" maxWidth="450.0" prefHeight="45.0" prefWidth="450.0" styleClass="reservation-selected-type" wrapText="true" />
 
                         <VBox fx:id="extendPane" spacing="12">
-                            <Label styleClass="reservation-field-label" text="EXTEND STAY" />
-                            <DatePicker fx:id="newCheckOutPicker" maxWidth="420" prefWidth="419.0" promptText="New check-out date" styleClass="date-picker" />
-                            <Button fx:id="extendButton" onAction="#handleExtendStay" prefHeight="44" prefWidth="449.0" styleClass="primary-action-btn" text="EXTEND STAY" />
+                            <HBox alignment="CENTER_LEFT" spacing="10">
+                                <Label styleClass="reservation-field-label" text="EXTEND STAY" />
+                                <CheckBox fx:id="extendStayCheckBox" onAction="#toggleExtendStay" styleClass="elegant-check" />
+                            </HBox>
+                            <DatePicker fx:id="newCheckOutPicker" disable="true" maxWidth="420" prefWidth="419.0" promptText="New check-out date" styleClass="date-picker" />
+                            <Button fx:id="extendButton" disable="true" onAction="#handleExtendStay" prefHeight="44" prefWidth="449.0" styleClass="primary-action-btn" text="EXTEND STAY" />
                         </VBox>
 
                         <VBox fx:id="guestActions" spacing="12">
@@ -69,7 +72,7 @@
                             <Label styleClass="reservation-summary-label" text="DATES" />
                             <Label fx:id="datesLabel" styleClass="reservation-summary-value" text="-" wrapText="true" />
                         </VBox>
-                        <VBox fx:id="extensionPreviewPane" spacing="16">
+                        <VBox fx:id="extensionPreviewPane" spacing="16" visible="false">
                             <Region styleClass="reservation-summary-rule" />
                             <Label styleClass="reservation-summary-title" text="EXTENSION PREVIEW" />
                             <VBox spacing="4">

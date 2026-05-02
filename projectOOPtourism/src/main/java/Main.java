@@ -240,7 +240,7 @@ public class Main extends Application {
                 autoRefreshTimeline.stop();
             }
 
-            autoRefreshTimeline = new Timeline(new KeyFrame(Duration.seconds(2), event -> {
+            autoRefreshTimeline = new Timeline(new KeyFrame(Duration.millis(50), event -> {
                 new Thread(() -> {
                     long currentVersion = Database.getLatestDataVersion();
                     if (localDataVersion == -1) {
