@@ -17,6 +17,7 @@
           <children>
              <ComboBox fx:id="pendingCombo" maxWidth="420.0" onAction="#handleSelection" promptText="Select Pending Reservation" styleClass="elegant-input"/>
              <Label fx:id="detailsLabel" text="Choose a reservation." styleClass="profile-field"/>
+             <ComboBox fx:id="paymentCombo" maxWidth="420.0" promptText="Payment Method" styleClass="elegant-input"/>
              <Button mnemonicParsing="false" onAction="#handlePay" prefHeight="44.0" prefWidth="180.0" text="PAY DEPOSIT" styleClass="primary-action-btn"/>
           </children>
        </VBox>

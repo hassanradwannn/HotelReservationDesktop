@@ -129,11 +129,20 @@ public abstract class ReservationService {
     }
 
     public static double getPaidAmount(Reservation reservation) {
+        if (reservation == null) {
+            return 0.0;
+        }
+        DatabaseSaver.ensureInvoiceSchema();
+
         String sql = """
-            SELECT COALESCE(SUM(total_amount), 0) AS paid_total
+            SELECT
+                COALESCE(SUM(CASE WHEN paid = TRUE THEN total_amount ELSE 0 END), 0) AS paid_total,
+                COALESCE(MAX(CASE
+                    WHEN paid = TRUE AND UPPER(payment_method) LIKE 'DEPOSIT%' THEN 1
+                    ELSE 0
+                END), 0) AS has_deposit_marker
             FROM invoices
-            WHERE paid = TRUE
-              AND (
+            WHERE (
                     reservation_id = ?
                     OR (reservation_id IS NULL AND guest_username = ? AND room_number = ?)
                   )
@@ -146,16 +155,50 @@ public abstract class ReservationService {
             stmt.setString(3, reservation.getRoom().getRoomNumber());
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    return rs.getDouble("paid_total");
+                    return paidAmountWithDepositFallback(
+                            reservation,
+                            rs.getDouble("paid_total"),
+                            rs.getInt("has_deposit_marker") == 1);
                 }
             }
         } catch (Exception ex) {
             return reservation.isDepositPaid() ? reservation.getDepositAmount() : 0.0;
         }
-        return 0.0;
+        return paidAmountWithDepositFallback(reservation, 0.0, false);
+    }
+
+    private static double paidAmountWithDepositFallback(Reservation reservation, double paidTotal, boolean hasDepositMarker) {
+        double deposit = getDepositAmount(reservation);
+        boolean depositWasPaid = reservation.isDepositPaid()
+                || hasDepositMarker
+                || statusImpliesDepositPaid(reservation.getStatus());
+
+        if (depositWasPaid && paidTotal < deposit) {
+            return deposit;
+        }
+        return paidTotal;
+    }
+
+    private static boolean statusImpliesDepositPaid(ReservationStatus status) {
+        return status == ReservationStatus.CONFIRMED
+                || status == ReservationStatus.ONGOING
+                || status == ReservationStatus.CHECKING_OUT;
     }
 
     public static boolean payDeposit(Reservation reservation, Guest guest) {
+        return payDeposit(reservation, guest, PaymentMethod.ONLINE);
+    }
+
+    public static boolean payDeposit(Reservation reservation, Guest guest, PaymentMethod paymentMethod) {
+        if (reservation == null || guest == null) {
+            throw new IllegalArgumentException("Reservation and guest are required.");
+        }
+        if (paymentMethod == null) {
+            throw new IllegalArgumentException("Payment method must be provided.");
+        }
+        if (reservation.getStatus() != ReservationStatus.PENDING) {
+            throw new IllegalArgumentException("Only pending reservations can receive a deposit.");
+        }
         if (reservation.isDepositPaid()) {
             throw new IllegalArgumentException("Deposit already paid.");
         }
@@ -172,23 +215,85 @@ public abstract class ReservationService {
                     "Insufficient balance. Need $" + deposit + ", have $" + guest.getBalance());
         }
 
-        guest.setBalance(guest.getBalance() - deposit);
-        DatabaseSaver.updateUserBalance(guest.getUsername(), guest.getBalance());
+        double newBalance = guest.getBalance() - deposit;
+        DatabaseSaver.ensureInvoiceSchema();
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            boolean originalAutoCommit = conn.getAutoCommit();
+            conn.setAutoCommit(false);
+
+            try {
+                try (PreparedStatement stmt = conn.prepareStatement("UPDATE users SET balance = ? WHERE username = ?")) {
+                    stmt.setDouble(1, newBalance);
+                    stmt.setString(2, guest.getUsername());
+                    if (stmt.executeUpdate() == 0) {
+                        throw new IllegalArgumentException("Guest account could not be found.");
+                    }
+                }
+
+                try (PreparedStatement stmt = conn.prepareStatement("UPDATE reservations SET status = ? WHERE reservation_id = ?")) {
+                    stmt.setString(1, ReservationStatus.CONFIRMED.toString());
+                    stmt.setString(2, reservation.getReservationId());
+                    if (stmt.executeUpdate() == 0) {
+                        throw new IllegalArgumentException("Reservation could not be found.");
+                    }
+                }
+
+                String invoiceSql = """
+                    INSERT INTO invoices
+                    (reservation_id, guest_username, room_number, total_amount, payment_method, paid, payment_date)
+                    VALUES (?, ?, ?, ?, ?, ?, CURRENT_DATE)
+                """;
+                try (PreparedStatement stmt = conn.prepareStatement(invoiceSql)) {
+                    stmt.setString(1, reservation.getReservationId());
+                    stmt.setString(2, guest.getUsername());
+                    stmt.setString(3, reservation.getRoom().getRoomNumber());
+                    stmt.setDouble(4, deposit);
+                    stmt.setString(5, "DEPOSIT_" + paymentMethod);
+                    stmt.setBoolean(6, true);
+                    stmt.executeUpdate();
+                }
+
+                conn.commit();
+                conn.setAutoCommit(originalAutoCommit);
+            } catch (Exception ex) {
+                conn.rollback();
+                conn.setAutoCommit(originalAutoCommit);
+                throw ex;
+            }
+        } catch (Exception ex) {
+            throw new IllegalArgumentException("Deposit payment failed: " + ex.getMessage(), ex);
+        }
+
+        guest.setBalance(newBalance);
         reservation.setDepositPaid(true);
         reservation.setStatus(ReservationStatus.CONFIRMED);
-        DatabaseSaver.updateReservationStatus(reservation.getReservationId(), ReservationStatus.CONFIRMED.toString());
-
-        // Log this transaction as an invoice
         try {
-            Invoice depositInvoice = new Invoice(deposit, PaymentMethod.ONLINE);
-            DatabaseSaver.saveInvoice(reservation.getReservationId(), guest.getUsername(), reservation.getRoom().getRoomNumber(), deposit, "DEPOSIT_ONLINE", true);
-        } catch (Exception e) {}
+            new Invoice(deposit, paymentMethod);
+        } catch (Exception ignored) {
+        }
+        Database.notifyDataChanged();
 
         return true;
 
         // reservation.setDepositPaid(true);
         // reservation.setStatus(ReservationStatus.CONFIRMED);
         // return true;
+    }
+
+    public static boolean requestCheckOut(Reservation reservation, Guest guest) {
+        if (reservation == null || guest == null) {
+            throw new IllegalArgumentException("Reservation and guest are required.");
+        }
+        if (reservation.getStatus() != ReservationStatus.ONGOING) {
+            throw new IllegalArgumentException("Only ongoing reservations can request check-out.");
+        }
+        if (!reservation.getGuest().getUsername().equalsIgnoreCase(guest.getUsername())) {
+            throw new IllegalArgumentException("This reservation does not belong to the current guest.");
+        }
+
+        reservation.setStatus(ReservationStatus.CHECKING_OUT);
+        DatabaseSaver.updateReservationStatus(reservation.getReservationId(), ReservationStatus.CHECKING_OUT.toString());
+        return true;
     }
 
     public static boolean checkInGuest(Reservation reservation, Guest guest) {
@@ -217,8 +322,9 @@ public abstract class ReservationService {
     }
 
     public static boolean checkOutGuest(Reservation reservation, PaymentMethod paymentMethod) {
-        if (reservation.getStatus() != ReservationStatus.ONGOING) {
-            throw new IllegalArgumentException("Reservation must be ONGOING to check out.");
+        if (reservation.getStatus() != ReservationStatus.ONGOING
+                && reservation.getStatus() != ReservationStatus.CHECKING_OUT) {
+            throw new IllegalArgumentException("Reservation must be ONGOING or CHECKING_OUT to check out.");
         }
 
         if (paymentMethod == null) {
@@ -346,6 +452,7 @@ public abstract class ReservationService {
 
             if (reservation.getStatus() == ReservationStatus.CANCELLED
                     || reservation.getStatus() == ReservationStatus.ONGOING
+                    || reservation.getStatus() == ReservationStatus.CHECKING_OUT
                     || reservation.getStatus() == ReservationStatus.COMPLETED) {
                 continue;
             }

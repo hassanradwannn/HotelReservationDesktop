@@ -3,7 +3,6 @@
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
 
 <VBox spacing="0" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="MakeReservationController">
     <padding><Insets bottom="10" left="10" right="10" top="10" /></padding>
@@ -17,12 +16,12 @@
              <VBox maxWidth="500" prefWidth="500" spacing="14" styleClass="form-card">
                 <children>
                    <Label styleClass="reservation-field-label" text="SELECTED ROOM TYPE" />
-                   <Label fx:id="selectedRoomTypeLabel" maxWidth="420" styleClass="reservation-selected-type" wrapText="true" />
+                   <Label fx:id="selectedRoomTypeLabel" maxWidth="449.0" prefHeight="45.0" prefWidth="449.0" styleClass="reservation-selected-type" wrapText="true" />
                    <TextField fx:id="guestsField" maxWidth="420" promptText="Number of Guests" styleClass="elegant-input" />
 
                    <!-- Width fixed to 420 to match the boxes above -->
-                   <DatePicker fx:id="checkInPicker" maxWidth="420" promptText="Check-in Date" styleClass="date-picker"/>
-                   <DatePicker fx:id="checkOutPicker" maxWidth="420" promptText="Check-out Date" styleClass="date-picker"/>
+                   <DatePicker fx:id="checkInPicker" maxWidth="420" promptText="Check-in Date" styleClass="date-picker" />
+                   <DatePicker fx:id="checkOutPicker" maxWidth="420" promptText="Check-out Date" styleClass="date-picker" />
 
                    <CheckBox fx:id="gymBox" styleClass="elegant-check" text="Add Gym Pass ($200)" />
                    <HBox spacing="12">

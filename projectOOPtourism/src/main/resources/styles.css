@@ -417,6 +417,90 @@
     -fx-wrap-text: true;
 }
 
+.profile-edit-input {
+    -fx-background-color: #F9F3EA;
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+    -fx-padding: 12 14 12 14;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 15px;
+    -fx-text-fill: #2C2523;
+    -fx-prompt-text-fill: #A88984;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+}
+
+.profile-edit-input:focused {
+    -fx-border-color: #8B2040;
+    -fx-background-color: #FFF7E6;
+}
+
+.profile-edit-date {
+    -fx-background-color: #F9F3EA;
+    -fx-background-insets: 0;
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+}
+
+.profile-edit-date > .text-field {
+    -fx-background-color: #F9F3EA;
+    -fx-text-fill: #2C2523;
+    -fx-prompt-text-fill: #A88984;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 15px;
+    -fx-padding: 12 14 12 14;
+}
+
+.profile-edit-date > .arrow-button {
+    -fx-background-color: #C4415D;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+}
+
+.profile-edit-date > .arrow-button > .arrow {
+    -fx-background-color: #F9F3EA;
+}
+
+.profile-edit-date:focused {
+    -fx-border-color: #8B2040;
+}
+
+.profile-edit-combo {
+    -fx-background-color: #F9F3EA;
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 15px;
+}
+
+.profile-edit-combo:focused {
+    -fx-border-color: #8B2040;
+}
+
+.profile-edit-combo .list-cell {
+    -fx-background-color: #F9F3EA;
+    -fx-text-fill: #2C2523;
+    -fx-font-family: "Georgia";
+}
+
+.profile-preference-pills {
+    -fx-background-color: #F9F3EA;
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+    -fx-padding: 10 10 10 10;
+}
+
+.profile-summary-preferences {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #FFFFFF;
+}
+
 /* ─── Form card (content panel grouping) ─────────────── */
 .form-card {
     -fx-background-color: #FFFFFF;
@@ -791,6 +875,11 @@
     -fx-background-radius: 5;
     -fx-effect: dropshadow(gaussian, rgba(44,37,35,0.10), 10, 0.12, 0, 3);
     -fx-cursor: hand;
+}
+
+.preferred-room-card {
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
 }
 
 .room-card-image {
@@ -1498,6 +1587,11 @@
     -fx-effect: dropshadow(gaussian, rgba(44,37,35,0.08), 8, 0.10, 0, 2);
 }
 
+.preferred-room-result-row {
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+}
+
 .room-type-result-visual {
     -fx-background-color: #E8879A;
     -fx-border-color: transparent #C8A97E transparent transparent;
@@ -1591,6 +1685,12 @@
     -fx-font-family: "Georgia";
     -fx-font-size: 12px;
     -fx-text-fill: #8B2040;
+}
+
+.preferred-amenity-chip {
+    -fx-background-color: #FFF7E6;
+    -fx-border-color: #C4415D;
+    -fx-text-fill: #2C2523;
 }
 
 .room-type-result-price-panel {

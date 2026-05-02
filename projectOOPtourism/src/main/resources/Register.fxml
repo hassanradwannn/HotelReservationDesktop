@@ -54,7 +54,12 @@
                               </children>
                            </HBox>
 
-                           <TextField fx:id="prefsField" promptText="room preferences" styleClass="elegant-input" maxWidth="480"/>
+                           <VBox spacing="8" maxWidth="480">
+                              <children>
+                                 <Label text="ROOM PREFERENCES" styleClass="search-field-label"/>
+                                 <FlowPane fx:id="prefsPillsPane" hgap="8" vgap="6" maxWidth="480"/>
+                              </children>
+                           </VBox>
                            <TextField fx:id="addressField" promptText="address" styleClass="elegant-input" maxWidth="480"/>
 
                            <Region prefHeight="4"/>

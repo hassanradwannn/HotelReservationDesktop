@@ -41,6 +41,7 @@ public class AvailableRoomsController implements DashboardContentController {
         this.searchContext = bookingData.length > 5 && bookingData[5] instanceof ReservationSearchContext context
                 ? context
                 : null;
+        GuestPreferenceRanker.sortRoomsByGuestPreferences(this.availableRooms, guest);
 
         loadRooms();
     }
@@ -63,6 +64,9 @@ public class AvailableRoomsController implements DashboardContentController {
         card.setPadding(new Insets(15));
         card.setMaxWidth(Double.MAX_VALUE);
         card.getStyleClass().add("room-card");
+        if (GuestPreferenceRanker.getPreferenceMatchScore(room, guest) > 0) {
+            card.getStyleClass().add("preferred-room-card");
+        }
 
         StackPane imageBox = new StackPane();
         imageBox.getStyleClass().add("room-image-box");
@@ -93,6 +97,9 @@ public class AvailableRoomsController implements DashboardContentController {
         for (String amenityName : getDisplayAmenityNames(room)) {
             Label chip = new Label(amenityName);
             chip.getStyleClass().add("room-type-result-amenity-chip");
+            if (GuestPreferenceRanker.isPreferredAmenity(guest, amenityName)) {
+                chip.getStyleClass().add("preferred-amenity-chip");
+            }
             amenityChips.getChildren().add(chip);
         }
         
@@ -139,6 +146,9 @@ public class AvailableRoomsController implements DashboardContentController {
         if (hasGymPass) {
             names.add(Reservation.GYM_PASS_NAME);
         }
+        names.sort((left, right) -> Boolean.compare(
+                GuestPreferenceRanker.isPreferredAmenity(guest, right),
+                GuestPreferenceRanker.isPreferredAmenity(guest, left)));
         return names;
     }
 }

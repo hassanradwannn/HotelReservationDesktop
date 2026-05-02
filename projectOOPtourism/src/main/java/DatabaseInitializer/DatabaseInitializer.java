@@ -34,6 +34,7 @@ public class DatabaseInitializer {
                     salary DOUBLE,
                 balance DOUBLE DEFAULT 0.0,
                     is_logged_in BOOLEAN DEFAULT FALSE,
+                    room_preferences TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """;
@@ -95,7 +96,7 @@ public class DatabaseInitializer {
                     has_gym_pass BOOLEAN DEFAULT FALSE,
                     status VARCHAR(50) DEFAULT 'PENDING',
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (guest_username) REFERENCES users(username),
+                    FOREIGN KEY (guest_username) REFERENCES users(username) ON UPDATE CASCADE,
                     FOREIGN KEY (room_number) REFERENCES rooms(room_number)
                 )
             """;
@@ -110,6 +111,7 @@ public class DatabaseInitializer {
                 total_amount DOUBLE NOT NULL,
                 payment_method VARCHAR(50) NOT NULL,
                 paid BOOLEAN DEFAULT TRUE,
+                payment_date DATE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """;
@@ -140,6 +142,12 @@ public class DatabaseInitializer {
                 // Column already exists, safe to ignore
             }
             try {
+                executeUpdate(conn, "ALTER TABLE users ADD COLUMN room_preferences TEXT");
+                System.out.println("Added missing 'room_preferences' column to users table.");
+            } catch (SQLException e) {
+                // Column already exists, safe to ignore
+            }
+            try {
                 executeUpdate(conn, "ALTER TABLE reservations ADD COLUMN reservation_id VARCHAR(50) UNIQUE NOT NULL AFTER id");
                 System.out.println("Added missing 'reservation_id' column to reservations table.");
             } catch (SQLException e) {
@@ -166,6 +174,18 @@ public class DatabaseInitializer {
             try {
                 executeUpdate(conn, "ALTER TABLE invoices ADD COLUMN reservation_id VARCHAR(50) AFTER room_number");
                 System.out.println("Added missing 'reservation_id' column to invoices table.");
+            } catch (SQLException e) {
+                // Column already exists, safe to ignore
+            }
+            try {
+                executeUpdate(conn, "ALTER TABLE invoices ADD COLUMN paid BOOLEAN DEFAULT TRUE AFTER payment_method");
+                System.out.println("Added missing 'paid' column to invoices table.");
+            } catch (SQLException e) {
+                // Column already exists, safe to ignore
+            }
+            try {
+                executeUpdate(conn, "ALTER TABLE invoices ADD COLUMN payment_date DATE AFTER paid");
+                System.out.println("Added missing 'payment_date' column to invoices table.");
             } catch (SQLException e) {
                 // Column already exists, safe to ignore
             }

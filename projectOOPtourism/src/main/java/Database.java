@@ -252,6 +252,13 @@ public class Database {
                 .toList();
     }
 
+    public static List<Reservation> getCheckingOutReservations() {
+        loadAllReservations();
+        return reservations.stream()
+                .filter(r -> r.getStatus() == ReservationStatus.CHECKING_OUT)
+                .toList();
+    }
+
     public static void addUser(User user) {
         if (user instanceof Guest) {
             guests.add((Guest) user);
@@ -286,7 +293,7 @@ public class Database {
 
                 java.time.LocalDate checkIn = checkInSql.toLocalDate();
                 java.time.LocalDate checkOut = checkOutSql.toLocalDate();
-                ReservationStatus status = ReservationStatus.valueOf(statusStr.toUpperCase());
+                ReservationStatus status = ReservationStatus.valueOf(statusStr.toUpperCase().replace(' ', '_'));
 
                 // BUG FIX 3: If the guest still isn't in memory (registered on
                 // another instance after our last user-load), fetch them live

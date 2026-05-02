@@ -52,6 +52,12 @@ public class GenericListController implements DashboardContentController {
             todayBtn.setOnAction(e -> mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GenericList.fxml",
                     new Object[]{"Today's Reservations", (Supplier<List<?>>) Database::getTodaysReservations}));
 
+            Button checkingOutBtn = new Button("Checking Out");
+            checkingOutBtn.getStyleClass().add("outline-action-btn");
+            checkingOutBtn.setPrefHeight(38);
+            checkingOutBtn.setOnAction(e -> mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GenericList.fxml",
+                    new Object[]{"Checking Out Reservations", (Supplier<List<?>>) Database::getCheckingOutReservations}));
+
             Button allBtn = new Button("ALL");
             allBtn.getStyleClass().add("outline-action-btn");
             allBtn.setPrefHeight(38);
@@ -61,7 +67,7 @@ public class GenericListController implements DashboardContentController {
                         return Database.getReservations();
                     }}));
 
-            actionBar.getChildren().addAll(todayBtn, allBtn);
+            actionBar.getChildren().addAll(todayBtn, checkingOutBtn, allBtn);
         }
 
         if (actionBar != null && mainApp.getCurrentUser() instanceof Admin) {

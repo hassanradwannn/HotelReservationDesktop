@@ -38,9 +38,6 @@ public class Reservation {
     }
 
     public final double getDepositAmount() {
-        if (isSameDayBooking()) {
-            return 0.0;
-        }
         return this.totalPrice * 0.25;
     }
 

@@ -267,6 +267,8 @@ public class GuestHomeController implements DashboardContentController {
                         checkIn, checkOut, type, numGuests, amenityFilter));
             }
 
+            GuestPreferenceRanker.sortRoomsByGuestPreferences(available, guest);
+
             if (available.isEmpty()) {
                 msgLabel.setText("No rooms available for the selected criteria.");
                 showResults(false);
@@ -326,21 +328,13 @@ public class GuestHomeController implements DashboardContentController {
             row.setPrefHeight(196);
 
             StackPane visual = new StackPane();
-            visual.getStyleClass().addAll("room-type-result-visual", "room-type-result-visual-" + (rowIndex % 4));
+            visual.getStyleClass().addAll("room-type-result-visual", "room-type-result-visual-2");
             visual.setMinWidth(226);
             visual.setPrefWidth(226);
             visual.setMaxWidth(226);
-            Region marker = new Region();
-            marker.getStyleClass().add("room-type-result-marker");
-            if (rowIndex % 4 == 1) {
-                marker.getStyleClass().add("room-type-result-marker-diamond");
-                marker.setRotate(45);
-            } else if (rowIndex % 4 == 2) {
-                marker.getStyleClass().add("room-type-result-marker-star");
-            } else if (rowIndex % 4 == 3) {
-                marker.getStyleClass().add("room-type-result-marker-cluster");
-            }
-            visual.getChildren().add(marker);
+            Label typeIcon = new Label(roomTypeIcon(roomType.getName()));
+            typeIcon.setStyle(roomTypeIconStyle(roomType.getName()));
+            visual.getChildren().add(typeIcon);
 
             VBox details = new VBox(12);
             details.getStyleClass().add("room-type-result-details");
@@ -435,6 +429,9 @@ public class GuestHomeController implements DashboardContentController {
                 .flatMap(room -> room.getAmenities().stream())
                 .map(Amenity::getName)
                 .distinct()
+                .sorted((left, right) -> Boolean.compare(
+                        GuestPreferenceRanker.isPreferredAmenity(guest, right),
+                        GuestPreferenceRanker.isPreferredAmenity(guest, left)))
                 .limit(4)
                 .toList();
 
@@ -446,6 +443,9 @@ public class GuestHomeController implements DashboardContentController {
         for (String amenityName : amenityNames) {
             Label chip = new Label(amenityName);
             chip.getStyleClass().add("room-type-result-amenity-chip");
+            if (GuestPreferenceRanker.isPreferredAmenity(guest, amenityName)) {
+                chip.getStyleClass().add("preferred-amenity-chip");
+            }
             chips.add(chip);
         }
         return chips;
@@ -466,6 +466,25 @@ public class GuestHomeController implements DashboardContentController {
             return "The crown jewel of the hotel. Grand parlor, two dressing rooms, rooftop terrace, gym membership, and jacuzzi.";
         }
         return "A carefully appointed suite with refined finishes, attentive service, and selected hotel amenities.";
+    }
+
+    private String roomTypeIcon(String name) {
+        String n = name.toLowerCase();
+        if (n.contains("suite") || n.contains("grand") || n.contains("alpine")) return "✦";
+        if (n.contains("penthouse") || n.contains("gustave")) return "❧";
+        if (n.contains("deluxe") || n.contains("lobby")) return "◆";
+        if (n.contains("classic") || n.contains("mendle")) return "⊙";
+        return "◈";
+    }
+
+    private String roomTypeIconStyle(String name) {
+        String n = name.toLowerCase();
+        String color = (n.contains("deluxe") || n.contains("lobby")) ? "#C8A97E" : "#F9F3EA";
+        String size = (n.contains("classic") || n.contains("mendle")) ? "40" : "34";
+        return "-fx-font-family: 'Georgia';"
+                + "-fx-font-size: " + size + "px;"
+                + "-fx-font-weight: bold;"
+                + "-fx-text-fill: " + color + ";";
     }
 
     private double calculateStayTotal(Room room, LocalDate checkIn, LocalDate checkOut) {

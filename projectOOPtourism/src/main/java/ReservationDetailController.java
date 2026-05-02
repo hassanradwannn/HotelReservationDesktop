@@ -27,16 +27,21 @@ public class ReservationDetailController implements DashboardContentController {
     @FXML private Label outstandingLabel;
     @FXML private Label messageLabel;
     @FXML private VBox receptionistActions;
+    @FXML private VBox guestActions;
     @FXML private VBox extendPane;
+    @FXML private VBox extensionPreviewPane;
     @FXML private DatePicker newCheckOutPicker;
     @FXML private Label extensionNightsLabel;
     @FXML private Label extensionFeeLabel;
     @FXML private Label extensionNewTotalLabel;
     @FXML private Button extendButton;
+    @FXML private Button payDepositButton;
+    @FXML private Button requestCheckOutButton;
     @FXML private Button cancelButton;
     @FXML private Button invoiceButton;
     @FXML private Button checkInButton;
     @FXML private Button checkOutButton;
+    @FXML private ComboBox<PaymentMethod> depositPaymentCombo;
     @FXML private ComboBox<PaymentMethod> paymentCombo;
 
     private Main mainApp;
@@ -56,6 +61,7 @@ public class ReservationDetailController implements DashboardContentController {
         }
 
         setupDatePicker();
+        depositPaymentCombo.setItems(FXCollections.observableArrayList(PaymentMethod.values()));
         paymentCombo.setItems(FXCollections.observableArrayList(PaymentMethod.values()));
         newCheckOutPicker.valueProperty().addListener((obs, oldVal, newVal) -> updateExtensionSummary());
         render();
@@ -86,7 +92,7 @@ public class ReservationDetailController implements DashboardContentController {
         guestLabel.setText(reservation.getGuest().getUsername());
         roomLabel.setText(reservation.getRoom().getRoomNumber() + " - " + reservation.getRoom().getRoomType().getName());
         datesLabel.setText(formatter.format(reservation.getCheckInDate()) + " : " + formatter.format(reservation.getCheckOutDate()));
-        statusLabel.setText(reservation.getStatus().toString());
+        statusLabel.setText(displayStatus(reservation.getStatus()));
         totalLabel.setText("$" + mainApp.money(reservation.getTotalPrice()));
         double paid = getPaidAmount();
         double outstanding = reservation.getStatus() == ReservationStatus.COMPLETED
@@ -103,14 +109,31 @@ public class ReservationDetailController implements DashboardContentController {
         invoiceButton.setVisible(receptionist);
         invoiceButton.setManaged(receptionist);
 
+        boolean guestUser = mainApp.getCurrentUser() instanceof Guest;
         boolean completed = reservation.getStatus() == ReservationStatus.COMPLETED;
         boolean cancelled = reservation.getStatus() == ReservationStatus.CANCELLED;
+        boolean checkingOut = reservation.getStatus() == ReservationStatus.CHECKING_OUT;
         boolean receptionistCannotCancel = receptionist && reservation.getStatus() == ReservationStatus.ONGOING;
-        cancelButton.setDisable(completed || cancelled || receptionistCannotCancel);
+        cancelButton.setDisable(completed || cancelled || checkingOut || receptionistCannotCancel);
 
-        extendPane.setVisible(receptionist || mainApp.getCurrentUser() instanceof Guest);
-        extendPane.setManaged(receptionist || mainApp.getCurrentUser() instanceof Guest);
-        boolean canExtend = receptionist && reservation.getStatus() == ReservationStatus.ONGOING;
+        guestActions.setVisible(guestUser && (reservation.getStatus() == ReservationStatus.PENDING
+                || reservation.getStatus() == ReservationStatus.ONGOING));
+        guestActions.setManaged(guestActions.isVisible());
+        boolean canPayDeposit = guestUser && reservation.getStatus() == ReservationStatus.PENDING;
+        depositPaymentCombo.setVisible(canPayDeposit);
+        depositPaymentCombo.setManaged(canPayDeposit);
+        payDepositButton.setVisible(canPayDeposit);
+        payDepositButton.setManaged(payDepositButton.isVisible());
+        requestCheckOutButton.setVisible(guestUser && reservation.getStatus() == ReservationStatus.ONGOING);
+        requestCheckOutButton.setManaged(requestCheckOutButton.isVisible());
+
+        boolean ongoing = reservation.getStatus() == ReservationStatus.ONGOING;
+        boolean showExtension = ongoing && (receptionist || guestUser);
+        extendPane.setVisible(showExtension);
+        extendPane.setManaged(showExtension);
+        extensionPreviewPane.setVisible(ongoing);
+        extensionPreviewPane.setManaged(ongoing);
+        boolean canExtend = showExtension;
         newCheckOutPicker.setDisable(!canExtend);
         extendButton.setDisable(!canExtend);
         newCheckOutPicker.setValue(reservation.getCheckOutDate().plusDays(1));
@@ -126,9 +149,11 @@ public class ReservationDetailController implements DashboardContentController {
         checkInButton.setDisable(completed || cancelled
                 || reservation.getStatus() != ReservationStatus.CONFIRMED
                 || !SystemTime.getToday().isEqual(reservation.getCheckInDate()));
-        checkOutButton.setDisable(completed || cancelled
-                || reservation.getStatus() != ReservationStatus.ONGOING
-                || SystemTime.getToday().isBefore(reservation.getCheckOutDate()));
+        boolean canCheckOut = !completed && !cancelled
+                && (checkingOut
+                || (reservation.getStatus() == ReservationStatus.ONGOING
+                && !SystemTime.getToday().isBefore(reservation.getCheckOutDate())));
+        checkOutButton.setDisable(!canCheckOut);
         paymentCombo.setDisable(checkOutButton.isDisabled());
     }
 
@@ -150,6 +175,11 @@ public class ReservationDetailController implements DashboardContentController {
         if ("Today's Reservations".equals(sourceTitle)) {
             mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GenericList.fxml",
                     new Object[]{"Today's Reservations", (java.util.function.Supplier<java.util.List<?>>) Database::getTodaysReservations});
+            return;
+        }
+        if ("Checking Out Reservations".equals(sourceTitle)) {
+            mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GenericList.fxml",
+                    new Object[]{"Checking Out Reservations", (java.util.function.Supplier<java.util.List<?>>) Database::getCheckingOutReservations});
             return;
         }
         String listTitle = sourceTitle == null || sourceTitle.isBlank() ? "Reservations" : sourceTitle;
@@ -206,6 +236,41 @@ public class ReservationDetailController implements DashboardContentController {
     }
 
     @FXML
+    private void handlePayDeposit() {
+        try {
+            if (!(mainApp.getCurrentUser() instanceof Guest currentGuest)) {
+                mainApp.alert("Error", "Only guests can pay deposits from this screen.");
+                return;
+            }
+            PaymentMethod paymentMethod = depositPaymentCombo.getValue();
+            if (paymentMethod == null) {
+                mainApp.alert("Error", "Please select a payment method.");
+                return;
+            }
+            ReservationService.payDeposit(reservation, currentGuest, paymentMethod);
+            setMessage("Deposit paid. Reservation confirmed.");
+            refreshCurrentReservation();
+        } catch (Exception ex) {
+            mainApp.alert("Payment Failed", ex.getMessage());
+        }
+    }
+
+    @FXML
+    private void handleRequestCheckOut() {
+        try {
+            if (!(mainApp.getCurrentUser() instanceof Guest currentGuest)) {
+                mainApp.alert("Error", "Only guests can request check-out from this screen.");
+                return;
+            }
+            ReservationService.requestCheckOut(reservation, currentGuest);
+            setMessage("Check-out requested. The front desk has been notified.");
+            refreshCurrentReservation();
+        } catch (Exception ex) {
+            mainApp.alert("Request Failed", ex.getMessage());
+        }
+    }
+
+    @FXML
     private void handleExtendStay() {
         try {
             ReservationService.extendStay(reservation, newCheckOutPicker.getValue());
@@ -252,6 +317,10 @@ public class ReservationDetailController implements DashboardContentController {
 
     private double getPaidAmount() {
         return ReservationService.getPaidAmount(reservation);
+    }
+
+    private String displayStatus(ReservationStatus status) {
+        return status.toString().replace('_', ' ');
     }
 
     private void setMessage(String message) {

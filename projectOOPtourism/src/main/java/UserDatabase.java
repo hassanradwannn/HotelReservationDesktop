@@ -59,7 +59,7 @@ public class UserDatabase {
                         }
                     }
                     
-                    String roomPreferences = ""; // Default since we don't store it
+                    String roomPreferences = readRoomPreferences(rs);
 
                     user = new Guest(username, password, dateOfBirth, balance, address, gender, roomPreferences);
                 }
@@ -123,7 +123,7 @@ public class UserDatabase {
                         }
                     }
                     
-                    String roomPreferences = "";
+                    String roomPreferences = readRoomPreferences(rs);
 
                     user = new Guest(username, password, dateOfBirth, balance, address, gender, roomPreferences);
                 }
@@ -176,6 +176,15 @@ public class UserDatabase {
         } catch (SQLException e) {
             System.out.println("Error clearing logged in users:");
             e.printStackTrace();
+        }
+    }
+
+    private static String readRoomPreferences(ResultSet rs) {
+        try {
+            String roomPreferences = rs.getString("room_preferences");
+            return roomPreferences == null ? "" : roomPreferences;
+        } catch (SQLException ex) {
+            return "";
         }
     }
 }

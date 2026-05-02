@@ -1,8 +1,11 @@
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.FlowPane;
 import javafx.util.StringConverter;
 
 public class RegisterController {
@@ -12,10 +15,11 @@ public class RegisterController {
     @FXML private TextField balanceField;
     @FXML private TextField addressField;
     @FXML private ComboBox<Gender> genderBox;
-    @FXML private TextField prefsField;
+    @FXML private FlowPane prefsPillsPane;
     @FXML private Label messageLabel;
 
     private Main mainApp;
+    private final Set<String> selectedPreferences = new LinkedHashSet<>();
     private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public void setMainApp(Main mainApp) {
@@ -48,6 +52,36 @@ public class RegisterController {
                 setDisable(empty || date.isAfter(LocalDate.now()));
             }
         });
+
+        buildPreferencePills();
+    }
+
+    private void buildPreferencePills() {
+        prefsPillsPane.getChildren().clear();
+        selectedPreferences.retainAll(Database.getAmenities().stream().map(Amenity::getName).toList());
+
+        for (Amenity amenity : Database.getAmenities()) {
+            ToggleButton pill = new ToggleButton(amenity.getName());
+            pill.getStyleClass().add("amenity-pill");
+            pill.setSelected(selectedPreferences.contains(amenity.getName()));
+            if (pill.isSelected()) {
+                pill.getStyleClass().add("amenity-pill-active");
+            }
+
+            pill.selectedProperty().addListener((obs, wasSelected, isSelected) -> {
+                if (isSelected) {
+                    selectedPreferences.add(amenity.getName());
+                    if (!pill.getStyleClass().contains("amenity-pill-active")) {
+                        pill.getStyleClass().add("amenity-pill-active");
+                    }
+                } else {
+                    selectedPreferences.remove(amenity.getName());
+                    pill.getStyleClass().remove("amenity-pill-active");
+                }
+            });
+
+            prefsPillsPane.getChildren().add(pill);
+        }
     }
 
     @FXML
@@ -68,7 +102,7 @@ public class RegisterController {
                     Double.parseDouble(balanceField.getText().trim()),
                     addressField.getText().trim(),
                     genderBox.getValue(),
-                    prefsField.getText().trim()
+                    String.join(", ", selectedPreferences)
             );
 
             guest.register(); // Calling your original method

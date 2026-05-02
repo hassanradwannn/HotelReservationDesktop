@@ -24,7 +24,8 @@ public class CheckOutController implements DashboardContentController {
         Database.refreshReservationsFromDatabase();
         reservationCombo.setItems(FXCollections.observableArrayList(
                 Database.getReservations().stream()
-                        .filter(r -> r.getStatus() == ReservationStatus.ONGOING)
+                        .filter(r -> r.getStatus() == ReservationStatus.ONGOING
+                                || r.getStatus() == ReservationStatus.CHECKING_OUT)
                         .collect(Collectors.toList())
         ));
     }

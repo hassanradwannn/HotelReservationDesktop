@@ -226,6 +226,7 @@ public class MakeReservationController implements DashboardContentController {
             int numGuests = parseGuests();
             List<Room> available = ReservationService.searchAvailableRooms(
                     in, out, selectedRoomType, numGuests, requestedAmenities);
+            GuestPreferenceRanker.sortRoomsByGuestPreferences(available, guest);
 
             if (available.isEmpty()) {
                 setError("No rooms available for the selected dates.");
@@ -273,6 +274,7 @@ public class MakeReservationController implements DashboardContentController {
 
         List<Room> available = ReservationService.searchAvailableRooms(
                 in, out, selectedRoomType, numGuests, requestedAmenities);
+        GuestPreferenceRanker.sortRoomsByGuestPreferences(available, guest);
 
         if (available.isEmpty()) {
             setError("No rooms available for the selected dates.");
@@ -337,6 +339,7 @@ public class MakeReservationController implements DashboardContentController {
         if (in != null && out != null && guests != null) {
             List<Room> available = ReservationService.searchAvailableRooms(
                     in, out, selectedRoomType, guests, requestedAmenities);
+            GuestPreferenceRanker.sortRoomsByGuestPreferences(available, guest);
             if (!available.isEmpty()) {
                 return available.get(0);
             }

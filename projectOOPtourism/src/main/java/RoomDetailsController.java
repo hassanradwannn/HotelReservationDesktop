@@ -65,6 +65,9 @@ public class RoomDetailsController implements DashboardContentController {
         if (hasGymPass) {
             names.add(Reservation.GYM_PASS_NAME);
         }
+        names.sort((left, right) -> Boolean.compare(
+                GuestPreferenceRanker.isPreferredAmenity(guest, right),
+                GuestPreferenceRanker.isPreferredAmenity(guest, left)));
         return names;
     }
 
