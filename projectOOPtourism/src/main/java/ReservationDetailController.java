@@ -147,16 +147,17 @@ public class ReservationDetailController implements DashboardContentController {
             mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GuestReservations.fxml", mainApp.getCurrentUser());
             return;
         }
-        if ("All Reservations".equals(sourceTitle)) {
+        if ("Today's Reservations".equals(sourceTitle)) {
             mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GenericList.fxml",
-                    new Object[]{"All Reservations", (java.util.function.Supplier<java.util.List<?>>) () -> {
-                        Database.refreshReservationsFromDatabase();
-                        return Database.getReservations();
-                    }});
+                    new Object[]{"Today's Reservations", (java.util.function.Supplier<java.util.List<?>>) Database::getTodaysReservations});
             return;
         }
+        String listTitle = sourceTitle == null || sourceTitle.isBlank() ? "Reservations" : sourceTitle;
         mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GenericList.fxml",
-                new Object[]{"Today's Reservations", (java.util.function.Supplier<java.util.List<?>>) Database::getTodaysReservations});
+                new Object[]{listTitle, (java.util.function.Supplier<java.util.List<?>>) () -> {
+                    Database.refreshReservationsFromDatabase();
+                    return Database.getReservations();
+                }});
     }
 
     @FXML

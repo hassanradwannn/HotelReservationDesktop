@@ -72,7 +72,7 @@ public class ReceptionistMenuController {
     @FXML private void showCheckOut() { mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/CheckOut.fxml", receptionist); }
     
     @FXML private void showAllReservations() {
-        mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GenericList.fxml", new Object[]{"All Reservations", (Supplier<List<?>>) () -> {
+        mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GenericList.fxml", new Object[]{"Reservations", (Supplier<List<?>>) () -> {
             Database.refreshReservationsFromDatabase();
             return Database.getReservations();
         }});

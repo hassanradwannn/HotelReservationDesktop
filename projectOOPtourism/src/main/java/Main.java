@@ -136,10 +136,14 @@ public class Main extends Application {
                 guestPage.getStyleClass().add("guest-subpage-shell");
 
                 ReservationSearchContext reservationBackContext = extractReservationBackContext(fxmlFile, data);
-                Button backHome = new Button(reservationBackContext == null ? "BACK HOME" : "BACK TO RESERVATION");
+                boolean returningToReservation = reservationBackContext != null;
+                Button backHome = new Button(returningToReservation ? "BACK TO RESERVATION MENU" : "BACK HOME");
                 backHome.getStyleClass().addAll("outline-action-btn", "guest-back-home-btn");
+                if (returningToReservation) {
+                    backHome.getStyleClass().add("guest-reservation-back-btn");
+                }
                 backHome.setOnAction(event -> {
-                    if (reservationBackContext != null) {
+                    if (returningToReservation) {
                         selectedRoomForReservation = null;
                         switchDashboardContent(getCurrentContentArea(), "/MakeReservation.fxml", reservationBackContext);
                     } else {

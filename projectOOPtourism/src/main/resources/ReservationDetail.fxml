@@ -1,15 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.ComboBox?>
-<?import javafx.scene.control.DatePicker?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Region?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 
-<VBox spacing="0" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ReservationDetailController">
+<VBox spacing="0" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ReservationDetailController">
     <padding><Insets bottom="10" left="10" right="10" top="10" /></padding>
     <children>
         <Label styleClass="panel-eyebrow" text="RESERVATIONS" />
@@ -31,13 +26,13 @@
 
                         <VBox fx:id="extendPane" spacing="12">
                             <Label styleClass="reservation-field-label" text="EXTEND STAY" />
-                            <DatePicker fx:id="newCheckOutPicker" maxWidth="420" promptText="New check-out date" styleClass="date-picker" />
-                            <Button fx:id="extendButton" onAction="#handleExtendStay" prefHeight="44" prefWidth="200" styleClass="primary-action-btn" text="EXTEND STAY" />
+                            <DatePicker fx:id="newCheckOutPicker" maxWidth="420" prefWidth="419.0" promptText="New check-out date" styleClass="date-picker" />
+                            <Button fx:id="extendButton" onAction="#handleExtendStay" prefHeight="44" prefWidth="424.0" styleClass="primary-action-btn" text="EXTEND STAY" />
                         </VBox>
 
                         <HBox spacing="12">
-                            <Button onAction="#handleBack" prefHeight="44" prefWidth="120" styleClass="outline-action-btn" text="BACK" />
-                            <Button fx:id="cancelButton" onAction="#handleCancel" prefHeight="44" prefWidth="200" styleClass="danger-action-btn" text="CANCEL RESERVATION" />
+                            <Button onAction="#handleBack" prefHeight="44" prefWidth="201.0" styleClass="outline-action-btn" text="BACK " />
+                            <Button fx:id="cancelButton" onAction="#handleCancel" prefHeight="44" prefWidth="210.0" styleClass="danger-action-btn" text="CANCEL RESERVATION" />
                         </HBox>
 
                         <VBox fx:id="receptionistActions" spacing="12">

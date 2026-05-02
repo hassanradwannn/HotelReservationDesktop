@@ -361,6 +361,10 @@
     -fx-pref-width: 132;
 }
 
+.guest-reservation-back-btn {
+    -fx-pref-width: 270;
+}
+
 /* ─── Danger Button ───────────────────────────────────── */
 .danger-action-btn {
     -fx-background-color: #C4415D;

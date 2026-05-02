@@ -1,3 +1,4 @@
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -8,10 +9,15 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.control.OverrunStyle;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 
 public class GenericListController implements DashboardContentController {
+    private static final DateTimeFormatter RESERVATION_DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
     @FXML private Label titleLabel;
     @FXML private ListView<Object> listView;
     @FXML private HBox actionBar;
@@ -36,10 +42,11 @@ public class GenericListController implements DashboardContentController {
         
         dataRefresher.run();
         mainApp.setCurrentViewRefresher(dataRefresher);
+        configureListCellFactory();
 
         // Add context-specific action buttons
         if (actionBar != null && mainApp.getCurrentUser() instanceof Receptionist && title.contains("Reservations")) {
-            Button todayBtn = new Button("TODAY'S");
+            Button todayBtn = new Button("For Today");
             todayBtn.getStyleClass().add("outline-action-btn");
             todayBtn.setPrefHeight(38);
             todayBtn.setOnAction(e -> mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GenericList.fxml",
@@ -104,6 +111,57 @@ public class GenericListController implements DashboardContentController {
                 }
             }
         });
+    }
+
+    private void configureListCellFactory() {
+        listView.setCellFactory(view -> new ListCell<>() {
+            @Override
+            protected void updateItem(Object item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (empty || item == null) {
+                    setText(null);
+                    setGraphic(null);
+                    setTooltip(null);
+                    return;
+                }
+
+                if (item instanceof Reservation reservation) {
+                    setText(null);
+                    setGraphic(createReservationRow(reservation));
+                    setTooltip(new Tooltip(reservation.toString()));
+                    return;
+                }
+
+                setText(item.toString());
+                setGraphic(null);
+                setTooltip(null);
+            }
+        });
+    }
+
+    private HBox createReservationRow(Reservation reservation) {
+        HBox row = new HBox(8);
+        row.getStyleClass().add("reservation-list-row");
+        row.getChildren().addAll(
+                fixedColumn("ID: " + reservation.getReservationId(), 190),
+                fixedColumn("Guest: " + reservation.getGuest().getUsername(), 150),
+                fixedColumn("Room: " + reservation.getRoom().getRoomNumber(), 100),
+                fixedColumn(reservation.getCheckInDate().format(RESERVATION_DATE_FORMAT)
+                        + " : " + reservation.getCheckOutDate().format(RESERVATION_DATE_FORMAT), 215),
+                fixedColumn("Status: " + reservation.getStatus(), 160)
+        );
+        return row;
+    }
+
+    private Label fixedColumn(String text, double width) {
+        Label label = new Label(text);
+        label.getStyleClass().add("reservation-list-column");
+        label.setMinWidth(width);
+        label.setPrefWidth(width);
+        label.setMaxWidth(width);
+        label.setTextOverrun(OverrunStyle.ELLIPSIS);
+        return label;
     }
 
     private void handleDeleteRoom(Runnable refresher) {
