@@ -96,6 +96,10 @@ public class Reservation {
         return checkOutDate;
     }
 
+    public void setCheckOutDate(LocalDate checkOutDate) {
+        this.checkOutDate = checkOutDate;
+    }
+
     public ReservationStatus getStatus() {
         return status;
     }

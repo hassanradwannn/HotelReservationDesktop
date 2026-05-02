@@ -59,7 +59,7 @@ public class ReceptionistMenuController {
     }
 
     public void loadDefaultView() {
-        showToday();
+        showAllReservations();
     }
 
     @FXML private void showToday() {

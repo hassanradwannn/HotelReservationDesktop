@@ -1,12 +1,10 @@
-import java.util.List;
-
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.ListView;
 
 public class GuestReservationsController implements DashboardContentController {
 
-    @FXML private ListView<String> reservationsList;
+    @FXML private ListView<Reservation> reservationsList;
     private Main mainApp;
     private Guest guest;
 
@@ -21,12 +19,14 @@ public class GuestReservationsController implements DashboardContentController {
 
     private void loadReservations() {
         Database.refreshReservationsFromDatabase();
-        List<String> res = Database.getReservations().stream()
+        reservationsList.setItems(FXCollections.observableArrayList(Database.getReservations().stream()
                 .filter(r -> r.getGuest().getUsername().equals(guest.getUsername()))
-                .map(r -> String.format("ID: %s | Guest: %s | Room: %s | %s : %s | Status: %s",
-                        r.getReservationId(), r.getGuest().getUsername(), r.getRoom().getRoomNumber(),
-                        r.getCheckInDate(), r.getCheckOutDate(), r.getStatus()))
-                .toList();
-        reservationsList.setItems(FXCollections.observableArrayList(res));
+                .toList()));
+        reservationsList.setOnMouseClicked(event -> {
+            Reservation selected = reservationsList.getSelectionModel().getSelectedItem();
+            if (selected != null) {
+                mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/ReservationDetail.fxml", selected);
+            }
+        });
     }
 }

@@ -168,20 +168,27 @@ public class DatabaseSaver {
     public static void saveInvoice(String guestUsername, String roomNumber,
                                    double totalAmount, String paymentMethod,
                                    boolean paid) {
+        saveInvoice(null, guestUsername, roomNumber, totalAmount, paymentMethod, paid);
+    }
+
+    public static void saveInvoice(String reservationId, String guestUsername, String roomNumber,
+                                   double totalAmount, String paymentMethod,
+                                   boolean paid) {
         String sql = """
             INSERT INTO invoices
-            (guest_username, room_number, total_amount, payment_method, paid)
-            VALUES (?, ?, ?, ?, ?)
+            (reservation_id, guest_username, room_number, total_amount, payment_method, paid)
+            VALUES (?, ?, ?, ?, ?, ?)
         """;
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, guestUsername);
-            stmt.setString(2, roomNumber);
-            stmt.setDouble(3, totalAmount);
-            stmt.setString(4, paymentMethod);
-            stmt.setBoolean(5, paid);
+            stmt.setString(1, reservationId);
+            stmt.setString(2, guestUsername);
+            stmt.setString(3, roomNumber);
+            stmt.setDouble(4, totalAmount);
+            stmt.setString(5, paymentMethod);
+            stmt.setBoolean(6, paid);
             if (stmt.executeUpdate() > 0 && !silentSync) {
                 Database.notifyDataChanged();
             }
@@ -222,6 +229,24 @@ public class DatabaseSaver {
 
         } catch (Exception e) {
             System.out.println("Failed to update reservation status: " + e.getMessage());
+        }
+    }
+
+    public static void updateReservationDates(String reservationId, java.time.LocalDate checkIn, java.time.LocalDate checkOut) {
+        String sql = "UPDATE reservations SET check_in_date = ?, check_out_date = ? WHERE reservation_id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setDate(1, java.sql.Date.valueOf(checkIn));
+            stmt.setDate(2, java.sql.Date.valueOf(checkOut));
+            stmt.setString(3, reservationId);
+            if (stmt.executeUpdate() > 0 && !silentSync) {
+                Database.notifyDataChanged();
+            }
+
+        } catch (Exception e) {
+            System.out.println("Failed to update reservation dates: " + e.getMessage());
         }
     }
 

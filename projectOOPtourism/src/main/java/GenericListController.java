@@ -38,6 +38,25 @@ public class GenericListController implements DashboardContentController {
         mainApp.setCurrentViewRefresher(dataRefresher);
 
         // Add context-specific action buttons
+        if (actionBar != null && mainApp.getCurrentUser() instanceof Receptionist && title.contains("Reservations")) {
+            Button todayBtn = new Button("TODAY'S");
+            todayBtn.getStyleClass().add("outline-action-btn");
+            todayBtn.setPrefHeight(38);
+            todayBtn.setOnAction(e -> mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GenericList.fxml",
+                    new Object[]{"Today's Reservations", (Supplier<List<?>>) Database::getTodaysReservations}));
+
+            Button allBtn = new Button("ALL");
+            allBtn.getStyleClass().add("outline-action-btn");
+            allBtn.setPrefHeight(38);
+            allBtn.setOnAction(e -> mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GenericList.fxml",
+                    new Object[]{"All Reservations", (Supplier<List<?>>) () -> {
+                        Database.refreshReservationsFromDatabase();
+                        return Database.getReservations();
+                    }}));
+
+            actionBar.getChildren().addAll(todayBtn, allBtn);
+        }
+
         if (actionBar != null && mainApp.getCurrentUser() instanceof Admin) {
             switch (title) {
                 case "Rooms" -> {
@@ -70,6 +89,12 @@ public class GenericListController implements DashboardContentController {
         }
         
         listView.setOnMouseClicked(event -> {
+            if (listView.getSelectionModel().getSelectedItem() instanceof Reservation selectedReservation
+                    && (mainApp.getCurrentUser() instanceof Receptionist || mainApp.getCurrentUser() instanceof Guest)) {
+                mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/ReservationDetail.fxml",
+                        new Object[]{selectedReservation, title});
+                return;
+            }
             if (event.getClickCount() == 2 && listView.getSelectionModel().getSelectedItem() != null && mainApp.getCurrentUser() instanceof Admin) {
                 Object selectedItem = listView.getSelectionModel().getSelectedItem();
                 switch (title) {

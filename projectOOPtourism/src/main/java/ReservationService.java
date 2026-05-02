@@ -1,8 +1,12 @@
 import java.time.LocalDate;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import database.DatabaseConnection;
 import exceptions.InvalidPaymentException;
 
 public abstract class ReservationService {
@@ -124,6 +128,33 @@ public abstract class ReservationService {
         return reservation.getRemainingAmount();
     }
 
+    public static double getPaidAmount(Reservation reservation) {
+        String sql = """
+            SELECT COALESCE(SUM(total_amount), 0) AS paid_total
+            FROM invoices
+            WHERE paid = TRUE
+              AND (
+                    reservation_id = ?
+                    OR (reservation_id IS NULL AND guest_username = ? AND room_number = ?)
+                  )
+        """;
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, reservation.getReservationId());
+            stmt.setString(2, reservation.getGuest().getUsername());
+            stmt.setString(3, reservation.getRoom().getRoomNumber());
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getDouble("paid_total");
+                }
+            }
+        } catch (Exception ex) {
+            return reservation.isDepositPaid() ? reservation.getDepositAmount() : 0.0;
+        }
+        return 0.0;
+    }
+
     public static boolean payDeposit(Reservation reservation, Guest guest) {
         if (reservation.isDepositPaid()) {
             throw new IllegalArgumentException("Deposit already paid.");
@@ -150,7 +181,7 @@ public abstract class ReservationService {
         // Log this transaction as an invoice
         try {
             Invoice depositInvoice = new Invoice(deposit, PaymentMethod.ONLINE);
-            DatabaseSaver.saveInvoice(guest.getUsername(), reservation.getRoom().getRoomNumber(), deposit, "DEPOSIT_ONLINE", true);
+            DatabaseSaver.saveInvoice(reservation.getReservationId(), guest.getUsername(), reservation.getRoom().getRoomNumber(), deposit, "DEPOSIT_ONLINE", true);
         } catch (Exception e) {}
 
         return true;
@@ -202,7 +233,7 @@ public abstract class ReservationService {
             guest.setBalance(dbGuest.getBalance());
         }
 
-        double remaining = getRemainingAmount(reservation);
+        double remaining = Math.max(0, reservation.getTotalPrice() - getPaidAmount(reservation));
         if (guest.getBalance() < remaining) {
             throw new IllegalArgumentException("Insufficient balance for checkout payment. Need $" + remaining + ", have $" + guest.getBalance());
         }
@@ -212,7 +243,7 @@ public abstract class ReservationService {
         try {
             Invoice invoice = new Invoice(remaining, paymentMethod);
             invoice.processPayment();
-            DatabaseSaver.saveInvoice(guest.getUsername(), reservation.getRoom().getRoomNumber(), remaining, paymentMethod.toString(), true);
+            DatabaseSaver.saveInvoice(reservation.getReservationId(), guest.getUsername(), reservation.getRoom().getRoomNumber(), remaining, paymentMethod.toString(), true);
         } catch (InvalidPaymentException e) {
             guest.setBalance(guest.getBalance() + remaining);
             DatabaseSaver.updateUserBalance(guest.getUsername(), guest.getBalance()); // Rollback DB on fail
@@ -222,6 +253,37 @@ public abstract class ReservationService {
         reservation.setFullPaid(true);
         reservation.setStatus(ReservationStatus.COMPLETED);
         DatabaseSaver.updateReservationStatus(reservation.getReservationId(), ReservationStatus.COMPLETED.toString());
+        return true;
+    }
+
+    public static boolean extendStay(Reservation reservation, LocalDate newCheckOut) {
+        if (reservation.getStatus() != ReservationStatus.ONGOING) {
+            throw new IllegalArgumentException("Only ongoing stays can be extended.");
+        }
+        if (newCheckOut == null || !newCheckOut.isAfter(reservation.getCheckOutDate())) {
+            throw new IllegalArgumentException("New check-out date must be after the current check-out date.");
+        }
+
+        for (Reservation other : Database.getReservations()) {
+            if (other == reservation || other.getReservationId().equals(reservation.getReservationId())) {
+                continue;
+            }
+            if (!other.getRoom().getRoomNumber().equals(reservation.getRoom().getRoomNumber())) {
+                continue;
+            }
+            if (other.getStatus() == ReservationStatus.CANCELLED || other.getStatus() == ReservationStatus.COMPLETED) {
+                continue;
+            }
+            boolean overlap = reservation.getCheckOutDate().isBefore(other.getCheckOutDate())
+                    && newCheckOut.isAfter(other.getCheckInDate());
+            if (overlap) {
+                throw new IllegalArgumentException("Room is already reserved during the requested extension.");
+            }
+        }
+
+        reservation.setCheckOutDate(newCheckOut);
+        reservation.setTotalPrice();
+        DatabaseSaver.updateReservationDates(reservation.getReservationId(), reservation.getCheckInDate(), newCheckOut);
         return true;
     }
 

@@ -106,6 +106,7 @@ public class DatabaseInitializer {
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 guest_username VARCHAR(100) NOT NULL,
                 room_number VARCHAR(50) NOT NULL,
+                reservation_id VARCHAR(50),
                 total_amount DOUBLE NOT NULL,
                 payment_method VARCHAR(50) NOT NULL,
                 paid BOOLEAN DEFAULT TRUE,
@@ -159,6 +160,12 @@ public class DatabaseInitializer {
             try {
                 executeUpdate(conn, "ALTER TABLE invoices ADD COLUMN room_number VARCHAR(50) NOT NULL AFTER guest_username");
                 System.out.println("Added missing 'room_number' column to invoices table.");
+            } catch (SQLException e) {
+                // Column already exists, safe to ignore
+            }
+            try {
+                executeUpdate(conn, "ALTER TABLE invoices ADD COLUMN reservation_id VARCHAR(50) AFTER room_number");
+                System.out.println("Added missing 'reservation_id' column to invoices table.");
             } catch (SQLException e) {
                 // Column already exists, safe to ignore
             }

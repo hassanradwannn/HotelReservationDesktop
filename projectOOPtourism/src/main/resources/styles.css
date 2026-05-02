@@ -591,6 +591,7 @@
     -fx-background-color: #F5EDE3;
     -fx-border-color: #C8A97E;
     -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(43,36,33,0.18), 24, 0.18, 0, 8);
 }
 
 .search-bar-inner {

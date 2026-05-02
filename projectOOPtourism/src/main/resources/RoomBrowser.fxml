@@ -28,8 +28,9 @@
    </VBox>
 
    <!-- Search / Filter Bar -->
-   <VBox styleClass="search-bar-wrapper">
-      <padding><Insets top="22" left="60" right="60" bottom="22"/></padding>
+   <VBox styleClass="search-bar-wrapper" maxWidth="900">
+      <VBox.margin><Insets top="-34" left="60" right="60" bottom="0"/></VBox.margin>
+      <padding><Insets top="22" left="24" right="24" bottom="22"/></padding>
       <children>
          <HBox alignment="CENTER_LEFT" spacing="0" styleClass="search-bar-inner">
             <Label text="RESERVE YOUR SUITE" styleClass="search-bar-label">
@@ -40,15 +41,15 @@
          </HBox>
 
          <HBox alignment="CENTER_LEFT" spacing="0" styleClass="search-fields-row">
-            <VBox styleClass="search-field-group" HBox.hgrow="ALWAYS">
+            <VBox styleClass="search-field-group" prefWidth="210">
                <Label text="ROOM TYPE" styleClass="search-field-label"/>
                <ComboBox fx:id="typeFilter" promptText="Any Type" styleClass="search-field-combo" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
             </VBox>
-            <VBox styleClass="search-field-group" HBox.hgrow="ALWAYS">
+            <VBox styleClass="search-field-group" prefWidth="170">
                <Label text="PRICE / NIGHT" styleClass="search-field-label"/>
                <TextField fx:id="maxPrice" promptText="Max price" styleClass="search-field-input"/>
             </VBox>
-            <VBox styleClass="search-field-group" HBox.hgrow="ALWAYS">
+            <VBox styleClass="search-field-group" prefWidth="360">
                <Label text="REQUIRED AMENITIES" styleClass="search-field-label"/>
                <FlowPane fx:id="amenityFiltersPane" hgap="8" vgap="8">
                   <padding><Insets top="5" bottom="5"/></padding>
