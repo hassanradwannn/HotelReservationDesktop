@@ -38,6 +38,7 @@ public class GuestHomeController implements DashboardContentController {
     @FXML private Label summaryTypeLabel;
     @FXML private Label summaryAmenitiesLabel;
     @FXML private Label resultsCountLabel;
+    @FXML private Label heroDateLabel;
 
     private Main mainApp;
     private Guest guest;
@@ -57,6 +58,7 @@ public class GuestHomeController implements DashboardContentController {
         }
 
         heroSubLabel.setText("Welcome back, " + guest.getUsername() + ". Begin curating your stay.");
+        updateHeroDate();
 
         setupDatePickerFormat(checkInPicker);
         setupDatePickerFormat(checkOutPicker);
@@ -70,6 +72,7 @@ public class GuestHomeController implements DashboardContentController {
         buildAmenityPills();
 
         mainApp.setCurrentViewRefresher(() -> {
+            updateHeroDate();
             buildAmenityPills();
             setupRoomTypeCombo();
         });
@@ -78,6 +81,10 @@ public class GuestHomeController implements DashboardContentController {
             applySearchContext(context);
             handleSearch();
         }
+    }
+
+    private void updateHeroDate() {
+        heroDateLabel.setText("Date: " + SystemTime.getToday().format(FMT));
     }
 
     private void setupRoomTypeCombo() {

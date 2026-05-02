@@ -137,7 +137,7 @@ public class Main extends Application {
 
                 ReservationSearchContext reservationBackContext = extractReservationBackContext(fxmlFile, data);
                 boolean returningToReservation = reservationBackContext != null;
-                Button backHome = new Button(returningToReservation ? "BACK TO RESERVATION MENU" : "BACK HOME");
+                Button backHome = new Button(returningToReservation ? "BACK TO RESERVATION MENU" : "HOME");
                 backHome.getStyleClass().addAll("outline-action-btn", "guest-back-home-btn");
                 if (returningToReservation) {
                     backHome.getStyleClass().add("guest-reservation-back-btn");
@@ -272,13 +272,10 @@ public class Main extends Application {
             content.setPadding(Insets.EMPTY);
             this.currentContentArea = content;
 
-            FXMLLoader menuLoader = new FXMLLoader(getClass().getResource("/GuestMenu.fxml"));
-            VBox menuContent = menuLoader.load();
-            GuestMenuController menuController = menuLoader.getController();
-            menuController.initData(this, guest);
-
-            menu.getChildren().setAll(menuContent);
-            menuController.loadDefaultView();
+            root.setLeft(null);
+            root.setTop(null);
+            menu.getChildren().clear();
+            switchDashboardContent(content, "/GuestHome.fxml", guest);
 
             stage.setScene(new Scene(root, WIDTH, HEIGHT));
         } catch (Exception e) { e.printStackTrace(); }

@@ -15,12 +15,17 @@
     <VBox fx:id="heroArea" styleClass="guest-hero" spacing="6" alignment="TOP_LEFT">
         <padding><Insets top="36" right="60" bottom="40" left="60"/></padding>
 
-        <HBox spacing="0">
-            <Label text="A most " styleClass="hero-bold"/>
-            <Label text="distinguished" styleClass="hero-italic"/>
+        <HBox spacing="18" alignment="TOP_LEFT">
+            <VBox spacing="6" HBox.hgrow="ALWAYS">
+               <HBox spacing="0">
+                  <Label text="A most " styleClass="hero-bold"/>
+                  <Label text="distinguished" styleClass="hero-italic"/>
+               </HBox>
+               <Label text="stay awaits you" styleClass="hero-bold"/>
+               <Label fx:id="heroSubLabel" text="Begin curating your stay and exploring our finest offerings" styleClass="hero-sub"/>
+            </VBox>
+            <Label fx:id="heroDateLabel" text="Date: DD/MM/YYYY" styleClass="guest-date-label"/>
         </HBox>
-        <Label text="stay awaits you" styleClass="hero-bold"/>
-        <Label fx:id="heroSubLabel" text="Begin curating your stay and exploring our finest offerings" styleClass="hero-sub"/>
 
         <!-- SEARCH CARD — floats inside the pink hero -->
         <VBox fx:id="searchArea" styleClass="search-card-inner" spacing="0">
