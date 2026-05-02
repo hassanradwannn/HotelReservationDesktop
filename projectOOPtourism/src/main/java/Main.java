@@ -135,10 +135,17 @@ public class Main extends Application {
                 VBox guestPage = new VBox(14);
                 guestPage.getStyleClass().add("guest-subpage-shell");
 
-                Button backHome = new Button("BACK HOME");
+                ReservationSearchContext reservationBackContext = extractReservationBackContext(fxmlFile, data);
+                Button backHome = new Button(reservationBackContext == null ? "BACK HOME" : "BACK TO RESERVATION");
                 backHome.getStyleClass().addAll("outline-action-btn", "guest-back-home-btn");
-                backHome.setOnAction(event ->
-                        switchDashboardContent(getCurrentContentArea(), "/GuestHome.fxml", currentUser));
+                backHome.setOnAction(event -> {
+                    if (reservationBackContext != null) {
+                        selectedRoomForReservation = null;
+                        switchDashboardContent(getCurrentContentArea(), "/MakeReservation.fxml", reservationBackContext);
+                    } else {
+                        switchDashboardContent(getCurrentContentArea(), "/GuestHome.fxml", currentUser);
+                    }
+                });
 
                 HBox backRow = new HBox(backHome);
                 backRow.getStyleClass().add("guest-back-row");
@@ -153,6 +160,20 @@ public class Main extends Application {
             System.out.println("Could not load FXML: " + fxmlFile);
             e.printStackTrace();
         }
+    }
+
+    private ReservationSearchContext extractReservationBackContext(String fxmlFile, Object data) {
+        if (!"/AvailableRooms.fxml".equals(fxmlFile) && !"/RoomDetails.fxml".equals(fxmlFile)) {
+            return null;
+        }
+        if (data instanceof Object[] args) {
+            for (Object arg : args) {
+                if (arg instanceof ReservationSearchContext context) {
+                    return context;
+                }
+            }
+        }
+        return null;
     }
 
     public void refreshActiveView() {

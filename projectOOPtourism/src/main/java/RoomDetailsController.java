@@ -18,6 +18,7 @@ public class RoomDetailsController implements DashboardContentController {
     private LocalDate checkOut;
     private boolean hasGymPass;
     private List<Room> availableRooms;
+    private ReservationSearchContext searchContext;
 
     @Override
     @SuppressWarnings("unchecked")
@@ -32,6 +33,9 @@ public class RoomDetailsController implements DashboardContentController {
         this.checkOut = (LocalDate) arrayData[3];
         this.hasGymPass = (Boolean) arrayData[4];
         this.availableRooms = (List<Room>) arrayData[5];
+        this.searchContext = arrayData.length > 6 && arrayData[6] instanceof ReservationSearchContext context
+                ? context
+                : null;
 
         titleLabel.setText("Room " + room.getRoomNumber());
         mainApp.setSelectedRoomTypeForReservation(null); // Clear lingering general type
@@ -67,7 +71,7 @@ public class RoomDetailsController implements DashboardContentController {
     @FXML
     private void handleBack() {
         // Repackage the search criteria to return to the specific Available Rooms list
-        Object[] bookingData = new Object[]{ guest, checkIn, checkOut, hasGymPass, availableRooms };
+        Object[] bookingData = new Object[]{ guest, checkIn, checkOut, hasGymPass, availableRooms, searchContext };
         mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/AvailableRooms.fxml", bookingData);
     }
 

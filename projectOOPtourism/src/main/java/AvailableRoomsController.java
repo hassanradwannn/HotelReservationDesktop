@@ -24,6 +24,7 @@ public class AvailableRoomsController implements DashboardContentController {
     private LocalDate checkOut;
     private boolean hasGymPass;
     private List<Room> availableRooms;
+    private ReservationSearchContext searchContext;
 
     @Override
     @SuppressWarnings("unchecked")
@@ -37,6 +38,9 @@ public class AvailableRoomsController implements DashboardContentController {
         this.checkOut = (LocalDate) bookingData[2];
         this.hasGymPass = (Boolean) bookingData[3];
         this.availableRooms = (List<Room>) bookingData[4];
+        this.searchContext = bookingData.length > 5 && bookingData[5] instanceof ReservationSearchContext context
+                ? context
+                : null;
 
         loadRooms();
     }
@@ -105,7 +109,7 @@ public class AvailableRoomsController implements DashboardContentController {
         detailsBtn.setMinWidth(130);
         detailsBtn.getStyleClass().add("outline-action-btn");
         detailsBtn.setOnAction(e -> {
-            Object[] detailsData = new Object[]{ guest, room, checkIn, checkOut, hasGymPass, availableRooms };
+            Object[] detailsData = new Object[]{ guest, room, checkIn, checkOut, hasGymPass, availableRooms, searchContext };
             mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/RoomDetails.fxml", detailsData);
         });
 

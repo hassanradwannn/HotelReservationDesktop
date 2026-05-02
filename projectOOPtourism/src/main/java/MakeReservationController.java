@@ -78,6 +78,7 @@ public class MakeReservationController implements DashboardContentController {
             guestsField.setText(String.valueOf(searchContext.getGuests()));
             checkInPicker.setValue(searchContext.getCheckIn());
             checkOutPicker.setValue(searchContext.getCheckOut());
+            gymBox.setSelected(searchContext.hasGymPass());
             setSuccess("Selected " + selectedRoomType.getName() + " type.");
         } else if (selectedRoom != null) {
             setSuccess("Selected Room " + selectedRoom.getRoomNumber() + " automatically.");
@@ -231,7 +232,17 @@ public class MakeReservationController implements DashboardContentController {
                 return;
             }
 
-            Object[] bookingData = new Object[]{ guest, in, out, gymBox.isSelected(), available };
+            ReservationSearchContext pickerContext = new ReservationSearchContext(
+                    guest,
+                    selectedRoomType,
+                    in,
+                    out,
+                    numGuests,
+                    requestedAmenities,
+                    sourceSearchContext != null ? sourceSearchContext.getSearchRoomType() : selectedRoomType,
+                    sourceSearchContext != null ? sourceSearchContext.getMaxPrice() : null,
+                    gymBox.isSelected());
+            Object[] bookingData = new Object[]{ guest, in, out, gymBox.isSelected(), available, pickerContext };
             mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/AvailableRooms.fxml", bookingData);
 
         } catch (NumberFormatException ex) {

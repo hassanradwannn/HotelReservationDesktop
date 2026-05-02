@@ -11,22 +11,20 @@
       stylesheets="@styles.css"
       spacing="0">
 
-    <!-- HERO BANNER -->
-    <VBox fx:id="heroArea" styleClass="guest-hero" spacing="6" alignment="TOP_LEFT" minHeight="200" maxHeight="200">
-        <padding><Insets top="36" right="48" bottom="36" left="48"/></padding>
+    <!-- HERO BANNER — now tall enough to contain the floating search card -->
+    <VBox fx:id="heroArea" styleClass="guest-hero" spacing="6" alignment="TOP_LEFT">
+        <padding><Insets top="36" right="60" bottom="40" left="60"/></padding>
+
         <HBox spacing="0">
             <Label text="A most " styleClass="hero-bold"/>
             <Label text="distinguished" styleClass="hero-italic"/>
         </HBox>
         <Label text="stay awaits you" styleClass="hero-bold"/>
         <Label fx:id="heroSubLabel" text="Begin curating your stay and exploring our finest offerings" styleClass="hero-sub"/>
-    </VBox>
 
-    <!-- SEARCH CARD -->
-    <VBox fx:id="searchArea" styleClass="guest-search-card-wrapper" spacing="0">
-        <padding><Insets top="0" right="48" bottom="0" left="48"/></padding>
-
-        <VBox styleClass="search-card-inner" spacing="0">
+        <!-- SEARCH CARD — floats inside the pink hero -->
+        <VBox fx:id="searchArea" styleClass="search-card-inner" spacing="0">
+            <VBox.margin><Insets top="24"/></VBox.margin>
             <padding><Insets top="18" right="24" bottom="18" left="24"/></padding>
 
             <Label text="RESERVE YOUR SUITE" styleClass="search-card-eyebrow"/>
@@ -77,6 +75,7 @@
                 <padding><Insets top="6"/></padding>
             </Label>
         </VBox>
+
     </VBox>
 
     <!-- RESULTS AREA — shown after search -->

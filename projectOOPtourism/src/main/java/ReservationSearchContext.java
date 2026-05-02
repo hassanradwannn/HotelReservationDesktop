@@ -10,6 +10,7 @@ public class ReservationSearchContext {
     private final List<Amenity> requestedAmenities;
     private final RoomType searchRoomType;
     private final Double maxPrice;
+    private final boolean gymPass;
 
     public ReservationSearchContext(
             Guest guest,
@@ -30,6 +31,19 @@ public class ReservationSearchContext {
             List<Amenity> requestedAmenities,
             RoomType searchRoomType,
             Double maxPrice) {
+        this(guest, roomType, checkIn, checkOut, guests, requestedAmenities, searchRoomType, maxPrice, false);
+    }
+
+    public ReservationSearchContext(
+            Guest guest,
+            RoomType roomType,
+            LocalDate checkIn,
+            LocalDate checkOut,
+            int guests,
+            List<Amenity> requestedAmenities,
+            RoomType searchRoomType,
+            Double maxPrice,
+            boolean gymPass) {
         this.guest = guest;
         this.roomType = roomType;
         this.checkIn = checkIn;
@@ -38,6 +52,7 @@ public class ReservationSearchContext {
         this.requestedAmenities = requestedAmenities == null ? List.of() : List.copyOf(requestedAmenities);
         this.searchRoomType = searchRoomType;
         this.maxPrice = maxPrice;
+        this.gymPass = gymPass;
     }
 
     public Guest getGuest() {
@@ -70,5 +85,9 @@ public class ReservationSearchContext {
 
     public Double getMaxPrice() {
         return maxPrice;
+    }
+
+    public boolean hasGymPass() {
+        return gymPass;
     }
 }

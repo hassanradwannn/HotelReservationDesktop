@@ -1142,11 +1142,9 @@
     -fx-background-color: #EDE4D8;
 }
 
-/* Hero banner */
+/* Hero banner — no fixed height; grows to contain the floating search card */
 .guest-hero {
     -fx-background-color: #C4415D;
-    -fx-min-height: 200;
-    -fx-max-height: 200;
 }
 
 .hero-bold {
@@ -1170,7 +1168,7 @@
     -fx-font-weight: bold;
 }
 
-/* Search card wrapper sits on top of the hero colour break */
+/* Search card wrapper — kept for backward compat, no longer used in layout */
 .guest-search-card-wrapper {
     -fx-background-color: #C4415D;
     -fx-padding: 0 0 38 0;
@@ -1182,6 +1180,7 @@
     -fx-border-width: 1;
     -fx-background-radius: 6;
     -fx-border-radius: 6;
+    -fx-effect: dropshadow(gaussian, rgba(44,37,35,0.22), 24, 0.18, 0, 6);
 }
 
 .search-card-eyebrow {
@@ -1382,12 +1381,13 @@
     -fx-border-color: #E8B8C0;
     -fx-border-insets: 0;
     -fx-border-width: 1;
-    -fx-border-radius: 4;
-    -fx-background-radius: 4;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
     -fx-text-fill: #FFFFFF;
     -fx-font-family: "Georgia";
-    -fx-font-size: 13px;
+    -fx-font-size: 12px;
     -fx-font-weight: bold;
+    -fx-padding: 0 18 0 18;
     -fx-cursor: hand;
 }
 
