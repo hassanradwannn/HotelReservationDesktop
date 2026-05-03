@@ -59,6 +59,13 @@ public class RoomTypeResultCardController {
     private void render() {
         RoomType roomType = typeRooms.get(0).getRoomType();
         Room pricedRoom = typeRooms.get(0);
+        boolean hasPreferenceMatch = typeRooms.stream()
+                .anyMatch(room -> GuestPreferenceRanker.getPreferenceMatchScore(room, guest) > 0);
+
+        root.getStyleClass().remove("preferred-room-result-row");
+        if (hasPreferenceMatch) {
+            root.getStyleClass().add("preferred-room-result-row");
+        }
 
         if (!visual.getStyleClass().contains("room-type-result-visual-2")) {
             visual.getStyleClass().add("room-type-result-visual-2");
@@ -93,7 +100,6 @@ public class RoomTypeResultCardController {
                 .sorted((left, right) -> Boolean.compare(
                         GuestPreferenceRanker.isPreferredAmenity(guest, right),
                         GuestPreferenceRanker.isPreferredAmenity(guest, left)))
-                .limit(4)
                 .toList();
 
         if (amenityNames.isEmpty()) {

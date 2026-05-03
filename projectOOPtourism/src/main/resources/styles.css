@@ -1690,7 +1690,9 @@
 .preferred-amenity-chip {
     -fx-background-color: #FFF7E6;
     -fx-border-color: #C4415D;
+    -fx-border-width: 2;
     -fx-text-fill: #2C2523;
+    -fx-effect: dropshadow(gaussian, rgba(196,65,93,0.28), 10, 0.22, 0, 0);
 }
 
 .room-type-result-price-panel {
@@ -1724,7 +1726,8 @@
 }
 
 .room-type-result-reserve-btn {
-    -fx-background-color: #FFFFFF;
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
     -fx-text-fill: #8B2040;
     -fx-font-family: "Georgia";
     -fx-font-size: 16px;
@@ -1732,6 +1735,8 @@
     -fx-letter-spacing: 4;
     -fx-background-radius: 0;
     -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-border-insets: 0;
     -fx-cursor: hand;
 }
 

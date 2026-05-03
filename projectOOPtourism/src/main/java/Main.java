@@ -132,9 +132,9 @@ public class Main extends Application {
         try {
             Object viewData = data;
             if (currentUser instanceof Guest && "/GuestHome.fxml".equals(fxmlFile)
-                    && !(data instanceof ReservationSearchContext)
+                    && data instanceof Guest
                     && guestHomeSearchContext != null) {
-                viewData = guestHomeSearchContext;
+                viewData = new GuestHomeController.HomeSearchState(guestHomeSearchContext, false);
             }
 
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlFile));

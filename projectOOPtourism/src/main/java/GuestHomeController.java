@@ -56,9 +56,15 @@ public class GuestHomeController implements DashboardContentController {
         this.mainApp = mainApp;
 
         ReservationSearchContext context = null;
+        boolean openResults = false;
         if (data instanceof ReservationSearchContext searchContext) {
             context = searchContext;
+            openResults = true;
             this.guest = searchContext.getGuest();
+        } else if (data instanceof HomeSearchState homeSearchState) {
+            context = homeSearchState.context();
+            openResults = homeSearchState.openResults();
+            this.guest = context.getGuest();
         } else {
             this.guest = (Guest) data;
         }
@@ -88,7 +94,9 @@ public class GuestHomeController implements DashboardContentController {
 
         if (context != null) {
             applySearchContext(context);
-            handleSearch();
+            if (openResults) {
+                handleSearch();
+            }
         }
 
         installSearchStateListeners();
@@ -572,5 +580,8 @@ public class GuestHomeController implements DashboardContentController {
             RoomType selectedType,
             List<RoomType> typesToSearch,
             boolean preserveCurrentResultsOnEmpty) {
+    }
+
+    public record HomeSearchState(ReservationSearchContext context, boolean openResults) {
     }
 }

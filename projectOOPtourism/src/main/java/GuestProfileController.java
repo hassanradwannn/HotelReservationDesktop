@@ -196,6 +196,7 @@ public class GuestProfileController implements DashboardContentController {
                     .findFirst()
                     .orElse(updatedGuest);
             mainApp.setCurrentUser(guest);
+            mainApp.setGuestHomeSearchContext(null);
             setSuccess("Profile saved and synced.");
             renderProfile();
         } catch (Exception ex) {

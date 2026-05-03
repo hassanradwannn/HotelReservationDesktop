@@ -11,6 +11,7 @@
 
 <HBox fx:id="root"
       alignment="CENTER_LEFT"
+      fillHeight="true"
       maxWidth="Infinity"
       spacing="20"
       styleClass="room-card"

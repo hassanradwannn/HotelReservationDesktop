@@ -10,6 +10,7 @@
 <?import javafx.scene.layout.VBox?>
 
 <HBox fx:id="root"
+      fillHeight="true"
       maxWidth="Infinity"
       minHeight="196"
       prefHeight="196"
@@ -61,6 +62,8 @@
         </VBox>
 
         <VBox fx:id="pricePanel"
+              alignment="BOTTOM_CENTER"
+              maxHeight="Infinity"
               maxWidth="202"
               minWidth="202"
               prefWidth="202"
