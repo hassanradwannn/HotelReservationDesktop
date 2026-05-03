@@ -127,12 +127,32 @@ public class Database {
         }
     }
     public static void deleteAmenityFromDB(Amenity amenity) {
-        String sql = "DELETE FROM amenities WHERE name = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, amenity.getName());
-            if (stmt.executeUpdate() > 0) {
+        String deleteRoomAmenitiesSql = "DELETE FROM room_amenities WHERE amenity_name = ?";
+        String deleteAmenitySql = "DELETE FROM amenities WHERE name = ?";
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement roomAmenitiesStmt = conn.prepareStatement(deleteRoomAmenitiesSql);
+                 PreparedStatement amenityStmt = conn.prepareStatement(deleteAmenitySql)) {
+                roomAmenitiesStmt.setString(1, amenity.getName());
+                roomAmenitiesStmt.executeUpdate();
+
+                amenityStmt.setString(1, amenity.getName());
+                int deletedRows = amenityStmt.executeUpdate();
+
+                conn.commit();
+                if (deletedRows > 0) {
+                    amenities.removeIf(a -> a.getName().equalsIgnoreCase(amenity.getName()));
+                    for (Room room : rooms) {
+                        room.removeAmenityByName(amenity.getName());
+                    }
+                    loadAllAmenities();
+                    loadAllRooms();
+                }
                 notifyDataChanged();
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
             }
         } catch (Exception e) {
             System.out.println("Failed to delete amenity from DB: " + e.getMessage());

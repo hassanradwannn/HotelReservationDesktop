@@ -56,6 +56,7 @@ public class Main extends Application {
     public void start(Stage stage) {
         instance = this;
         DatabaseInitializer.initializeDatabase();
+        ChatServer.startInBackgroundIfAvailable();
         UserDatabase.clearLoggedInUsers();
         if (Database.isFirstInstance()) {
             SystemTime.resetToRealToday();
@@ -122,6 +123,7 @@ public class Main extends Application {
     public void switchDashboardContent(VBox contentArea, String fxmlFile, Object data) {
         this.currentView = fxmlFile;
         this.currentContentArea = contentArea;
+        this.currentViewRefresher = null;
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlFile));
             javafx.scene.Node node = loader.load();

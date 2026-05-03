@@ -43,18 +43,77 @@ public class AvailableRoomsController implements DashboardContentController {
                 : null;
         GuestPreferenceRanker.sortRoomsByGuestPreferences(this.availableRooms, guest);
 
+        mainApp.setCurrentViewRefresher(this::refreshAvailableRooms);
         loadRooms();
     }
 
+    private void refreshAvailableRooms() {
+        if (searchContext != null) {
+            List<Amenity> currentRequestedAmenities = currentAmenities(searchContext.getRequestedAmenities());
+            RoomType currentRoomType = CatalogService.findRoomType(searchContext.getRoomType().getName());
+            RoomType currentSearchRoomType = searchContext.getSearchRoomType() == null
+                    ? null
+                    : CatalogService.findRoomType(searchContext.getSearchRoomType().getName());
+            if (currentRoomType == null) {
+                availableRooms = List.of();
+                loadRooms();
+                return;
+            }
+            searchContext = new ReservationSearchContext(
+                    guest,
+                    currentRoomType,
+                    checkIn,
+                    checkOut,
+                    searchContext.getGuests(),
+                    currentRequestedAmenities,
+                    currentSearchRoomType,
+                    searchContext.getMaxPrice(),
+                    hasGymPass);
+            availableRooms = ReservationService.searchAvailableRooms(
+                    checkIn,
+                    checkOut,
+                    currentRoomType,
+                    searchContext.getGuests(),
+                    currentRequestedAmenities);
+        } else {
+            availableRooms = availableRooms.stream()
+                    .map(room -> CatalogService.findRoom(room.getRoomNumber()))
+                    .filter(room -> room != null)
+                    .toList();
+        }
+        GuestPreferenceRanker.sortRoomsByGuestPreferences(availableRooms, guest);
+        loadRooms();
+    }
+
+    private List<Amenity> currentAmenities(List<Amenity> amenities) {
+        if (amenities == null || amenities.isEmpty()) {
+            return List.of();
+        }
+        List<Amenity> current = new ArrayList<>();
+        for (Amenity amenity : amenities) {
+            Amenity fresh = CatalogService.findAmenity(amenity.getName());
+            if (fresh != null) {
+                current.add(fresh);
+            }
+        }
+        return current;
+    }
+
     private void loadRooms() {
-        if (roomCards != null) {
-            roomCards.getChildren().clear();
+        if (roomCards == null) {
+            return;
+        }
+        roomCards.getChildren().clear();
+
+        if (availableRooms.isEmpty()) {
+            Label empty = new Label("No rooms available for the selected criteria.");
+            empty.getStyleClass().add("error-message");
+            roomCards.getChildren().add(empty);
+            return;
         }
 
         for (Room room : availableRooms) {
-            if (roomCards != null) {
-                roomCards.getChildren().add(createRoomCard(room));
-            }
+            roomCards.getChildren().add(createRoomCard(room));
         }
     }
 

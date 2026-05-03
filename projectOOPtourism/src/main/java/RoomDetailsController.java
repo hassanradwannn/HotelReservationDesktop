@@ -37,11 +37,64 @@ public class RoomDetailsController implements DashboardContentController {
                 ? context
                 : null;
 
-        titleLabel.setText("Room " + room.getRoomNumber());
         mainApp.setSelectedRoomTypeForReservation(null); // Clear lingering general type
         mainApp.setSelectedRoomForReservation(room); // Ensure it's set for the reserve button
-        imageTextLabel.setText(room.getRoomType().getName() + "\nLuxury Suite Preview");
+        mainApp.setCurrentViewRefresher(this::refreshRoomDetails);
+        renderRoomDetails();
+    }
 
+    private void refreshRoomDetails() {
+        Room freshRoom = CatalogService.findRoom(room.getRoomNumber());
+        if (freshRoom == null) {
+            mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GuestHome.fxml", guest);
+            return;
+        }
+        room = freshRoom;
+        mainApp.setSelectedRoomForReservation(room);
+        availableRooms = availableRooms.stream()
+                .map(existingRoom -> CatalogService.findRoom(existingRoom.getRoomNumber()))
+                .filter(existingRoom -> existingRoom != null)
+                .toList();
+        refreshSearchContext();
+        renderRoomDetails();
+    }
+
+    private void refreshSearchContext() {
+        if (searchContext == null) {
+            return;
+        }
+
+        List<Amenity> currentRequestedAmenities = new ArrayList<>();
+        for (Amenity amenity : searchContext.getRequestedAmenities()) {
+            Amenity fresh = CatalogService.findAmenity(amenity.getName());
+            if (fresh != null) {
+                currentRequestedAmenities.add(fresh);
+            }
+        }
+
+        RoomType currentRoomType = CatalogService.findRoomType(searchContext.getRoomType().getName());
+        RoomType currentSearchRoomType = searchContext.getSearchRoomType() == null
+                ? null
+                : CatalogService.findRoomType(searchContext.getSearchRoomType().getName());
+        if (currentRoomType == null) {
+            return;
+        }
+
+        searchContext = new ReservationSearchContext(
+                guest,
+                currentRoomType,
+                checkIn,
+                checkOut,
+                searchContext.getGuests(),
+                currentRequestedAmenities,
+                currentSearchRoomType,
+                searchContext.getMaxPrice(),
+                hasGymPass);
+    }
+
+    private void renderRoomDetails() {
+        titleLabel.setText("Room " + room.getRoomNumber());
+        imageTextLabel.setText(room.getRoomType().getName() + "\nLuxury Suite Preview");
         String amenityText = String.join(", ", getDisplayAmenityNames());
         double total = Reservation.calculateTotalPrice(room, checkIn, checkOut, hasGymPass);
         detailsLabel.setText(

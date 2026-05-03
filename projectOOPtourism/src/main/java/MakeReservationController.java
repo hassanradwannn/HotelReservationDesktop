@@ -56,6 +56,43 @@ public class MakeReservationController implements DashboardContentController {
         updateGymPassState(selectedRoomType);
         updateSelectedRoomTypeDisplay();
         updateStaySummary();
+        mainApp.setCurrentViewRefresher(this::refreshCurrentSelection);
+    }
+
+    private void refreshCurrentSelection() {
+        requestedAmenities = currentAmenities(requestedAmenities);
+
+        if (selectedRoom != null) {
+            selectedRoom = CatalogService.findRoom(selectedRoom.getRoomNumber());
+            mainApp.setSelectedRoomForReservation(selectedRoom);
+        }
+
+        if (selectedRoomType != null) {
+            selectedRoomType = findCurrentRoomType(selectedRoomType);
+            mainApp.setSelectedRoomTypeForReservation(selectedRoomType);
+        }
+
+        if (sourceSearchContext != null) {
+            sourceSearchContext = currentSearchContext();
+        }
+
+        updateGymPassState(selectedRoomType);
+        updateSelectedRoomTypeDisplay();
+        updateStaySummary();
+    }
+
+    private List<Amenity> currentAmenities(List<Amenity> amenities) {
+        if (amenities == null || amenities.isEmpty()) {
+            return List.of();
+        }
+        List<Amenity> current = new ArrayList<>();
+        for (Amenity amenity : amenities) {
+            Amenity fresh = CatalogService.findAmenity(amenity.getName());
+            if (fresh != null) {
+                current.add(fresh);
+            }
+        }
+        return current;
     }
 
     private void resolveSelectedRoomType(ReservationSearchContext searchContext) {
@@ -79,7 +116,11 @@ public class MakeReservationController implements DashboardContentController {
             checkInPicker.setValue(searchContext.getCheckIn());
             checkOutPicker.setValue(searchContext.getCheckOut());
             gymBox.setSelected(searchContext.hasGymPass());
-            setSuccess("Selected " + selectedRoomType.getName() + " type.");
+            if (selectedRoomType != null) {
+                setSuccess("Selected " + selectedRoomType.getName() + " type.");
+            } else {
+                setError("The previously selected room type is no longer available.");
+            }
         } else if (selectedRoom != null) {
             setSuccess("Selected Room " + selectedRoom.getRoomNumber() + " automatically.");
         } else if (selectedRoomType != null) {
@@ -171,10 +212,29 @@ public class MakeReservationController implements DashboardContentController {
     @FXML
     private void handleBack() {
         if (sourceSearchContext != null) {
-            mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GuestHome.fxml", sourceSearchContext);
+            mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GuestHome.fxml", currentSearchContext());
         } else {
             mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GuestHome.fxml", guest);
         }
+    }
+
+    private ReservationSearchContext currentSearchContext() {
+        int guests = sourceSearchContext != null ? sourceSearchContext.getGuests() : 1;
+        try {
+            guests = parseGuests();
+        } catch (NumberFormatException ignored) {
+        }
+
+        return new ReservationSearchContext(
+                guest,
+                selectedRoomType,
+                checkInPicker.getValue(),
+                checkOutPicker.getValue(),
+                guests,
+                requestedAmenities,
+                sourceSearchContext != null ? sourceSearchContext.getSearchRoomType() : selectedRoomType,
+                sourceSearchContext != null ? sourceSearchContext.getMaxPrice() : null,
+                gymBox.isSelected());
     }
 
     @FXML

@@ -1,9 +1,5 @@
 import java.util.List;
 
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
-import javafx.application.Platform;
-import javafx.util.Duration;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -31,8 +27,9 @@ public class ChatController implements DashboardContentController {
     private Main mainApp;
     private User currentUser;
     private final int[] activeChatId = {-1};
-    private Timeline chatSyncTimeline;
-    private long localDataVersion = -1;
+    private ChatClient chatClient;
+    private String activeGuestUsername;
+    private String activeReceptionistUsername;
 
     @Override
     public void initData(Main mainApp, Object data) {
@@ -43,6 +40,7 @@ public class ChatController implements DashboardContentController {
 
         // Ensure chat tables exist before any DB calls
         ChatDatabase.ensureTablesExist();
+        connectToChatServer();
 
         // Create single ComboBox, populate, then wire listener
         guestDropdown = new ComboBox<>();
@@ -66,21 +64,21 @@ public class ChatController implements DashboardContentController {
         }
 
         mainApp.setCurrentViewRefresher(this::refreshChatView);
+    }
 
-        if (chatSyncTimeline != null) chatSyncTimeline.stop();
-        chatSyncTimeline = new Timeline(new KeyFrame(Duration.seconds(2), event -> {
-            new Thread(() -> {
-                long currentVersion = Database.getLatestDataVersion();
-                if (localDataVersion == -1) {
-                    localDataVersion = currentVersion;
-                } else if (currentVersion > localDataVersion) {
-                    localDataVersion = currentVersion;
-                    Platform.runLater(this::refreshChatView);
-                }
-            }).start();
-        }));
-        chatSyncTimeline.setCycleCount(Timeline.INDEFINITE);
-        chatSyncTimeline.play();
+    private void connectToChatServer() {
+        try {
+            chatClient = new ChatClient(
+                    ChatServer.DEFAULT_HOST,
+                    ChatServer.DEFAULT_PORT,
+                    currentUser.getUsername(),
+                    this::appendIncomingMessage,
+                    status -> chatStatus.setText(status));
+        } catch (Exception e) {
+            chatClient = null;
+            chatStatus.setText("Offline - chat server unavailable");
+            chatArea.setText("Cannot connect to the chat server.\nStart ChatServer.java or open another app instance to host it.");
+        }
     }
 
     private void populateDropdown() {
@@ -127,7 +125,6 @@ public class ChatController implements DashboardContentController {
                 guestDropdown.getItems().add(selected);
             }
             guestDropdown.setValue(selected);
-            loadChatHistory(selected);
         } else {
             loadChatHistory(null);
         }
@@ -155,6 +152,8 @@ public class ChatController implements DashboardContentController {
 
         int chatId = ChatDatabase.getOrCreateChat(guestUser, receptionistUser);
         activeChatId[0] = chatId;
+        activeGuestUsername = guestUser;
+        activeReceptionistUsername = receptionistUser;
 
         if (chatId == -1) {
             chatArea.setText("Could not open chat. Check database connection.\n");
@@ -163,13 +162,25 @@ public class ChatController implements DashboardContentController {
         }
 
         chatArea.clear();
-        List<ChatDatabase.ChatMessage> msgs = ChatDatabase.loadChatMessages(chatId);
-        for (ChatDatabase.ChatMessage m : msgs) {
-            chatArea.appendText(m.getSenderUsername() + ": " + m.getMessage() + "\n");
+        if (chatClient != null) {
+            chatClient.joinChat(guestUser, receptionistUser);
+        } else {
+            List<ChatDatabase.ChatMessage> msgs = ChatDatabase.loadChatMessages(chatId);
+            for (ChatDatabase.ChatMessage m : msgs) {
+                chatArea.appendText(m.getSenderUsername() + ": " + m.getMessage() + "\n");
+            }
         }
         chatArea.setScrollTop(Double.MAX_VALUE);
         chatStatus.setText("Chatting with " + otherUsername);
         if (chatName != null) chatName.setText(otherUsername);
+    }
+
+    private void appendIncomingMessage(int chatId, String senderUsername, String message) {
+        if (chatId != activeChatId[0]) {
+            return;
+        }
+        chatArea.appendText(senderUsername + ": " + message + "\n");
+        chatArea.setScrollTop(Double.MAX_VALUE);
     }
 
     @FXML
@@ -180,9 +191,12 @@ public class ChatController implements DashboardContentController {
             mainApp.alert("Error", "Please select a chat first.");
             return;
         }
-        ChatDatabase.sendMessage(activeChatId[0], currentUser.getUsername(), msg);
+        if (chatClient == null) {
+            mainApp.alert("Error", "Chat server is not connected.");
+            return;
+        }
+        chatClient.send(activeGuestUsername, activeReceptionistUsername, currentUser.getUsername(), msg);
         inputField.clear();
-        loadChatHistory(guestDropdown.getValue());
     }
 
     @FXML

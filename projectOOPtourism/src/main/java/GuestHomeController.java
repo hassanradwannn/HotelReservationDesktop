@@ -75,6 +75,9 @@ public class GuestHomeController implements DashboardContentController {
             updateHeroDate();
             buildAmenityPills();
             setupRoomTypeCombo();
+            if (resultsArea != null && resultsArea.isVisible()) {
+                handleSearch();
+            }
         });
 
         if (context != null) {
@@ -88,7 +91,14 @@ public class GuestHomeController implements DashboardContentController {
     }
 
     private void setupRoomTypeCombo() {
+        String selectedTypeName = typeCombo.getValue() == null ? null : typeCombo.getValue().getName();
         typeCombo.setItems(FXCollections.observableArrayList(Database.getRoomTypes()));
+        if (selectedTypeName != null) {
+            typeCombo.setValue(Database.getRoomTypes().stream()
+                    .filter(type -> type.getName().equals(selectedTypeName))
+                    .findFirst()
+                    .orElse(null));
+        }
         typeCombo.setConverter(new StringConverter<>() {
             @Override
             public String toString(RoomType roomType) {

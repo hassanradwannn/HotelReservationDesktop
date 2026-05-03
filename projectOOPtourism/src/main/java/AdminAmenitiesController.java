@@ -52,7 +52,6 @@ public class AdminAmenitiesController implements DashboardContentController {
 
         if (result.isPresent() && result.get() == ButtonType.OK) {
             try {
-                CatalogService.deleteAmenity(selected);
                 Database.deleteAmenityFromDB(selected);
                 loadAmenities();
             } catch (Exception ex) {
