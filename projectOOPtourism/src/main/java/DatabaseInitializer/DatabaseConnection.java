@@ -7,6 +7,10 @@ import java.sql.SQLException;
 
 public class DatabaseConnection {
 
+  /*  private static final String URL = configuredValue("hotel.db.url", "HOTEL_DB_URL", "jdbc:mysql://192.168.86.25/hotel_db");
+    private static final String USER = configuredValue("hotel.db.user", "HOTEL_DB_USER", "hassan");
+    private static final String PASSWORD = configuredValue("hotel.db.password", "HOTEL_DB_PASSWORD", "admin"); */
+
     private static final String URL = configuredValue("hotel.db.url", "HOTEL_DB_URL", "jdbc:mysql://localhost/hotel_db");
     private static final String USER = configuredValue("hotel.db.user", "HOTEL_DB_USER", "root");
     private static final String PASSWORD = configuredValue("hotel.db.password", "HOTEL_DB_PASSWORD", "password");
