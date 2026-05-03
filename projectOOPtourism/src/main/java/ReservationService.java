@@ -32,8 +32,8 @@ public abstract class ReservationService {
     }
     
     public static boolean isRoomAvailable(Room room, LocalDate checkIn, LocalDate checkOut) {
-        for (Reservation reservation : reservations) {
-            if (reservation.getRoom().getRoomNumber() == room.getRoomNumber()
+        for (Reservation reservation : Database.getReservations()) {
+            if (reservation.getRoom().getRoomNumber().equalsIgnoreCase(room.getRoomNumber())
                     && reservation.getStatus() != ReservationStatus.CANCELLED
                     && reservation.overlaps(checkIn, checkOut)) {
                 return false;
@@ -400,8 +400,10 @@ public abstract class ReservationService {
             return availableRooms;
         }
 
-        for (Room room : rooms) {
-            if (room.getRoomType() != requestedType) {
+        for (Room room : Database.getRooms()) {
+            if (requestedType == null
+                    || room.getRoomType() == null
+                    || !room.getRoomType().getName().equalsIgnoreCase(requestedType.getName())) {
                 continue;
             }
 

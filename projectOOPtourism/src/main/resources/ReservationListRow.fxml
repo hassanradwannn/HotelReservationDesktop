@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+
+<HBox fx:id="root"
+      spacing="8"
+      styleClass="reservation-list-row"
+      stylesheets="@styles.css"
+      xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="ReservationListRowController">
+    <children>
+        <Label fx:id="reservationIdLabel" styleClass="reservation-list-column" />
+        <Label fx:id="guestLabel" styleClass="reservation-list-column" />
+        <Label fx:id="roomLabel" styleClass="reservation-list-column" />
+        <Label fx:id="datesLabel" styleClass="reservation-list-column" />
+        <Label fx:id="statusLabel" styleClass="reservation-list-column" />
+    </children>
+</HBox>

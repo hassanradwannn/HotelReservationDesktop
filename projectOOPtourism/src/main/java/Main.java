@@ -13,17 +13,21 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public class Main extends Application {
 
     private Stage stage;
     private User currentUser;
     private Room selectedRoomForReservation;
     private RoomType selectedRoomTypeForReservation;
+    private ReservationSearchContext guestHomeSearchContext;
     private VBox currentContentArea;
     private DashboardController currentDashboardController;
     private Timeline autoRefreshTimeline;
     private Runnable currentViewRefresher;
     private volatile long localDataVersion = -1;
+    private final AtomicBoolean refreshInProgress = new AtomicBoolean(false);
     private String currentView = "";
     private static Main instance;
 
@@ -88,6 +92,7 @@ public class Main extends Application {
         currentUser = null;
         selectedRoomForReservation = null;
         selectedRoomTypeForReservation = null;
+        guestHomeSearchContext = null;
 
         // Stop any running auto-refresh when returning to login screen
         if (autoRefreshTimeline != null) {
@@ -125,12 +130,19 @@ public class Main extends Application {
         this.currentContentArea = contentArea;
         this.currentViewRefresher = null;
         try {
+            Object viewData = data;
+            if (currentUser instanceof Guest && "/GuestHome.fxml".equals(fxmlFile)
+                    && !(data instanceof ReservationSearchContext)
+                    && guestHomeSearchContext != null) {
+                viewData = guestHomeSearchContext;
+            }
+
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlFile));
             javafx.scene.Node node = loader.load();
 
             Object controller = loader.getController();
             if (controller instanceof DashboardContentController contentController) {
-                contentController.initData(this, data);
+                contentController.initData(this, viewData);
             }
 
             if (currentUser instanceof Guest && !"/GuestHome.fxml".equals(fxmlFile)) {
@@ -212,6 +224,14 @@ public class Main extends Application {
         this.selectedRoomTypeForReservation = type;
     }
 
+    public ReservationSearchContext getGuestHomeSearchContext() {
+        return guestHomeSearchContext;
+    }
+
+    public void setGuestHomeSearchContext(ReservationSearchContext guestHomeSearchContext) {
+        this.guestHomeSearchContext = guestHomeSearchContext;
+    }
+
     public User getCurrentUser() {
         return currentUser;
     }
@@ -227,11 +247,13 @@ public class Main extends Application {
     }
 
     private void refreshRuntimeDataFromDatabase() {
-        Database.refreshUsersFromDatabase();
-        Database.loadAllRoomTypes();
-        Database.loadAllAmenities();
-        Database.loadAllRooms();
-        Database.loadAllReservations();
+        synchronized (Database.class) {
+            Database.refreshUsersFromDatabase();
+            Database.loadAllRoomTypes();
+            Database.loadAllAmenities();
+            Database.loadAllRooms();
+            Database.loadAllReservations();
+        }
     }
 
     public void showGuestDashboard(Guest guest) {
@@ -242,17 +264,21 @@ public class Main extends Application {
                 autoRefreshTimeline.stop();
             }
 
-            autoRefreshTimeline = new Timeline(new KeyFrame(Duration.millis(50), event -> {
+            autoRefreshTimeline = new Timeline(new KeyFrame(Duration.millis(150), event -> {
                 new Thread(() -> {
                     long currentVersion = Database.getLatestDataVersion();
                     if (localDataVersion == -1) {
                         localDataVersion = currentVersion;
-                    } else if (currentVersion > localDataVersion) {
-                        System.out.println("Database changes detected! Syncing view...");
-                        localDataVersion = currentVersion;
-                        refreshRuntimeDataFromDatabase();
-                        SystemTime.syncFromDatabase();
-                        javafx.application.Platform.runLater(() -> Main.getInstance().refreshActiveView());
+                    } else if (currentVersion > localDataVersion && refreshInProgress.compareAndSet(false, true)) {
+                        try {
+                            System.out.println("Database changes detected! Syncing view...");
+                            localDataVersion = currentVersion;
+                            refreshRuntimeDataFromDatabase();
+                            SystemTime.syncFromDatabase();
+                            javafx.application.Platform.runLater(() -> Main.getInstance().refreshActiveView());
+                        } finally {
+                            refreshInProgress.set(false);
+                        }
                     }
                 }).start();
             }));
@@ -291,24 +317,28 @@ public class Main extends Application {
                 autoRefreshTimeline.stop();
             }
 
-            autoRefreshTimeline = new Timeline(new KeyFrame(Duration.seconds(2), event -> {
+            autoRefreshTimeline = new Timeline(new KeyFrame(Duration.millis(500), event -> {
                 new Thread(() -> {
                     long currentVersion = Database.getLatestDataVersion();
                     if (localDataVersion == -1) {
                         localDataVersion = currentVersion;
-                    } else if (currentVersion > localDataVersion) {
-                        System.out.println("Database changes detected! Syncing view...");
-                        localDataVersion = currentVersion;
+                    } else if (currentVersion > localDataVersion && refreshInProgress.compareAndSet(false, true)) {
+                        try {
+                            System.out.println("Database changes detected! Syncing view...");
+                            localDataVersion = currentVersion;
 
-                        refreshRuntimeDataFromDatabase();
+                            refreshRuntimeDataFromDatabase();
 
-                        SystemTime.syncFromDatabase();
-                        javafx.application.Platform.runLater(() -> {
-                            if (currentDashboardController != null && currentUser != null) {
-                                currentDashboardController.setUserInfo(userInfoText(currentUser));
-                            }
-                            Main.getInstance().refreshActiveView();
-                        });
+                            SystemTime.syncFromDatabase();
+                            javafx.application.Platform.runLater(() -> {
+                                if (currentDashboardController != null && currentUser != null) {
+                                    currentDashboardController.setUserInfo(userInfoText(currentUser));
+                                }
+                                Main.getInstance().refreshActiveView();
+                            });
+                        } finally {
+                            refreshInProgress.set(false);
+                        }
                     }
                 }).start();
             }));
@@ -348,25 +378,28 @@ public class Main extends Application {
                 autoRefreshTimeline.stop();
             }
 
-            autoRefreshTimeline = new Timeline(new KeyFrame(Duration.seconds(2), event -> {
+            autoRefreshTimeline = new Timeline(new KeyFrame(Duration.millis(500), event -> {
                 new Thread(() -> {
                     long currentVersion = Database.getLatestDataVersion();
                     if (localDataVersion == -1) {
                         localDataVersion = currentVersion;
-                    } else if (currentVersion > localDataVersion) {
-                        System.out.println("Database changes detected! Syncing view...");
-                        localDataVersion = currentVersion;
+                    } else if (currentVersion > localDataVersion && refreshInProgress.compareAndSet(false, true)) {
+                        try {
+                            System.out.println("Database changes detected! Syncing view...");
+                            localDataVersion = currentVersion;
 
-                        // Refresh in-memory data from the database in the background thread
-                        refreshRuntimeDataFromDatabase();
+                            refreshRuntimeDataFromDatabase();
 
-                        SystemTime.syncFromDatabase();
-                        javafx.application.Platform.runLater(() -> {
-                            if (currentDashboardController != null && currentUser != null) {
-                                currentDashboardController.setUserInfo(userInfoText(currentUser));
-                            }
-                            Main.getInstance().refreshActiveView();
-                        });
+                            SystemTime.syncFromDatabase();
+                            javafx.application.Platform.runLater(() -> {
+                                if (currentDashboardController != null && currentUser != null) {
+                                    currentDashboardController.setUserInfo(userInfoText(currentUser));
+                                }
+                                Main.getInstance().refreshActiveView();
+                            });
+                        } finally {
+                            refreshInProgress.set(false);
+                        }
                     }
                 }).start();
             }));

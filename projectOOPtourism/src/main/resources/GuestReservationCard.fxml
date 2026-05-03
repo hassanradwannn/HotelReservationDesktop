@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Text?>
+<?import javafx.scene.text.TextFlow?>
+
+<StackPane fx:id="root"
+           maxWidth="Infinity"
+           pickOnBounds="true"
+           stylesheets="@styles.css"
+           xmlns="http://javafx.com/javafx/17"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="GuestReservationCardController">
+    <children>
+        <HBox fx:id="cardBody"
+              alignment="CENTER_LEFT"
+              maxWidth="Infinity"
+              mouseTransparent="true">
+            <children>
+                <Region fx:id="accentBar"
+                        maxWidth="5"
+                        minWidth="5"
+                        prefWidth="5" />
+                <HBox alignment="CENTER_LEFT" maxWidth="Infinity" HBox.hgrow="ALWAYS">
+                    <padding>
+                        <Insets bottom="20" left="20" right="24" top="20" />
+                    </padding>
+                    <children>
+                        <VBox alignment="TOP_LEFT" HBox.hgrow="ALWAYS">
+                            <children>
+                                <HBox alignment="CENTER_LEFT" spacing="14">
+                                    <children>
+                                        <Label fx:id="iconLabel" />
+                                        <VBox alignment="CENTER_LEFT" spacing="3" HBox.hgrow="ALWAYS">
+                                            <children>
+                                                <TextFlow fx:id="typeNameFlow">
+                                                    <children>
+                                                        <Text fx:id="typeNameText" />
+                                                    </children>
+                                                </TextFlow>
+                                                <Label fx:id="subLineLabel" />
+                                            </children>
+                                        </VBox>
+                                    </children>
+                                </HBox>
+
+                                <HBox alignment="CENTER_LEFT" spacing="32">
+                                    <padding>
+                                        <Insets top="10" />
+                                    </padding>
+                                    <children>
+                                        <VBox spacing="2">
+                                            <children>
+                                                <Label fx:id="checkInHeaderLabel" text="CHECK-IN" />
+                                                <Label fx:id="checkInValueLabel" />
+                                            </children>
+                                        </VBox>
+                                        <VBox spacing="2">
+                                            <children>
+                                                <Label fx:id="checkOutHeaderLabel" text="CHECK-OUT" />
+                                                <Label fx:id="checkOutValueLabel" />
+                                            </children>
+                                        </VBox>
+                                        <VBox spacing="2">
+                                            <children>
+                                                <Label fx:id="totalHeaderLabel" text="TOTAL" />
+                                                <Label fx:id="totalValueLabel" />
+                                            </children>
+                                        </VBox>
+                                    </children>
+                                </HBox>
+                            </children>
+                        </VBox>
+
+                        <Region maxWidth="182" minWidth="182" prefWidth="182" />
+                    </children>
+                </HBox>
+            </children>
+        </HBox>
+
+        <Label fx:id="statusBadgeLabel" StackPane.alignment="TOP_RIGHT">
+            <StackPane.margin>
+                <Insets right="24" top="20" />
+            </StackPane.margin>
+        </Label>
+
+        <HBox fx:id="actionBox"
+              alignment="CENTER_RIGHT"
+              spacing="8"
+              StackPane.alignment="TOP_RIGHT">
+            <StackPane.margin>
+                <Insets right="24" top="74" />
+            </StackPane.margin>
+        </HBox>
+    </children>
+</StackPane>

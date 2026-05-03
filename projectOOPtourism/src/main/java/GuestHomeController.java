@@ -1,6 +1,6 @@
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -9,9 +9,10 @@ import java.util.Map;
 import java.util.Set;
 
 import javafx.collections.FXCollections;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.util.StringConverter;
@@ -43,6 +44,11 @@ public class GuestHomeController implements DashboardContentController {
     private Main mainApp;
     private Guest guest;
     private final Set<String> selectedAmenities = new HashSet<>();
+    private final Map<String, Node> roomTypeCardNodes = new LinkedHashMap<>();
+    private final Map<String, RoomTypeResultCardController> roomTypeCardControllers = new LinkedHashMap<>();
+    private boolean restoringSearchState;
+    private Task<List<Room>> roomSearchTask;
+    private int roomSearchRequestId;
     private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     @Override
@@ -66,7 +72,7 @@ public class GuestHomeController implements DashboardContentController {
         setupRoomTypeCombo();
 
         guestsSpinner.setValueFactory(
-                new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 20, 2)
+                new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 20, 1)
         );
 
         buildAmenityPills();
@@ -76,7 +82,7 @@ public class GuestHomeController implements DashboardContentController {
             buildAmenityPills();
             setupRoomTypeCombo();
             if (resultsArea != null && resultsArea.isVisible()) {
-                handleSearch();
+                refreshVisibleSearchResults();
             }
         });
 
@@ -84,6 +90,9 @@ public class GuestHomeController implements DashboardContentController {
             applySearchContext(context);
             handleSearch();
         }
+
+        installSearchStateListeners();
+        saveGuestHomeSearchContext();
     }
 
     private void updateHeroDate() {
@@ -91,13 +100,19 @@ public class GuestHomeController implements DashboardContentController {
     }
 
     private void setupRoomTypeCombo() {
-        String selectedTypeName = typeCombo.getValue() == null ? null : typeCombo.getValue().getName();
-        typeCombo.setItems(FXCollections.observableArrayList(Database.getRoomTypes()));
+        RoomType previousSelection = typeCombo.getValue();
+        String selectedTypeName = previousSelection == null ? null : previousSelection.getName();
+        List<RoomType> roomTypes = Database.getRoomTypes();
+        if (roomTypes.isEmpty()) {
+            return;
+        }
+
+        typeCombo.setItems(FXCollections.observableArrayList(roomTypes));
         if (selectedTypeName != null) {
-            typeCombo.setValue(Database.getRoomTypes().stream()
+            typeCombo.setValue(roomTypes.stream()
                     .filter(type -> type.getName().equals(selectedTypeName))
                     .findFirst()
-                    .orElse(null));
+                    .orElse(previousSelection));
         }
         typeCombo.setConverter(new StringConverter<>() {
             @Override
@@ -176,15 +191,52 @@ public class GuestHomeController implements DashboardContentController {
     }
 
     private void applySearchContext(ReservationSearchContext context) {
-        checkInPicker.setValue(context.getCheckIn());
-        checkOutPicker.setValue(context.getCheckOut());
-        guestsSpinner.getValueFactory().setValue(context.getGuests());
-        maxPriceField.setText(context.getMaxPrice() == null ? "" : formatWholeMoney(context.getMaxPrice()));
-        typeCombo.setValue(findRoomType(context.getSearchRoomType()));
+        restoringSearchState = true;
+        try {
+            checkInPicker.setValue(context.getCheckIn());
+            checkOutPicker.setValue(context.getCheckOut());
+            guestsSpinner.getValueFactory().setValue(context.getGuests());
+            maxPriceField.setText(context.getMaxPrice() == null ? "" : formatWholeMoney(context.getMaxPrice()));
+            typeCombo.setValue(findRoomType(context.getSearchRoomType()));
 
-        selectedAmenities.clear();
-        selectedAmenities.addAll(context.getRequestedAmenities().stream().map(Amenity::getName).toList());
-        buildAmenityPills();
+            selectedAmenities.clear();
+            selectedAmenities.addAll(context.getRequestedAmenities().stream().map(Amenity::getName).toList());
+            buildAmenityPills();
+        } finally {
+            restoringSearchState = false;
+        }
+    }
+
+    private void installSearchStateListeners() {
+        checkInPicker.valueProperty().addListener((obs, oldValue, newValue) -> saveGuestHomeSearchContext());
+        checkOutPicker.valueProperty().addListener((obs, oldValue, newValue) -> saveGuestHomeSearchContext());
+        guestsSpinner.valueProperty().addListener((obs, oldValue, newValue) -> saveGuestHomeSearchContext());
+        maxPriceField.textProperty().addListener((obs, oldValue, newValue) -> saveGuestHomeSearchContext());
+        typeCombo.valueProperty().addListener((obs, oldValue, newValue) -> saveGuestHomeSearchContext());
+    }
+
+    private void saveGuestHomeSearchContext() {
+        if (mainApp == null || guest == null || restoringSearchState) {
+            return;
+        }
+
+        RoomType selectedType = findRoomType(typeCombo.getValue());
+        int guests = guestsSpinner.getValue() == null ? 1 : guestsSpinner.getValue();
+        Double maxPrice = null;
+        try {
+            maxPrice = parseBudget();
+        } catch (NumberFormatException ignored) {
+        }
+
+        mainApp.setGuestHomeSearchContext(new ReservationSearchContext(
+                guest,
+                selectedType,
+                checkInPicker.getValue(),
+                checkOutPicker.getValue(),
+                guests,
+                getSelectedAmenityObjects(),
+                selectedType,
+                maxPrice));
     }
 
     private RoomType findRoomType(RoomType roomType) {
@@ -198,12 +250,17 @@ public class GuestHomeController implements DashboardContentController {
     }
 
     private void buildAmenityPills() {
+        List<Amenity> amenities = Database.getAmenities();
+        if (amenities.isEmpty() && !selectedAmenities.isEmpty()) {
+            return;
+        }
+
         amenityPillsPane.getChildren().clear();
         selectedAmenities.retainAll(
-                Database.getAmenities().stream().map(Amenity::getName).toList()
+                amenities.stream().map(Amenity::getName).toList()
         );
 
-        for (Amenity amenity : Database.getAmenities()) {
+        for (Amenity amenity : amenities) {
             ToggleButton pill = new ToggleButton(amenity.getName());
             pill.getStyleClass().add("amenity-pill");
             pill.setSelected(selectedAmenities.contains(amenity.getName()));
@@ -221,6 +278,7 @@ public class GuestHomeController implements DashboardContentController {
                     selectedAmenities.remove(amenity.getName());
                     pill.getStyleClass().remove("amenity-pill-active");
                 }
+                saveGuestHomeSearchContext();
             });
 
             amenityPillsPane.getChildren().add(pill);
@@ -229,8 +287,15 @@ public class GuestHomeController implements DashboardContentController {
 
     @FXML
     private void handleSearch() {
+        runSearch(false);
+    }
+
+    private void refreshVisibleSearchResults() {
+        runSearch(true);
+    }
+
+    private void runSearch(boolean preserveCurrentResultsOnEmpty) {
         msgLabel.setText("");
-        Database.refreshReservationsFromDatabase();
 
         try {
             LocalDate checkIn = checkInPicker.getValue();
@@ -241,23 +306,33 @@ public class GuestHomeController implements DashboardContentController {
 
             LocalDate checkOut = checkOutPicker.getValue();
             if (checkOut == null) {
-                msgLabel.setText("Please enter a check-out date.");
+                if (!preserveCurrentResultsOnEmpty) {
+                    msgLabel.setText("Please enter a check-out date.");
+                }
                 return;
             }
 
             if (!ReservationService.isDateRangeValid(checkIn, checkOut)) {
-                msgLabel.setText("Invalid dates. Check-out must be after check-in and not in the past.");
+                if (!preserveCurrentResultsOnEmpty) {
+                    msgLabel.setText("Invalid dates. Check-out must be after check-in and not in the past.");
+                }
                 return;
             }
 
             int numGuests = guestsSpinner.getValue();
-            RoomType selectedType = typeCombo.getValue();
+            RoomType selectedType = findRoomType(typeCombo.getValue());
+            if (selectedType != null) {
+                typeCombo.setValue(selectedType);
+            }
+            saveGuestHomeSearchContext();
             List<Amenity> amenityFilter = getSelectedAmenityObjects();
             Double maxPrice;
             try {
                 maxPrice = parseBudget();
             } catch (NumberFormatException ex) {
-                msgLabel.setText("Budget must be a valid number.");
+                if (!preserveCurrentResultsOnEmpty) {
+                    msgLabel.setText("Budget must be a valid number.");
+                }
                 return;
             }
 
@@ -265,31 +340,99 @@ public class GuestHomeController implements DashboardContentController {
                     ? List.of(selectedType)
                     : new ArrayList<>(Database.getRoomTypes());
 
-            List<Room> available = new ArrayList<>();
-            for (RoomType type : typesToSearch) {
-                if (type.getCapacity() < numGuests) {
-                    continue;
-                }
-                if (maxPrice != null && type.getPricePerNight() > maxPrice) {
-                    continue;
-                }
-                available.addAll(ReservationService.searchAvailableRooms(
-                        checkIn, checkOut, type, numGuests, amenityFilter));
+            SearchRequest request = new SearchRequest(
+                    checkIn,
+                    checkOut,
+                    numGuests,
+                    List.copyOf(amenityFilter),
+                    maxPrice,
+                    selectedType,
+                    List.copyOf(typesToSearch),
+                    preserveCurrentResultsOnEmpty);
+            runRoomSearchTask(request);
+        } catch (RuntimeException ex) {
+            if (!preserveCurrentResultsOnEmpty) {
+                msgLabel.setText("Use date format DD/MM/YYYY (e.g. 15/06/2026).");
             }
+        }
+    }
 
-            GuestPreferenceRanker.sortRoomsByGuestPreferences(available, guest);
+    private void runRoomSearchTask(SearchRequest request) {
+        int requestId = ++roomSearchRequestId;
+        if (roomSearchTask != null && roomSearchTask.isRunning()) {
+            roomSearchTask.cancel();
+        }
 
+        if (!request.preserveCurrentResultsOnEmpty()) {
+            msgLabel.setText("Searching rooms...");
+        }
+
+        roomSearchTask = new Task<>() {
+            @Override
+            protected List<Room> call() {
+                synchronized (Database.class) {
+                    Database.refreshReservationsFromDatabase();
+                    List<Room> available = new ArrayList<>();
+                    for (RoomType type : request.typesToSearch()) {
+                        if (isCancelled()) {
+                            return List.of();
+                        }
+                        if (type.getCapacity() < request.numGuests()) {
+                            continue;
+                        }
+                        if (request.maxPrice() != null && type.getPricePerNight() > request.maxPrice()) {
+                            continue;
+                        }
+                        available.addAll(ReservationService.searchAvailableRooms(
+                                request.checkIn(),
+                                request.checkOut(),
+                                type,
+                                request.numGuests(),
+                                request.amenityFilter()));
+                    }
+                    GuestPreferenceRanker.sortRoomsByGuestPreferences(available, guest);
+                    return available;
+                }
+            }
+        };
+
+        roomSearchTask.setOnSucceeded(event -> {
+            if (requestId != roomSearchRequestId) {
+                return;
+            }
+            List<Room> available = roomSearchTask.getValue();
             if (available.isEmpty()) {
+                if (request.preserveCurrentResultsOnEmpty()) {
+                    return;
+                }
                 msgLabel.setText("No rooms available for the selected criteria.");
                 showResults(false);
                 return;
             }
 
-            buildRoomTypeResults(available, checkIn, checkOut, numGuests, amenityFilter, maxPrice, selectedType);
+            msgLabel.setText("");
+            buildRoomTypeResults(
+                    available,
+                    request.checkIn(),
+                    request.checkOut(),
+                    request.numGuests(),
+                    request.amenityFilter(),
+                    request.maxPrice(),
+                    request.selectedType());
             showResults(true);
-        } catch (RuntimeException ex) {
-            msgLabel.setText("Use date format DD/MM/YYYY (e.g. 15/06/2026).");
-        }
+        });
+
+        roomSearchTask.setOnFailed(event -> {
+            if (requestId != roomSearchRequestId || request.preserveCurrentResultsOnEmpty()) {
+                return;
+            }
+            Throwable error = roomSearchTask.getException();
+            msgLabel.setText(error == null ? "Could not search rooms." : error.getMessage());
+        });
+
+        Thread thread = new Thread(roomSearchTask, "room-availability-search");
+        thread.setDaemon(true);
+        thread.start();
     }
 
     private List<Amenity> getSelectedAmenityObjects() {
@@ -319,7 +462,6 @@ public class GuestHomeController implements DashboardContentController {
             List<Amenity> amenityFilter,
             Double maxPrice,
             RoomType selectedType) {
-        resultsPane.getChildren().clear();
         updateResultsSummary(rooms, checkIn, checkOut, numGuests, amenityFilter, maxPrice, selectedType);
 
         Map<String, List<Room>> roomsByType = new LinkedHashMap<>();
@@ -327,92 +469,48 @@ public class GuestHomeController implements DashboardContentController {
             roomsByType.computeIfAbsent(room.getRoomType().getName(), key -> new ArrayList<>()).add(room);
         }
 
-        int rowIndex = 0;
+        List<Node> orderedCards = new ArrayList<>();
+        Set<String> activeKeys = new HashSet<>();
         for (List<Room> typeRooms : roomsByType.values()) {
-            RoomType roomType = typeRooms.get(0).getRoomType();
-            Room pricedRoom = typeRooms.get(0);
-
-            HBox row = new HBox(0);
-            row.getStyleClass().add("room-type-result-row");
-            row.setMinHeight(196);
-            row.setPrefHeight(196);
-
-            StackPane visual = new StackPane();
-            visual.getStyleClass().addAll("room-type-result-visual", "room-type-result-visual-2");
-            visual.setMinWidth(226);
-            visual.setPrefWidth(226);
-            visual.setMaxWidth(226);
-            Label typeIcon = new Label(roomTypeIcon(roomType.getName()));
-            typeIcon.setStyle(roomTypeIconStyle(roomType.getName()));
-            visual.getChildren().add(typeIcon);
-
-            VBox details = new VBox(12);
-            details.getStyleClass().add("room-type-result-details");
-            details.setPadding(new Insets(32, 42, 24, 42));
-            HBox.setHgrow(details, Priority.ALWAYS);
-
-            HBox titleRow = new HBox(16);
-            titleRow.setAlignment(Pos.TOP_LEFT);
-
-            Label title = new Label(roomType.getName());
-            title.getStyleClass().add("room-type-result-title");
-            title.setWrapText(true);
-            HBox.setHgrow(title, Priority.ALWAYS);
-
-            Label availability = new Label(typeRooms.size() + " ROOMS");
-            availability.getStyleClass().add("room-count-badge");
-            availability.setMinWidth(146);
-            availability.setAlignment(Pos.CENTER);
-            titleRow.getChildren().addAll(title, availability);
-
-            Label description = new Label(getRoomTypeDescription(roomType));
-            description.getStyleClass().add("room-type-result-description");
-            description.setWrapText(true);
-
-            FlowPane amenityChips = new FlowPane(10, 8);
-            amenityChips.getChildren().addAll(createAmenityChipLabels(typeRooms));
-
-            Region spacer = new Region();
-            VBox.setVgrow(spacer, Priority.ALWAYS);
-
-            VBox pricePanel = new VBox(0);
-            pricePanel.getStyleClass().add("room-type-result-price-panel");
-            pricePanel.setMinWidth(202);
-            pricePanel.setPrefWidth(202);
-            pricePanel.setMaxWidth(202);
-
-            VBox priceBox = new VBox(0);
-            priceBox.getStyleClass().add("room-type-result-price-box");
-            priceBox.setAlignment(Pos.CENTER);
-            VBox.setVgrow(priceBox, Priority.ALWAYS);
-
-            Label price = new Label("$" + formatWholeMoney(roomType.getPricePerNight()));
-            price.getStyleClass().add("room-type-result-price");
-            Label perNight = new Label("per night");
-            perNight.getStyleClass().add("room-type-result-price-sub");
-            Label total = new Label("Total: $" + formatWholeMoney(calculateStayTotal(pricedRoom, checkIn, checkOut)));
-            total.getStyleClass().add("room-type-result-total");
-            VBox.setMargin(total, new Insets(14, 0, 0, 0));
-            priceBox.getChildren().addAll(price, perNight, total);
-
-            Button reserveBtn = new Button("RESERVE");
-            reserveBtn.getStyleClass().add("room-type-result-reserve-btn");
-            reserveBtn.setMaxWidth(Double.MAX_VALUE);
-            reserveBtn.setPrefHeight(72);
-            reserveBtn.setOnAction(e -> {
-                mainApp.setSelectedRoomForReservation(null);
-                mainApp.setSelectedRoomTypeForReservation(roomType);
-                ReservationSearchContext context = new ReservationSearchContext(
-                        guest, roomType, checkIn, checkOut, numGuests, amenityFilter, selectedType, maxPrice);
-                mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/MakeReservation.fxml", context);
-            });
-
-            pricePanel.getChildren().addAll(priceBox, reserveBtn);
-            details.getChildren().addAll(titleRow, description, amenityChips, spacer);
-            row.getChildren().addAll(visual, details, pricePanel);
-            resultsPane.getChildren().add(row);
-            rowIndex++;
+            String key = typeRooms.get(0).getRoomType().getName();
+            activeKeys.add(key);
+            try {
+                orderedCards.add(updateRoomTypeResultCard(
+                        key, typeRooms, checkIn, checkOut, numGuests, amenityFilter, selectedType, maxPrice));
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                Label error = new Label("Could not load room type card.");
+                error.getStyleClass().add("error-message");
+                orderedCards.add(error);
+            }
         }
+
+        roomTypeCardNodes.keySet().removeIf(key -> !activeKeys.contains(key));
+        roomTypeCardControllers.keySet().removeIf(key -> !activeKeys.contains(key));
+        FxNodeSync.syncChildren(resultsPane, orderedCards);
+    }
+
+    private Node updateRoomTypeResultCard(
+            String key,
+            List<Room> typeRooms,
+            LocalDate checkIn,
+            LocalDate checkOut,
+            int numGuests,
+            List<Amenity> amenityFilter,
+            RoomType selectedType,
+            Double maxPrice) throws IOException {
+        Node card = roomTypeCardNodes.get(key);
+        RoomTypeResultCardController controller = roomTypeCardControllers.get(key);
+        if (card == null || controller == null) {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/RoomTypeResultCard.fxml"));
+            card = loader.load();
+            controller = loader.getController();
+            roomTypeCardNodes.put(key, card);
+            roomTypeCardControllers.put(key, controller);
+        }
+        controller.setData(
+                mainApp, guest, typeRooms, checkIn, checkOut, numGuests, amenityFilter, selectedType, maxPrice);
+        return card;
     }
 
     private void updateResultsSummary(
@@ -432,78 +530,6 @@ public class GuestHomeController implements DashboardContentController {
                 ? "ANY"
                 : amenityFilter.size() + " " + (amenityFilter.size() == 1 ? "Amenity" : "Amenities"));
         resultsCountLabel.setText(rooms.size() + " rooms available");
-    }
-
-    private List<Label> createAmenityChipLabels(List<Room> rooms) {
-        List<String> amenityNames = rooms.stream()
-                .flatMap(room -> room.getAmenities().stream())
-                .map(Amenity::getName)
-                .distinct()
-                .sorted((left, right) -> Boolean.compare(
-                        GuestPreferenceRanker.isPreferredAmenity(guest, right),
-                        GuestPreferenceRanker.isPreferredAmenity(guest, left)))
-                .limit(4)
-                .toList();
-
-        if (amenityNames.isEmpty()) {
-            amenityNames = List.of("Amenities vary by room");
-        }
-
-        List<Label> chips = new ArrayList<>();
-        for (String amenityName : amenityNames) {
-            Label chip = new Label(amenityName);
-            chip.getStyleClass().add("room-type-result-amenity-chip");
-            if (GuestPreferenceRanker.isPreferredAmenity(guest, amenityName)) {
-                chip.getStyleClass().add("preferred-amenity-chip");
-            }
-            chips.add(chip);
-        }
-        return chips;
-    }
-
-    private String getRoomTypeDescription(RoomType roomType) {
-        String name = roomType.getName().toLowerCase();
-        if (name.contains("mendle")) {
-            return "Cozy single room with writing desk, garden-facing window. Smart TV and high-speed WiFi included";
-        }
-        if (name.contains("lobby")) {
-            return "Elevated classic with king bed, reading alcove, copper bath fixtures, and a view of the inner courtyard fountain.";
-        }
-        if (name.contains("alpine")) {
-            return "Spacious two-room suite with fireplace, velvet chaises, a private terrace, and direct mountain views.";
-        }
-        if (name.contains("gustave")) {
-            return "The crown jewel of the hotel. Grand parlor, two dressing rooms, rooftop terrace, gym membership, and jacuzzi.";
-        }
-        return "A carefully appointed suite with refined finishes, attentive service, and selected hotel amenities.";
-    }
-
-    private String roomTypeIcon(String name) {
-        String n = name.toLowerCase();
-        if (n.contains("suite") || n.contains("grand") || n.contains("alpine")) return "✦";
-        if (n.contains("penthouse") || n.contains("gustave")) return "❧";
-        if (n.contains("deluxe") || n.contains("lobby")) return "◆";
-        if (n.contains("classic") || n.contains("mendle")) return "⊙";
-        return "◈";
-    }
-
-    private String roomTypeIconStyle(String name) {
-        String n = name.toLowerCase();
-        String color = (n.contains("deluxe") || n.contains("lobby")) ? "#C8A97E" : "#F9F3EA";
-        String size = (n.contains("classic") || n.contains("mendle")) ? "40" : "34";
-        return "-fx-font-family: 'Georgia';"
-                + "-fx-font-size: " + size + "px;"
-                + "-fx-font-weight: bold;"
-                + "-fx-text-fill: " + color + ";";
-    }
-
-    private double calculateStayTotal(Room room, LocalDate checkIn, LocalDate checkOut) {
-        long nights = Math.max(1, ChronoUnit.DAYS.between(checkIn, checkOut));
-        double total = room.getPricePerNight() * nights;
-        for (Amenity amenity : room.getAmenities()) {
-            total += amenity.getPrice();
-        }
-        return total;
     }
 
     private String formatWholeMoney(double value) {
@@ -536,4 +562,15 @@ public class GuestHomeController implements DashboardContentController {
     @FXML private void showTime()         { mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/AdvanceTime.fxml", null); }
     @FXML private void showChat()         { mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/Chat.fxml", guest); }
     @FXML private void doLogout()         { mainApp.showLoginScreen(); }
+
+    private record SearchRequest(
+            LocalDate checkIn,
+            LocalDate checkOut,
+            int numGuests,
+            List<Amenity> amenityFilter,
+            Double maxPrice,
+            RoomType selectedType,
+            List<RoomType> typesToSearch,
+            boolean preserveCurrentResultsOnEmpty) {
+    }
 }

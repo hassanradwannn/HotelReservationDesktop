@@ -1,17 +1,17 @@
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.control.Button;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
-import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 public class AvailableRoomsController implements DashboardContentController {
@@ -25,13 +25,16 @@ public class AvailableRoomsController implements DashboardContentController {
     private boolean hasGymPass;
     private List<Room> availableRooms;
     private ReservationSearchContext searchContext;
+    private final Map<String, Node> roomCardNodes = new LinkedHashMap<>();
+    private final Map<String, RoomCardController> roomCardControllers = new LinkedHashMap<>();
+    private Task<RoomRefreshResult> roomRefreshTask;
+    private int roomRefreshRequestId;
 
     @Override
     @SuppressWarnings("unchecked")
     public void initData(Main mainApp, Object data) {
         this.mainApp = mainApp;
-        
-        // Unpack the search criteria passed from MakeReservationController
+
         Object[] bookingData = (Object[]) data;
         this.guest = (Guest) bookingData[0];
         this.checkIn = (LocalDate) bookingData[1];
@@ -48,41 +51,75 @@ public class AvailableRoomsController implements DashboardContentController {
     }
 
     private void refreshAvailableRooms() {
-        if (searchContext != null) {
-            List<Amenity> currentRequestedAmenities = currentAmenities(searchContext.getRequestedAmenities());
-            RoomType currentRoomType = CatalogService.findRoomType(searchContext.getRoomType().getName());
-            RoomType currentSearchRoomType = searchContext.getSearchRoomType() == null
-                    ? null
-                    : CatalogService.findRoomType(searchContext.getSearchRoomType().getName());
-            if (currentRoomType == null) {
-                availableRooms = List.of();
-                loadRooms();
+        int requestId = ++roomRefreshRequestId;
+        ReservationSearchContext contextSnapshot = searchContext;
+        List<Room> roomsSnapshot = availableRooms == null ? List.of() : List.copyOf(availableRooms);
+
+        if (roomRefreshTask != null && roomRefreshTask.isRunning()) {
+            roomRefreshTask.cancel();
+        }
+
+        roomRefreshTask = new Task<>() {
+            @Override
+            protected RoomRefreshResult call() {
+                synchronized (Database.class) {
+                    List<Room> refreshedRooms;
+                    ReservationSearchContext refreshedContext = contextSnapshot;
+
+                    if (contextSnapshot != null) {
+                        List<Amenity> currentRequestedAmenities = currentAmenities(contextSnapshot.getRequestedAmenities());
+                        RoomType currentRoomType = CatalogService.findRoomType(contextSnapshot.getRoomType().getName());
+                        RoomType currentSearchRoomType = contextSnapshot.getSearchRoomType() == null
+                                ? null
+                                : CatalogService.findRoomType(contextSnapshot.getSearchRoomType().getName());
+                        if (currentRoomType == null) {
+                            return new RoomRefreshResult(List.of(), contextSnapshot);
+                        }
+
+                        refreshedContext = new ReservationSearchContext(
+                                guest,
+                                currentRoomType,
+                                checkIn,
+                                checkOut,
+                                contextSnapshot.getGuests(),
+                                currentRequestedAmenities,
+                                currentSearchRoomType,
+                                contextSnapshot.getMaxPrice(),
+                                hasGymPass);
+                        refreshedRooms = ReservationService.searchAvailableRooms(
+                                checkIn,
+                                checkOut,
+                                currentRoomType,
+                                contextSnapshot.getGuests(),
+                                currentRequestedAmenities);
+                    } else {
+                        refreshedRooms = roomsSnapshot.stream()
+                                .map(room -> CatalogService.findRoom(room.getRoomNumber()))
+                                .filter(room -> room != null)
+                                .toList();
+                    }
+
+                    GuestPreferenceRanker.sortRoomsByGuestPreferences(refreshedRooms, guest);
+                    return new RoomRefreshResult(refreshedRooms, refreshedContext);
+                }
+            }
+        };
+
+        roomRefreshTask.setOnSucceeded(event -> {
+            if (requestId != roomRefreshRequestId) {
                 return;
             }
-            searchContext = new ReservationSearchContext(
-                    guest,
-                    currentRoomType,
-                    checkIn,
-                    checkOut,
-                    searchContext.getGuests(),
-                    currentRequestedAmenities,
-                    currentSearchRoomType,
-                    searchContext.getMaxPrice(),
-                    hasGymPass);
-            availableRooms = ReservationService.searchAvailableRooms(
-                    checkIn,
-                    checkOut,
-                    currentRoomType,
-                    searchContext.getGuests(),
-                    currentRequestedAmenities);
-        } else {
-            availableRooms = availableRooms.stream()
-                    .map(room -> CatalogService.findRoom(room.getRoomNumber()))
-                    .filter(room -> room != null)
-                    .toList();
-        }
-        GuestPreferenceRanker.sortRoomsByGuestPreferences(availableRooms, guest);
-        loadRooms();
+            RoomRefreshResult result = roomRefreshTask.getValue();
+            availableRooms = result.rooms();
+            searchContext = result.searchContext();
+            loadRooms();
+        });
+
+        roomRefreshTask.setOnFailed(event -> roomRefreshTask.getException().printStackTrace());
+
+        Thread thread = new Thread(roomRefreshTask, "available-room-refresh");
+        thread.setDaemon(true);
+        thread.start();
     }
 
     private List<Amenity> currentAmenities(List<Amenity> amenities) {
@@ -103,111 +140,49 @@ public class AvailableRoomsController implements DashboardContentController {
         if (roomCards == null) {
             return;
         }
-        roomCards.getChildren().clear();
-
         if (availableRooms.isEmpty()) {
+            roomCardNodes.clear();
+            roomCardControllers.clear();
             Label empty = new Label("No rooms available for the selected criteria.");
             empty.getStyleClass().add("error-message");
-            roomCards.getChildren().add(empty);
+            FxNodeSync.syncChildren(roomCards, List.of(empty));
             return;
         }
 
+        List<Node> orderedCards = new ArrayList<>();
+        Set<String> activeKeys = new HashSet<>();
         for (Room room : availableRooms) {
-            roomCards.getChildren().add(createRoomCard(room));
+            String key = room.getRoomNumber();
+            activeKeys.add(key);
+            try {
+                orderedCards.add(updateRoomCard(key, room));
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                Label error = new Label("Could not load room card.");
+                error.getStyleClass().add("error-message");
+                orderedCards.add(error);
+            }
         }
+
+        roomCardNodes.keySet().removeIf(key -> !activeKeys.contains(key));
+        roomCardControllers.keySet().removeIf(key -> !activeKeys.contains(key));
+        FxNodeSync.syncChildren(roomCards, orderedCards);
     }
 
-    private HBox createRoomCard(Room room) {
-        HBox card = new HBox(20);
-        card.setAlignment(Pos.CENTER_LEFT);
-        card.setPadding(new Insets(15));
-        card.setMaxWidth(Double.MAX_VALUE);
-        card.getStyleClass().add("room-card");
-        if (GuestPreferenceRanker.getPreferenceMatchScore(room, guest) > 0) {
-            card.getStyleClass().add("preferred-room-card");
+    private Node updateRoomCard(String key, Room room) throws IOException {
+        Node card = roomCardNodes.get(key);
+        RoomCardController controller = roomCardControllers.get(key);
+        if (card == null || controller == null) {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/RoomCard.fxml"));
+            card = loader.load();
+            controller = loader.getController();
+            roomCardNodes.put(key, card);
+            roomCardControllers.put(key, controller);
         }
-
-        StackPane imageBox = new StackPane();
-        imageBox.getStyleClass().add("room-image-box");
-        imageBox.setMinWidth(160);
-        imageBox.setMaxWidth(160);
-        imageBox.setMinHeight(160);
-        imageBox.setMaxHeight(160);
-
-        Label imageText = new Label("ROOM\n" + room.getRoomNumber());
-        imageText.getStyleClass().add("room-image-text");
-        imageText.setAlignment(Pos.CENTER);
-        imageBox.getChildren().add(imageText);
-
-        VBox details = new VBox(7);
-        details.setAlignment(Pos.CENTER_LEFT);
-        details.setPadding(new Insets(10));
-        details.setMinWidth(400);
-        HBox.setHgrow(details, Priority.ALWAYS);
-        Label roomTitle = new Label("Room " + room.getRoomNumber() + " — " + room.getRoomType().getName());
-        roomTitle.getStyleClass().add("room-title");
-        
-        double total = Reservation.calculateTotalPrice(room, checkIn, checkOut, hasGymPass);
-        
-        Label price = new Label("Total: $" + mainApp.money(total));
-        price.getStyleClass().add("room-price");
-        
-        FlowPane amenityChips = new FlowPane(10, 8);
-        for (String amenityName : getDisplayAmenityNames(room)) {
-            Label chip = new Label(amenityName);
-            chip.getStyleClass().add("room-type-result-amenity-chip");
-            if (GuestPreferenceRanker.isPreferredAmenity(guest, amenityName)) {
-                chip.getStyleClass().add("preferred-amenity-chip");
-            }
-            amenityChips.getChildren().add(chip);
-        }
-        
-        details.getChildren().addAll(roomTitle, price, amenityChips);
-
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-
-        VBox actions = new VBox(15);
-        actions.setAlignment(Pos.CENTER_RIGHT);
-
-        Button detailsBtn = new Button("DETAILS");
-        detailsBtn.setPrefSize(130, 38);
-        detailsBtn.setMinWidth(130);
-        detailsBtn.getStyleClass().add("outline-action-btn");
-        detailsBtn.setOnAction(e -> {
-            Object[] detailsData = new Object[]{ guest, room, checkIn, checkOut, hasGymPass, availableRooms, searchContext };
-            mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/RoomDetails.fxml", detailsData);
-        });
-
-        Button reserveBtn = new Button("BOOK NOW");
-        reserveBtn.setPrefSize(130, 38);
-        reserveBtn.setMinWidth(130);
-        reserveBtn.getStyleClass().add("primary-action-btn");
-        reserveBtn.setOnAction(e -> {
-            Reservation res = ReservationService.createReservation(guest, room, checkIn, checkOut, hasGymPass);
-            mainApp.alert("Reservation Created", "ID: " + res.getReservationId() + "\nTotal: $" + mainApp.money(res.getTotalPrice()) + "\nDeposit: $" + mainApp.money(ReservationService.getDepositAmount(res)));
-            mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GuestReservations.fxml", guest);
-        });
-        
-        actions.getChildren().addAll(detailsBtn, reserveBtn);
-        card.getChildren().addAll(imageBox, details, spacer, actions);
+        controller.setData(mainApp, guest, room, checkIn, checkOut, hasGymPass, availableRooms, searchContext);
         return card;
     }
 
-    private List<String> getDisplayAmenityNames(Room room) {
-        List<String> names = new ArrayList<>();
-        for (Amenity amenity : room.getAmenities()) {
-            if (hasGymPass && Reservation.isGymAmenity(amenity)) {
-                continue;
-            }
-            names.add(amenity.getName());
-        }
-        if (hasGymPass) {
-            names.add(Reservation.GYM_PASS_NAME);
-        }
-        names.sort((left, right) -> Boolean.compare(
-                GuestPreferenceRanker.isPreferredAmenity(guest, right),
-                GuestPreferenceRanker.isPreferredAmenity(guest, left)));
-        return names;
+    private record RoomRefreshResult(List<Room> rooms, ReservationSearchContext searchContext) {
     }
 }

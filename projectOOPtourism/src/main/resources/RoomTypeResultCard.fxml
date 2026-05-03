@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<HBox fx:id="root"
+      maxWidth="Infinity"
+      minHeight="196"
+      prefHeight="196"
+      spacing="0"
+      styleClass="room-type-result-row"
+      stylesheets="@styles.css"
+      xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="RoomTypeResultCardController">
+    <children>
+        <StackPane fx:id="visual"
+                   maxWidth="226"
+                   minWidth="226"
+                   prefWidth="226"
+                   styleClass="room-type-result-visual">
+            <children>
+                <Label fx:id="typeIconLabel" />
+            </children>
+        </StackPane>
+
+        <VBox fx:id="detailsBox"
+              spacing="12"
+              styleClass="room-type-result-details"
+              HBox.hgrow="ALWAYS">
+            <padding>
+                <Insets bottom="24" left="42" right="42" top="32" />
+            </padding>
+            <children>
+                <HBox alignment="TOP_LEFT" spacing="16">
+                    <children>
+                        <Label fx:id="titleLabel"
+                               maxWidth="Infinity"
+                               styleClass="room-type-result-title"
+                               wrapText="true"
+                               HBox.hgrow="ALWAYS" />
+                        <Label fx:id="availabilityLabel"
+                               alignment="CENTER"
+                               minWidth="146"
+                               styleClass="room-count-badge" />
+                    </children>
+                </HBox>
+
+                <Label fx:id="descriptionLabel"
+                       styleClass="room-type-result-description"
+                       wrapText="true" />
+                <FlowPane fx:id="amenityChips" hgap="10" vgap="8" />
+                <Region VBox.vgrow="ALWAYS" />
+            </children>
+        </VBox>
+
+        <VBox fx:id="pricePanel"
+              maxWidth="202"
+              minWidth="202"
+              prefWidth="202"
+              styleClass="room-type-result-price-panel">
+            <children>
+                <VBox alignment="CENTER"
+                      styleClass="room-type-result-price-box"
+                      VBox.vgrow="ALWAYS">
+                    <children>
+                        <Label fx:id="priceLabel" styleClass="room-type-result-price" />
+                        <Label styleClass="room-type-result-price-sub" text="per night" />
+                        <Label fx:id="totalLabel" styleClass="room-type-result-total">
+                            <VBox.margin>
+                                <Insets top="14" />
+                            </VBox.margin>
+                        </Label>
+                    </children>
+                </VBox>
+                <Button fx:id="reserveButton"
+                        maxWidth="Infinity"
+                        prefHeight="72"
+                        styleClass="room-type-result-reserve-btn"
+                        text="RESERVE" />
+            </children>
+        </VBox>
+    </children>
+</HBox>

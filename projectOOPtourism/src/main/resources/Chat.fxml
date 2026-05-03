@@ -20,7 +20,7 @@
        <VBox styleClass="chat-card" VBox.vgrow="ALWAYS" spacing="14">
           <children>
              <HBox fx:id="header" alignment="CENTER_LEFT" spacing="14">
-                <StackPane prefHeight="46" prefWidth="46" style="-fx-background-color: #C74261; -fx-background-radius: 50;">
+                <StackPane fx:id="avatar" prefHeight="46" prefWidth="46" style="-fx-background-color: #C74261; -fx-background-radius: 50;">
                    <Label fx:id="avatarText" text="U" style="-fx-text-fill: WHITE; -fx-font-weight: bold; -fx-font-size: 20;"/>
                 </StackPane>
                 <VBox spacing="2">

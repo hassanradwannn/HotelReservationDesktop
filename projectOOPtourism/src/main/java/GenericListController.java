@@ -1,29 +1,32 @@
-import java.time.format.DateTimeFormatter;
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
-import javafx.scene.control.OverrunStyle;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 
 public class GenericListController implements DashboardContentController {
-    private static final DateTimeFormatter RESERVATION_DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
     @FXML private Label titleLabel;
     @FXML private ListView<Object> listView;
     @FXML private HBox actionBar;
     private Main mainApp;
     private Supplier<List<?>> supplier;
     private String title;
+    private final ObservableList<Object> listItems = FXCollections.observableArrayList();
+    private Task<List<Object>> dataLoadTask;
+    private int dataLoadRequestId;
 
     @Override
     public void initData(Main mainApp, Object data) {
@@ -32,17 +35,13 @@ public class GenericListController implements DashboardContentController {
         this.title = (String) args[0];
         titleLabel.setText(title);
         this.supplier = (Supplier<List<?>>) args[1];
+        listView.setItems(listItems);
+        configureListCellFactory();
 
-        Runnable dataRefresher = () -> {
-            List<?> list = supplier.get();
-            @SuppressWarnings("unchecked")
-            List<Object> typedList = (List<Object>) list;
-            listView.setItems(FXCollections.observableArrayList(typedList));
-        };
+        Runnable dataRefresher = this::loadDataAsync;
         
         dataRefresher.run();
         mainApp.setCurrentViewRefresher(dataRefresher);
-        configureListCellFactory();
 
         // Add context-specific action buttons
         if (actionBar != null && mainApp.getCurrentUser() instanceof Receptionist && title.contains("Reservations")) {
@@ -119,8 +118,43 @@ public class GenericListController implements DashboardContentController {
         });
     }
 
+    private void loadDataAsync() {
+        int requestId = ++dataLoadRequestId;
+        if (dataLoadTask != null && dataLoadTask.isRunning()) {
+            dataLoadTask.cancel();
+        }
+
+        dataLoadTask = new Task<>() {
+            @Override
+            protected List<Object> call() {
+                synchronized (Database.class) {
+                    return new java.util.ArrayList<>(supplier.get());
+                }
+            }
+        };
+
+        dataLoadTask.setOnSucceeded(event -> {
+            if (requestId == dataLoadRequestId) {
+                syncListItems(dataLoadTask.getValue());
+            }
+        });
+
+        dataLoadTask.setOnFailed(event -> {
+            Throwable error = dataLoadTask.getException();
+            if (error != null) {
+                error.printStackTrace();
+            }
+        });
+
+        Thread thread = new Thread(dataLoadTask, "generic-list-load");
+        thread.setDaemon(true);
+        thread.start();
+    }
+
     private void configureListCellFactory() {
         listView.setCellFactory(view -> new ListCell<>() {
+            private ReservationRowView reservationRowView;
+
             @Override
             protected void updateItem(Object item, boolean empty) {
                 super.updateItem(item, empty);
@@ -134,7 +168,16 @@ public class GenericListController implements DashboardContentController {
 
                 if (item instanceof Reservation reservation) {
                     setText(null);
-                    setGraphic(createReservationRow(reservation));
+                    try {
+                        if (reservationRowView == null) {
+                            reservationRowView = loadReservationRow();
+                        }
+                        reservationRowView.controller().setReservation(reservation);
+                        setGraphic(reservationRowView.row());
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                        setGraphic(new Label("Could not load reservation row."));
+                    }
                     setTooltip(new Tooltip(reservation.toString()));
                     return;
                 }
@@ -146,28 +189,32 @@ public class GenericListController implements DashboardContentController {
         });
     }
 
-    private HBox createReservationRow(Reservation reservation) {
-        HBox row = new HBox(8);
-        row.getStyleClass().add("reservation-list-row");
-        row.getChildren().addAll(
-                fixedColumn("ID: " + reservation.getReservationId(), 190),
-                fixedColumn("Guest: " + reservation.getGuest().getUsername(), 150),
-                fixedColumn("Room: " + reservation.getRoom().getRoomNumber(), 100),
-                fixedColumn(reservation.getCheckInDate().format(RESERVATION_DATE_FORMAT)
-                        + " : " + reservation.getCheckOutDate().format(RESERVATION_DATE_FORMAT), 215),
-                fixedColumn("Status: " + reservation.getStatus(), 160)
-        );
-        return row;
+    private void syncListItems(List<Object> freshItems) {
+        int index = 0;
+        for (; index < freshItems.size(); index++) {
+            Object freshItem = freshItems.get(index);
+            if (index < listItems.size()) {
+                if (listItems.get(index) != freshItem) {
+                    listItems.set(index, freshItem);
+                }
+            } else {
+                listItems.add(freshItem);
+            }
+        }
+
+        if (listItems.size() > freshItems.size()) {
+            listItems.remove(index, listItems.size());
+        }
     }
 
-    private Label fixedColumn(String text, double width) {
-        Label label = new Label(text);
-        label.getStyleClass().add("reservation-list-column");
-        label.setMinWidth(width);
-        label.setPrefWidth(width);
-        label.setMaxWidth(width);
-        label.setTextOverrun(OverrunStyle.ELLIPSIS);
-        return label;
+    private ReservationRowView loadReservationRow() throws IOException {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/ReservationListRow.fxml"));
+        HBox row = loader.load();
+        ReservationListRowController controller = loader.getController();
+        return new ReservationRowView(row, controller);
+    }
+
+    private record ReservationRowView(HBox row, ReservationListRowController controller) {
     }
 
     private void handleDeleteRoom(Runnable refresher) {

@@ -24,4 +24,7 @@ public class DashboardController {
 
 interface DashboardContentController {
     void initData(Main mainApp, Object data);
+
+    default void onRemoved() {
+    }
 }
