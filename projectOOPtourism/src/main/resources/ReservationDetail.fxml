@@ -68,6 +68,14 @@
                             <Label styleClass="reservation-summary-label" text="PAID SO FAR" />
                             <Label fx:id="paidLabel" styleClass="reservation-summary-value" text="-" />
                         </VBox>
+                        <VBox fx:id="refundBox" spacing="4">
+                            <Label styleClass="reservation-summary-label" text="REFUNDED FOR EARLY CHECK OUT" />
+                            <Label fx:id="refundLabel" styleClass="reservation-summary-value" text="-" />
+                        </VBox>
+                        <VBox fx:id="depositDueBox" spacing="4">
+                            <Label styleClass="reservation-summary-label" text="DEPOSIT DUE" />
+                            <Label fx:id="depositDueLabel" styleClass="reservation-summary-value" text="-" />
+                        </VBox>
                         <VBox spacing="4">
                             <Label styleClass="reservation-summary-label" text="DATES" />
                             <Label fx:id="datesLabel" styleClass="reservation-summary-value" text="-" wrapText="true" />

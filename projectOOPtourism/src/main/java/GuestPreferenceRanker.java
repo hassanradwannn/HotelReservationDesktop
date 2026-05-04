@@ -32,6 +32,9 @@ public final class GuestPreferenceRanker {
         }
 
         int score = 0;
+        if (preferences.contains(normalize(room.getViewName()))) {
+            score++;
+        }
         for (Amenity amenity : room.getAmenities()) {
             if (amenity != null && preferences.contains(normalize(amenity.getName()))) {
                 score++;
@@ -47,6 +50,9 @@ public final class GuestPreferenceRanker {
         }
 
         Set<String> preferences = getNormalizedPreferenceNames(guest);
+        if (preferences.contains(normalize(room.getViewName()))) {
+            matches.add(room.getViewName());
+        }
         for (Amenity amenity : room.getAmenities()) {
             if (amenity != null && preferences.contains(normalize(amenity.getName()))) {
                 matches.add(amenity.getName());

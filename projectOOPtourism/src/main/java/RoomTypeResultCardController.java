@@ -94,12 +94,14 @@ public class RoomTypeResultCardController {
 
     private List<Label> createAmenityChipLabels(List<Room> rooms) {
         List<String> amenityNames = rooms.stream()
-                .flatMap(room -> room.getAmenities().stream())
-                .map(Amenity::getName)
+                .flatMap(room -> {
+                    List<String> names = new ArrayList<>();
+                    names.add(room.getViewName());
+                    names.addAll(room.getAmenities().stream().map(Amenity::getName).toList());
+                    return names.stream();
+                })
                 .distinct()
-                .sorted((left, right) -> Boolean.compare(
-                        GuestPreferenceRanker.isPreferredAmenity(guest, right),
-                        GuestPreferenceRanker.isPreferredAmenity(guest, left)))
+                .sorted((left, right) -> Integer.compare(pillPriority(left), pillPriority(right)))
                 .toList();
 
         if (amenityNames.isEmpty()) {
@@ -133,6 +135,20 @@ public class RoomTypeResultCardController {
             return "The crown jewel of the hotel. Grand parlor, two dressing rooms, rooftop terrace, gym membership, and jacuzzi.";
         }
         return "A carefully appointed suite with refined finishes, attentive service, and selected hotel amenities.";
+    }
+
+    private boolean isViewName(String name) {
+        return "Sea View".equalsIgnoreCase(name) || "Mountain View".equalsIgnoreCase(name);
+    }
+
+    private int pillPriority(String name) {
+        if (GuestPreferenceRanker.isPreferredAmenity(guest, name)) {
+            return 0;
+        }
+        if (isViewName(name)) {
+            return 2;
+        }
+        return 1;
     }
 
     private String roomTypeIcon(String name) {

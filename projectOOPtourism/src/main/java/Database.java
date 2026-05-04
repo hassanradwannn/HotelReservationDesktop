@@ -268,7 +268,8 @@ public class Database {
     public static List<Reservation> getTodaysReservations() {
         loadAllReservations();
         return reservations.stream()
-                .filter(r -> r.getCheckInDate().isEqual(SystemTime.getToday()))
+                .filter(r -> r.getStatus() == ReservationStatus.CHECKING_IN
+                        && r.getCheckInDate().isEqual(SystemTime.getToday()))
                 .toList();
     }
 
@@ -340,6 +341,16 @@ public class Database {
                 if (guest != null && room != null) {
                     Reservation r = new Reservation(resId, guest, room, checkIn, checkOut, status, hasGymPass);
                     r.setTotalPrice();
+                    if (r.getStatus() == ReservationStatus.CONFIRMED && checkIn.isEqual(SystemTime.getToday())) {
+                        r.setStatus(ReservationStatus.CHECKING_IN);
+                        DatabaseSaver.updateReservationStatus(r.getReservationId(), ReservationStatus.CHECKING_IN.toString());
+                    } else if (r.getStatus() == ReservationStatus.CHECKING_IN && !checkIn.isEqual(SystemTime.getToday())) {
+                        r.setStatus(ReservationStatus.CONFIRMED);
+                        DatabaseSaver.updateReservationStatus(r.getReservationId(), ReservationStatus.CONFIRMED.toString());
+                    } else if (r.getStatus() == ReservationStatus.ONGOING && checkOut.isEqual(SystemTime.getToday())) {
+                        r.setStatus(ReservationStatus.CHECKING_OUT);
+                        DatabaseSaver.updateReservationStatus(r.getReservationId(), ReservationStatus.CHECKING_OUT.toString());
+                    }
                     reservations.add(r);
                 }
             }

@@ -26,6 +26,22 @@ public class Room {
         return roomNumber;
     }
 
+    public String getViewName() {
+        return isSeaView() ? "Sea View" : "Mountain View";
+    }
+
+    public boolean isSeaView() {
+        int number;
+        try {
+            number = Integer.parseInt(roomNumber);
+        } catch (NumberFormatException ex) {
+            return true;
+        }
+
+        int positionOnFloor = Math.floorMod(number, 100);
+        return positionOnFloor <= 10;
+    }
+
     public void setRoomNumber(String roomNumber) {
         this.roomNumber = roomNumber;
     }
@@ -73,6 +89,6 @@ public class Room {
         return String.format("Room Number: %s | Type: %s | Amenities: %s", 
                 roomNumber, 
                 roomType.getName(), 
-                amenityList);
+                amenityList + " | View: " + getViewName());
     }
 }

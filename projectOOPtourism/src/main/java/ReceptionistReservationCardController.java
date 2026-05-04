@@ -13,7 +13,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 
-public class GuestReservationCardController {
+public class ReceptionistReservationCardController {
 
     @FXML private StackPane root;
     @FXML private HBox cardBody;
@@ -22,20 +22,20 @@ public class GuestReservationCardController {
     @FXML private TextFlow typeNameFlow;
     @FXML private Text typeNameText;
     @FXML private Label subLineLabel;
+    @FXML private Label guestHeaderLabel;
+    @FXML private Label guestValueLabel;
     @FXML private Label checkInHeaderLabel;
     @FXML private Label checkInValueLabel;
     @FXML private Label checkOutHeaderLabel;
     @FXML private Label checkOutValueLabel;
-    @FXML private Label totalHeaderLabel;
-    @FXML private Label totalValueLabel;
-    @FXML private javafx.scene.layout.VBox depositDueBox;
-    @FXML private Label depositDueHeaderLabel;
-    @FXML private Label depositDueValueLabel;
+    @FXML private Label paidHeaderLabel;
+    @FXML private Label paidValueLabel;
+    @FXML private Label outstandingHeaderLabel;
+    @FXML private Label outstandingValueLabel;
     @FXML private Label statusBadgeLabel;
     @FXML private HBox actionBox;
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("d/M/yyyy");
-
     private static final String CREAM = "#F9F3EA";
     private static final String CRIMSON = "#C4415D";
     private static final String BURGUNDY = "#8B2040";
@@ -45,16 +45,15 @@ public class GuestReservationCardController {
     private static final String ROSE = "#E8879A";
 
     private Main mainApp;
-    private Guest guest;
     private Reservation reservation;
+    private String sourceTitle;
     private Runnable refreshHandler;
 
-    public void setData(Main mainApp, Guest guest, Reservation reservation, Runnable refreshHandler) {
+    public void setData(Main mainApp, Reservation reservation, String sourceTitle, Runnable refreshHandler) {
         this.mainApp = mainApp;
-        this.guest = guest;
         this.reservation = reservation;
+        this.sourceTitle = sourceTitle;
         this.refreshHandler = refreshHandler;
-
         render();
     }
 
@@ -63,7 +62,6 @@ public class GuestReservationCardController {
         String roomTypeName = reservation.getRoom().getRoomType().getName();
 
         accentBar.setStyle("-fx-background-color: " + statusAccentColor(reservation.getStatus()) + ";");
-
         boolean isLobbyDeluxe = roomTypeName.toLowerCase().contains("deluxe")
                 || roomTypeName.toLowerCase().contains("lobby");
         iconLabel.setText(roomTypeIcon(roomTypeName));
@@ -96,11 +94,28 @@ public class GuestReservationCardController {
                         + "-fx-font-size: 12px;"
                         + "-fx-text-fill: " + (isCancelled ? "#c4a098" : CRIMSON) + ";");
 
-        styleDateLabels(isCancelled);
+        styleMetricLabels(isCancelled);
+        guestValueLabel.setText(reservation.getGuest().getUsername());
         checkInValueLabel.setText(reservation.getCheckInDate().format(DATE_FMT));
         checkOutValueLabel.setText(reservation.getCheckOutDate().format(DATE_FMT));
-        totalValueLabel.setText("$" + String.format("%,.0f", reservation.getTotalPrice()));
-        styleDepositDue(isCancelled);
+
+        double paid = ReservationService.getGrossPaidAmountBeforeRefunds(reservation);
+        double refunded = ReservationService.getEarlyCheckOutRefundAmount(reservation);
+        double refundDue = Math.max(0, paid - refunded - reservation.getTotalPrice());
+        double refundDisplay = refunded > 0.009 ? refunded : refundDue;
+        double outstanding = reservation.getStatus() == ReservationStatus.COMPLETED
+                ? 0
+                : Math.max(0, reservation.getTotalPrice() - paid);
+        paidValueLabel.setText("$" + mainApp.money(reservation.getStatus() == ReservationStatus.COMPLETED
+                ? Math.max(paid, reservation.getTotalPrice())
+                : paid));
+        if (refundDisplay > 0.009) {
+            outstandingHeaderLabel.setText("REFUND");
+            outstandingValueLabel.setText("$" + mainApp.money(refundDisplay));
+        } else {
+            outstandingHeaderLabel.setText("OUTSTANDING");
+            outstandingValueLabel.setText("$" + mainApp.money(outstanding));
+        }
 
         styleStatusBadge();
         addActionButtons();
@@ -121,39 +136,28 @@ public class GuestReservationCardController {
         });
     }
 
-    private void styleDateLabels(boolean faded) {
-        styleDateHeader(checkInHeaderLabel, faded);
-        styleDateHeader(checkOutHeaderLabel, faded);
-        styleDateHeader(totalHeaderLabel, faded);
-        styleDateHeader(depositDueHeaderLabel, faded);
-        styleDateValue(checkInValueLabel, faded);
-        styleDateValue(checkOutValueLabel, faded);
-        styleDateValue(totalValueLabel, faded);
-        styleDateValue(depositDueValueLabel, faded);
+    private void styleMetricLabels(boolean faded) {
+        styleMetricHeader(guestHeaderLabel, faded);
+        styleMetricHeader(checkInHeaderLabel, faded);
+        styleMetricHeader(checkOutHeaderLabel, faded);
+        styleMetricHeader(paidHeaderLabel, faded);
+        styleMetricHeader(outstandingHeaderLabel, faded);
+        styleMetricValue(guestValueLabel, faded);
+        styleMetricValue(checkInValueLabel, faded);
+        styleMetricValue(checkOutValueLabel, faded);
+        styleMetricValue(paidValueLabel, faded);
+        styleMetricValue(outstandingValueLabel, faded);
     }
 
-    private void styleDepositDue(boolean faded) {
-        boolean pending = reservation.getStatus() == ReservationStatus.PENDING;
-        depositDueBox.setVisible(pending);
-        depositDueBox.setManaged(pending);
-
-        if (pending) {
-            depositDueValueLabel.setText("$" + String.format("%,.0f", ReservationService.getDepositAmount(reservation)));
-            styleDateHeader(depositDueHeaderLabel, faded);
-            styleDateValue(depositDueValueLabel, faded);
-        }
-    }
-
-    private void styleDateHeader(Label label, boolean faded) {
+    private void styleMetricHeader(Label label, boolean faded) {
         label.setStyle(
                 "-fx-font-family: 'Georgia';"
                         + "-fx-font-size: 10px;"
                         + "-fx-font-weight: bold;"
-                        + "-fx-text-fill: " + (faded ? "#c4a8a0" : BURGUNDY) + ";"
-                        + "-fx-letter-spacing: 1;");
+                        + "-fx-text-fill: " + (faded ? "#c4a8a0" : BURGUNDY) + ";");
     }
 
-    private void styleDateValue(Label label, boolean faded) {
+    private void styleMetricValue(Label label, boolean faded) {
         label.setStyle(
                 "-fx-font-family: 'Georgia';"
                         + "-fx-font-size: 15px;"
@@ -171,53 +175,38 @@ public class GuestReservationCardController {
                         + "-fx-font-size: 11px;"
                         + "-fx-font-weight: bold;"
                         + "-fx-padding: 5 18 5 18;"
-                        + "-fx-background-radius: 20;"
-                        + "-fx-letter-spacing: 1;");
+                        + "-fx-background-radius: 20;");
     }
 
     private void addActionButtons() {
         actionBox.getChildren().clear();
         switch (reservation.getStatus()) {
-            case PENDING -> {
-                Button payBtn = outlineBtn("PAY DEPOSIT", e -> openReservationDetail());
-                Button cancelBtn = outlineBtn("CANCEL", null);
-                cancelBtn.setOnAction(e -> showConfirmCancel(cancelBtn));
-                actionBox.getChildren().addAll(payBtn, cancelBtn);
-            }
-            case CONFIRMED -> {
-                Button cancelBtn = outlineBtn("CANCEL", null);
-                cancelBtn.setOnAction(e -> showConfirmCancel(cancelBtn));
-                actionBox.getChildren().add(cancelBtn);
-            }
-            case CHECKING_IN -> { }
-            case ONGOING -> {
-                Button checkoutBtn = outlineBtn("REQUEST CHECK OUT", e -> handleRequestCheckOut());
-                Button extendBtn = outlineBtn("EXTEND STAY", e ->
-                        mainApp.switchDashboardContent(
-                                mainApp.getCurrentContentArea(),
-                                "/ReservationDetail.fxml",
-                                new Object[]{reservation, "My Reservations"}));
-                actionBox.getChildren().addAll(checkoutBtn, extendBtn);
-            }
-            default -> { }
+            case CHECKING_IN -> actionBox.getChildren().add(outlineBtn("CHECK IN", e -> handleCheckIn()));
+            case CHECKING_OUT -> actionBox.getChildren().add(outlineBtn("CHECK OUT", e -> openReservationDetail()));
+            case ONGOING -> actionBox.getChildren().add(outlineBtn("EXTEND STAY", e -> openReservationDetail(true)));
+            default -> actionBox.getChildren().add(outlineBtn("DETAILS", e -> openReservationDetail()));
+        }
+    }
+
+    private void handleCheckIn() {
+        try {
+            ReservationService.checkInGuest(reservation, reservation.getGuest());
+            mainApp.alert("Success", "Guest checked in.");
+            refreshHandler.run();
+        } catch (Exception ex) {
+            mainApp.alert("Error", ex.getMessage());
         }
     }
 
     private void openReservationDetail() {
+        openReservationDetail(false);
+    }
+
+    private void openReservationDetail(boolean extendStay) {
         mainApp.switchDashboardContent(
                 mainApp.getCurrentContentArea(),
                 "/ReservationDetail.fxml",
-                new Object[]{reservation, "My Reservations"});
-    }
-
-    private void handleRequestCheckOut() {
-        try {
-            ReservationService.requestCheckOut(reservation, guest);
-            mainApp.alert("Check-out Requested", "Your check-out request has been sent to the front desk.");
-            refreshHandler.run();
-        } catch (Exception ex) {
-            mainApp.alert("Request Failed", ex.getMessage());
-        }
+                new Object[]{reservation, sourceTitle, extendStay});
     }
 
     private boolean isInsideButton(Node node) {
@@ -228,70 +217,6 @@ public class GuestReservationCardController {
             node = node.getParent();
         }
         return false;
-    }
-
-    private void showConfirmCancel(Button originalBtn) {
-        String confirm =
-                "-fx-background-color: " + CRIMSON + ";"
-                        + "-fx-border-color: " + CRIMSON + ";"
-                        + "-fx-border-width: 1.5;"
-                        + "-fx-border-radius: 0;"
-                        + "-fx-background-radius: 0;"
-                        + "-fx-text-fill: #FFFFFF;"
-                        + "-fx-font-family: 'Georgia';"
-                        + "-fx-font-size: 11px;"
-                        + "-fx-font-weight: bold;"
-                        + "-fx-padding: 6 16 6 16;"
-                        + "-fx-cursor: hand;";
-        String confirmHover =
-                "-fx-background-color: " + BURGUNDY + ";"
-                        + "-fx-border-color: " + BURGUNDY + ";"
-                        + "-fx-border-width: 1.5;"
-                        + "-fx-border-radius: 0;"
-                        + "-fx-background-radius: 0;"
-                        + "-fx-text-fill: #FFFFFF;"
-                        + "-fx-font-family: 'Georgia';"
-                        + "-fx-font-size: 11px;"
-                        + "-fx-font-weight: bold;"
-                        + "-fx-padding: 6 16 6 16;"
-                        + "-fx-cursor: hand;";
-
-        Button areYouSure = new Button("ARE YOU SURE?");
-        areYouSure.setFocusTraversable(false);
-        areYouSure.setStyle(confirm);
-        areYouSure.setOnMouseEntered(e -> areYouSure.setStyle(confirmHover));
-        areYouSure.setOnMouseExited(e -> areYouSure.setStyle(confirm));
-        areYouSure.setOnAction(e -> {
-            try {
-                ReservationService.cancelReservation(reservation.getReservationId());
-                refreshHandler.run();
-            } catch (Exception ex) {
-                mainApp.alert("Error", ex.getMessage());
-            }
-        });
-
-        int idx = actionBox.getChildren().indexOf(originalBtn);
-        if (idx >= 0) {
-            actionBox.getChildren().set(idx, areYouSure);
-        } else {
-            actionBox.getChildren().add(areYouSure);
-        }
-    }
-
-    private String[] badgeColors(ReservationStatus status) {
-        return switch (status) {
-            case PENDING -> new String[]{"rgba(220, 158, 45, 0.85)", "#FFFFFF"};
-            case CONFIRMED -> new String[]{"rgba(95, 148, 205, 0.82)", "#FFFFFF"};
-            case CHECKING_IN -> new String[]{"rgba(95, 148, 205, 0.92)", "#FFFFFF"};
-            case ONGOING -> new String[]{"rgba(70, 168, 95, 0.85)", "#FFFFFF"};
-            case CHECKING_OUT -> new String[]{"rgba(196, 65, 93, 0.86)", "#FFFFFF"};
-            case COMPLETED -> new String[]{"rgba(155, 148, 145, 0.80)", "#FFFFFF"};
-            case CANCELLED -> new String[]{"rgba(208, 130, 142, 0.82)", "#FFFFFF"};
-        };
-    }
-
-    private String displayStatus(ReservationStatus status) {
-        return status.toString().replace('_', ' ');
     }
 
     private Button outlineBtn(String text, EventHandler<ActionEvent> handler) {
@@ -329,6 +254,18 @@ public class GuestReservationCardController {
         return btn;
     }
 
+    private String[] badgeColors(ReservationStatus status) {
+        return switch (status) {
+            case PENDING -> new String[]{"rgba(220, 158, 45, 0.85)", "#FFFFFF"};
+            case CONFIRMED -> new String[]{"rgba(95, 148, 205, 0.82)", "#FFFFFF"};
+            case CHECKING_IN -> new String[]{"rgba(95, 148, 205, 0.92)", "#FFFFFF"};
+            case ONGOING -> new String[]{"rgba(70, 168, 95, 0.85)", "#FFFFFF"};
+            case CHECKING_OUT -> new String[]{"rgba(196, 65, 93, 0.86)", "#FFFFFF"};
+            case COMPLETED -> new String[]{"rgba(155, 148, 145, 0.80)", "#FFFFFF"};
+            case CANCELLED -> new String[]{"rgba(208, 130, 142, 0.82)", "#FFFFFF"};
+        };
+    }
+
     private String cardStyle(boolean cancelled) {
         return "-fx-background-color: " + CREAM + ";"
                 + "-fx-background-radius: 0;"
@@ -349,6 +286,10 @@ public class GuestReservationCardController {
             case COMPLETED -> "#9B9491";
             case CANCELLED -> "#D0828E";
         };
+    }
+
+    private String displayStatus(ReservationStatus status) {
+        return status.toString().replace('_', ' ');
     }
 
     private String iconBackground(String name) {

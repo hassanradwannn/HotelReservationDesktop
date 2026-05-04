@@ -25,6 +25,10 @@ public class ReservationDetailController implements DashboardContentController {
     @FXML private Label statusLabel;
     @FXML private Label totalLabel;
     @FXML private Label paidLabel;
+    @FXML private VBox refundBox;
+    @FXML private Label refundLabel;
+    @FXML private VBox depositDueBox;
+    @FXML private Label depositDueLabel;
     @FXML private Label outstandingLabel;
     @FXML private Label messageLabel;
     @FXML private VBox receptionistActions;
@@ -49,6 +53,7 @@ public class ReservationDetailController implements DashboardContentController {
     private Main mainApp;
     private Reservation reservation;
     private String sourceTitle;
+    private boolean openExtendStay;
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     @Override
@@ -57,9 +62,11 @@ public class ReservationDetailController implements DashboardContentController {
         if (data instanceof Object[] args) {
             this.reservation = (Reservation) args[0];
             this.sourceTitle = args.length > 1 ? (String) args[1] : "";
+            this.openExtendStay = args.length > 2 && Boolean.TRUE.equals(args[2]);
         } else {
             this.reservation = (Reservation) data;
             this.sourceTitle = "";
+            this.openExtendStay = false;
         }
 
         setupDatePicker();
@@ -97,12 +104,22 @@ public class ReservationDetailController implements DashboardContentController {
         statusLabel.setText(displayStatus(reservation.getStatus()));
         totalLabel.setText("$" + mainApp.money(reservation.getTotalPrice()));
         double paid = getPaidAmount();
+        double grossPaid = ReservationService.getGrossPaidAmountBeforeRefunds(reservation);
         double outstanding = reservation.getStatus() == ReservationStatus.COMPLETED
                 ? 0
                 : Math.max(0, reservation.getTotalPrice() - paid);
+        double refund = ReservationService.getEarlyCheckOutRefundAmount(reservation);
+        double displayedPaid = refund > 0.009 ? grossPaid : paid;
         paidLabel.setText("$" + mainApp.money(reservation.getStatus() == ReservationStatus.COMPLETED
-                ? Math.max(paid, reservation.getTotalPrice())
-                : paid));
+                ? Math.max(displayedPaid, reservation.getTotalPrice())
+                : displayedPaid));
+        refundBox.setVisible(refund > 0.009);
+        refundBox.setManaged(refundBox.isVisible());
+        refundLabel.setText("$" + mainApp.money(refund));
+        boolean pending = reservation.getStatus() == ReservationStatus.PENDING;
+        depositDueBox.setVisible(pending);
+        depositDueBox.setManaged(pending);
+        depositDueLabel.setText(pending ? "$" + mainApp.money(ReservationService.getDepositAmount(reservation)) : "-");
         outstandingLabel.setText("$" + mainApp.money(outstanding));
 
         boolean receptionist = mainApp.getCurrentUser() instanceof Receptionist;
@@ -133,10 +150,12 @@ public class ReservationDetailController implements DashboardContentController {
         boolean showExtension = ongoing && (receptionist || guestUser);
         extendPane.setVisible(showExtension);
         extendPane.setManaged(showExtension);
-        extensionPreviewPane.setVisible(false);
-        extensionPreviewPane.setManaged(false);
-        newCheckOutPicker.setDisable(true);
-        extendButton.setDisable(true);
+        boolean extensionSelected = showExtension && openExtendStay;
+        extendStayCheckBox.setSelected(extensionSelected);
+        extensionPreviewPane.setVisible(extensionSelected);
+        extensionPreviewPane.setManaged(extensionSelected);
+        newCheckOutPicker.setDisable(!extensionSelected);
+        extendButton.setDisable(!extensionSelected);
         newCheckOutPicker.setValue(reservation.getCheckOutDate().plusDays(1));
         newCheckOutPicker.setDayCellFactory(picker -> new DateCell() {
             @Override
@@ -148,7 +167,8 @@ public class ReservationDetailController implements DashboardContentController {
         updateExtensionSummary();
 
         checkInButton.setDisable(completed || cancelled
-                || reservation.getStatus() != ReservationStatus.CONFIRMED
+                || (reservation.getStatus() != ReservationStatus.CONFIRMED
+                && reservation.getStatus() != ReservationStatus.CHECKING_IN)
                 || !SystemTime.getToday().isEqual(reservation.getCheckInDate()));
         boolean canCheckOut = !completed && !cancelled
                 && (checkingOut
@@ -187,9 +207,29 @@ public class ReservationDetailController implements DashboardContentController {
                     new Object[]{"Today's Reservations", (java.util.function.Supplier<java.util.List<?>>) Database::getTodaysReservations});
             return;
         }
+        if ("Reservations To Check In".equals(sourceTitle)) {
+            mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/ReceptionistReservations.fxml",
+                    ReceptionistReservationsController.ViewMode.CHECKING_IN);
+            return;
+        }
         if ("Checking Out Reservations".equals(sourceTitle)) {
             mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GenericList.fxml",
                     new Object[]{"Checking Out Reservations", (java.util.function.Supplier<java.util.List<?>>) Database::getCheckingOutReservations});
+            return;
+        }
+        if ("Requested Check Outs".equals(sourceTitle)) {
+            mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/ReceptionistReservations.fxml",
+                    ReceptionistReservationsController.ViewMode.CHECKING_OUT);
+            return;
+        }
+        if ("Guests Currently Residing".equals(sourceTitle)) {
+            mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/ReceptionistReservations.fxml",
+                    ReceptionistReservationsController.ViewMode.RESIDING);
+            return;
+        }
+        if ("All Reservations".equals(sourceTitle)) {
+            mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/ReceptionistReservations.fxml",
+                    ReceptionistReservationsController.ViewMode.ALL);
             return;
         }
         String listTitle = sourceTitle == null || sourceTitle.isBlank() ? "Reservations" : sourceTitle;
@@ -294,6 +334,9 @@ public class ReservationDetailController implements DashboardContentController {
     @FXML
     private void handleViewInvoice() {
         double paid = getPaidAmount();
+        double grossPaid = ReservationService.getGrossPaidAmountBeforeRefunds(reservation);
+        double refund = ReservationService.getEarlyCheckOutRefundAmount(reservation);
+        double displayedPaid = refund > 0.009 ? grossPaid : paid;
         double outstanding = reservation.getStatus() == ReservationStatus.COMPLETED
                 ? 0
                 : Math.max(0, reservation.getTotalPrice() - paid);
@@ -303,8 +346,9 @@ public class ReservationDetailController implements DashboardContentController {
                         + "\nRoom: " + reservation.getRoom().getRoomNumber()
                         + "\nTotal charges: $" + mainApp.money(reservation.getTotalPrice())
                         + "\nPaid so far: $" + mainApp.money(reservation.getStatus() == ReservationStatus.COMPLETED
-                                ? Math.max(paid, reservation.getTotalPrice())
-                                : paid)
+                                ? Math.max(displayedPaid, reservation.getTotalPrice())
+                                : displayedPaid)
+                        + (refund > 0.009 ? "\nRefunded for early check out: $" + mainApp.money(refund) : "")
                         + "\nOutstanding: $" + mainApp.money(outstanding));
     }
 

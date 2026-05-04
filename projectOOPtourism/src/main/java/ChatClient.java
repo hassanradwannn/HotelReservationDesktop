@@ -3,6 +3,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -21,6 +22,7 @@ public class ChatClient implements Closeable {
     private final MessageListener messageListener;
     private final Consumer<String> statusListener;
     private volatile boolean running = true;
+    private static final int CONNECT_TIMEOUT_MS = 1200;
 
     public ChatClient(
             String host,
@@ -28,7 +30,8 @@ public class ChatClient implements Closeable {
             String username,
             MessageListener messageListener,
             Consumer<String> statusListener) throws IOException {
-        this.socket = new Socket(host, port);
+        this.socket = new Socket();
+        this.socket.connect(new InetSocketAddress(host, port), CONNECT_TIMEOUT_MS);
         this.in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
         this.out = new PrintWriter(socket.getOutputStream(), true, StandardCharsets.UTF_8);
         this.messageListener = messageListener;

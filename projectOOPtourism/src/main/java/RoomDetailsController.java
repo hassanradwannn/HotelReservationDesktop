@@ -100,6 +100,7 @@ public class RoomDetailsController implements DashboardContentController {
         detailsLabel.setText(
                 "Room Number: " + room.getRoomNumber()
                         + "\nRoom Type: " + room.getRoomType().getName()
+                        + "\nView: " + room.getViewName()
                         + "\nCapacity: " + room.getRoomType().getCapacity()
                         + "\nPrice per night: $" + mainApp.money(room.getRoomType().getPricePerNight())
                         + "\nAmenities: " + amenityText
@@ -109,6 +110,7 @@ public class RoomDetailsController implements DashboardContentController {
 
     private List<String> getDisplayAmenityNames() {
         List<String> names = new ArrayList<>();
+        names.add(room.getViewName());
         for (Amenity amenity : room.getAmenities()) {
             if (hasGymPass && Reservation.isGymAmenity(amenity)) {
                 continue;
@@ -118,10 +120,22 @@ public class RoomDetailsController implements DashboardContentController {
         if (hasGymPass) {
             names.add(Reservation.GYM_PASS_NAME);
         }
-        names.sort((left, right) -> Boolean.compare(
-                GuestPreferenceRanker.isPreferredAmenity(guest, right),
-                GuestPreferenceRanker.isPreferredAmenity(guest, left)));
+        names.sort((left, right) -> Integer.compare(pillPriority(left), pillPriority(right)));
         return names;
+    }
+
+    private int pillPriority(String name) {
+        if (GuestPreferenceRanker.isPreferredAmenity(guest, name)) {
+            return 0;
+        }
+        if (isViewName(name)) {
+            return 2;
+        }
+        return 1;
+    }
+
+    private boolean isViewName(String name) {
+        return "Sea View".equalsIgnoreCase(name) || "Mountain View".equalsIgnoreCase(name);
     }
 
     @FXML

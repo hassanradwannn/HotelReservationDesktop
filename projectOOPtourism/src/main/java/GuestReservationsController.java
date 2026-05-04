@@ -1,5 +1,6 @@
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -50,6 +51,10 @@ public class GuestReservationsController implements DashboardContentController {
                     Database.refreshReservationsFromDatabase();
                     return Database.getReservations().stream()
                             .filter(r -> r.getGuest().getUsername().equals(guest.getUsername()))
+                            .sorted(Comparator
+                                    .comparingInt((Reservation r) -> statusPriority(r.getStatus()))
+                                    .thenComparing(Reservation::getCheckInDate)
+                                    .thenComparing(Reservation::getReservationId))
                             .toList();
                 }
             }
@@ -72,6 +77,15 @@ public class GuestReservationsController implements DashboardContentController {
         Thread thread = new Thread(reservationLoadTask, "guest-reservation-load");
         thread.setDaemon(true);
         thread.start();
+    }
+
+    private int statusPriority(ReservationStatus status) {
+        return switch (status) {
+            case PENDING -> 0;
+            case CONFIRMED, CHECKING_IN -> 1;
+            case ONGOING, CHECKING_OUT -> 2;
+            default -> 3;
+        };
     }
 
     private void renderReservations(List<Reservation> reservations, double previousVvalue) {

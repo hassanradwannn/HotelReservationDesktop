@@ -15,7 +15,7 @@
            stylesheets="@styles.css"
            xmlns="http://javafx.com/javafx/17"
            xmlns:fx="http://javafx.com/fxml/1"
-           fx:controller="GuestReservationCardController">
+           fx:controller="ReceptionistReservationCardController">
     <children>
         <HBox fx:id="cardBody"
               alignment="CENTER_LEFT"
@@ -49,11 +49,17 @@
                                     </children>
                                 </HBox>
 
-                                <HBox alignment="CENTER_LEFT" spacing="32">
+                                <HBox alignment="CENTER_LEFT" spacing="28">
                                     <padding>
                                         <Insets top="10" />
                                     </padding>
                                     <children>
+                                        <VBox spacing="2">
+                                            <children>
+                                                <Label fx:id="guestHeaderLabel" text="GUEST" />
+                                                <Label fx:id="guestValueLabel" />
+                                            </children>
+                                        </VBox>
                                         <VBox spacing="2">
                                             <children>
                                                 <Label fx:id="checkInHeaderLabel" text="CHECK-IN" />
@@ -68,14 +74,14 @@
                                         </VBox>
                                         <VBox spacing="2">
                                             <children>
-                                                <Label fx:id="totalHeaderLabel" text="TOTAL" />
-                                                <Label fx:id="totalValueLabel" />
+                                                <Label fx:id="paidHeaderLabel" text="PAID" />
+                                                <Label fx:id="paidValueLabel" />
                                             </children>
                                         </VBox>
-                                        <VBox fx:id="depositDueBox" spacing="2">
+                                        <VBox spacing="2">
                                             <children>
-                                                <Label fx:id="depositDueHeaderLabel" text="DEPOSIT DUE" />
-                                                <Label fx:id="depositDueValueLabel" />
+                                                <Label fx:id="outstandingHeaderLabel" text="OUTSTANDING" />
+                                                <Label fx:id="outstandingValueLabel" />
                                             </children>
                                         </VBox>
                                     </children>
@@ -83,7 +89,7 @@
                             </children>
                         </VBox>
 
-                        <Region maxWidth="182" minWidth="182" prefWidth="182" />
+                        <Region maxWidth="190" minWidth="190" prefWidth="190" />
                     </children>
                 </HBox>
             </children>

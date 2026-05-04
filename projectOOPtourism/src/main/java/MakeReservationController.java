@@ -21,6 +21,8 @@ public class MakeReservationController implements DashboardContentController {
     @FXML private Label summaryPricePerNightLabel;
     @FXML private VBox summaryAmenitiesBox;
     @FXML private Label summaryTotalCostLabel;
+    @FXML private VBox summaryDepositDueBox;
+    @FXML private Label summaryDepositDueLabel;
 
     private Main mainApp;
     private Guest guest;
@@ -380,9 +382,19 @@ public class MakeReservationController implements DashboardContentController {
 
         if (selectedRoomType == null || nights <= 0) {
             summaryTotalCostLabel.setText("-");
+            summaryDepositDueLabel.setText("-");
+            setSummaryDepositDueVisible(false);
         } else {
-            summaryTotalCostLabel.setText("$" + mainApp.money(calculateTotalCost(selectedRoomType, amenities, nights)));
+            double totalCost = calculateTotalCost(selectedRoomType, amenities, nights);
+            summaryTotalCostLabel.setText("$" + mainApp.money(totalCost));
+            summaryDepositDueLabel.setText("$" + mainApp.money(calculateDepositDue(totalCost)));
+            setSummaryDepositDueVisible(true);
         }
+    }
+
+    private void setSummaryDepositDueVisible(boolean visible) {
+        summaryDepositDueBox.setVisible(visible);
+        summaryDepositDueBox.setManaged(visible);
     }
 
     private Room findRoomForSummary() {
@@ -434,6 +446,10 @@ public class MakeReservationController implements DashboardContentController {
             }
         }
         return total;
+    }
+
+    private double calculateDepositDue(double totalCost) {
+        return totalCost * 0.25;
     }
 
     private List<Amenity> getPricedAmenities(Room pricedRoom) {

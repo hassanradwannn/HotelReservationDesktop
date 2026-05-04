@@ -61,6 +61,10 @@
                    <VBox spacing="4" styleClass="reservation-total-box">
                       <Label styleClass="reservation-total-label" text="TOTAL COST" />
                       <Label fx:id="summaryTotalCostLabel" styleClass="reservation-total-value" text="-" />
+                      <VBox fx:id="summaryDepositDueBox" spacing="2">
+                         <Label styleClass="reservation-total-label" text="DEPOSIT DUE" />
+                         <Label fx:id="summaryDepositDueLabel" styleClass="reservation-summary-value" text="-" />
+                      </VBox>
                    </VBox>
                 </children>
              </VBox>

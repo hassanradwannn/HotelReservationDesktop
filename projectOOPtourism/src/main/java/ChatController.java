@@ -30,40 +30,42 @@ public class ChatController implements DashboardContentController {
     private ChatClient chatClient;
     private String activeGuestUsername;
     private String activeReceptionistUsername;
+    private boolean chatServerConnected;
 
     @Override
     public void initData(Main mainApp, Object data) {
         this.mainApp = mainApp;
         this.currentUser = (User) data;
 
-        avatarText.setText(currentUser.getUsername().substring(0, 1).toUpperCase());
+        try {
+            avatarText.setText(currentUser.getUsername().substring(0, 1).toUpperCase());
 
-        // Ensure chat tables exist before any DB calls
-        ChatDatabase.ensureTablesExist();
-        connectToChatServer();
+            ChatDatabase.ensureTablesExist();
+            connectToChatServer();
 
-        // Create single ComboBox, populate, then wire listener
-        guestDropdown = new ComboBox<>();
-        guestDropdown.getStyleClass().add("combo-box");
-        populateDropdown();
+            guestDropdown = new ComboBox<>();
+            guestDropdown.getStyleClass().add("combo-box");
+            populateDropdown();
 
-        // Listener attached AFTER population to avoid premature fires
-        guestDropdown.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null) {
-                loadChatHistory(newVal);
+            guestDropdown.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal != null) {
+                    loadChatHistory(newVal);
+                }
+            });
+
+            header.getChildren().add(guestDropdown);
+
+            if (!guestDropdown.getItems().isEmpty()) {
+                guestDropdown.getSelectionModel().selectFirst();
+            } else {
+                chatArea.setText("No users available to chat with.\n");
+                chatStatus.setText("No users found");
             }
-        });
 
-        header.getChildren().add(guestDropdown);
-
-        if (!guestDropdown.getItems().isEmpty()) {
-            guestDropdown.getSelectionModel().selectFirst();
-        } else {
-            chatArea.setText("No users available to chat with.\n");
-            chatStatus.setText("No users found");
+            mainApp.setCurrentViewRefresher(this::refreshChatView);
+        } catch (Exception e) {
+            showChatDisconnected();
         }
-
-        mainApp.setCurrentViewRefresher(this::refreshChatView);
     }
 
     private void connectToChatServer() {
@@ -74,11 +76,22 @@ public class ChatController implements DashboardContentController {
                     currentUser.getUsername(),
                     this::appendIncomingMessage,
                     status -> chatStatus.setText(status));
+            chatServerConnected = true;
+            sendButton.setDisable(false);
+            inputField.setDisable(false);
         } catch (Exception e) {
-            chatClient = null;
-            chatStatus.setText("Offline - chat server unavailable");
-            chatArea.setText("Cannot connect to the chat server.\nStart ChatServer.java or open another app instance to host it.");
+            showChatDisconnected();
         }
+    }
+
+    private void showChatDisconnected() {
+        chatClient = null;
+        chatServerConnected = false;
+        activeChatId[0] = -1;
+        chatStatus.setText("Chat is not connected");
+        chatArea.setText("Chat is not connected to localhost.\nStart the chat server, then reopen chat.");
+        sendButton.setDisable(true);
+        inputField.setDisable(true);
     }
 
     private void populateDropdown() {
@@ -103,6 +116,11 @@ public class ChatController implements DashboardContentController {
     }
 
     private void refreshChatView() {
+        if (!chatServerConnected) {
+            showChatDisconnected();
+            return;
+        }
+
         String selected = guestDropdown.getValue();
 
         List<String> freshItems;
@@ -131,6 +149,11 @@ public class ChatController implements DashboardContentController {
     }
 
     public void loadChatHistory(String otherUsername) {
+        if (!chatServerConnected) {
+            showChatDisconnected();
+            return;
+        }
+
         if (otherUsername == null) {
             activeChatId[0] = -1;
             chatArea.setText("Please select a user from the dropdown above to view chat history...\n");
@@ -192,7 +215,8 @@ public class ChatController implements DashboardContentController {
             return;
         }
         if (chatClient == null) {
-            mainApp.alert("Error", "Chat server is not connected.");
+            showChatDisconnected();
+            mainApp.alert("Error", "Chat is not connected.");
             return;
         }
         chatClient.send(activeGuestUsername, activeReceptionistUsername, currentUser.getUsername(), msg);

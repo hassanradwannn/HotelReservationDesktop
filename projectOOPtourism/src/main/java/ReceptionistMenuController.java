@@ -59,23 +59,32 @@ public class ReceptionistMenuController {
     }
 
     public void loadDefaultView() {
-        showAllReservations();
+        showReservationDashboard();
     }
 
     @FXML private void showToday() {
-        mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GenericList.fxml", new Object[]{"Today's Reservations", (Supplier<List<?>>) () -> {
-            return Database.getTodaysReservations();
-        }});
+        mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/ReceptionistReservations.fxml",
+                ReceptionistReservationsController.ViewMode.CHECKING_IN);
     }
     
-    @FXML private void showCheckIn() { mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/CheckIn.fxml", receptionist); }
-    @FXML private void showCheckOut() { mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/CheckOut.fxml", receptionist); }
+    @FXML private void showCheckIn() {
+        mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/ReceptionistReservations.fxml",
+                ReceptionistReservationsController.ViewMode.CHECKING_IN);
+    }
+
+    @FXML private void showCheckOut() {
+        mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/ReceptionistReservations.fxml",
+                ReceptionistReservationsController.ViewMode.CHECKING_OUT);
+    }
     
     @FXML private void showAllReservations() {
-        mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GenericList.fxml", new Object[]{"Reservations", (Supplier<List<?>>) () -> {
-            Database.refreshReservationsFromDatabase();
-            return Database.getReservations();
-        }});
+        mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/ReceptionistReservations.fxml",
+                ReceptionistReservationsController.ViewMode.ALL);
+    }
+
+    private void showReservationDashboard() {
+        mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/ReceptionistReservations.fxml",
+                ReceptionistReservationsController.ViewMode.CHECKING_IN);
     }
     
     @FXML private void showGuests() {
