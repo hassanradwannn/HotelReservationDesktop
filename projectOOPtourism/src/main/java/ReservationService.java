@@ -547,7 +547,7 @@ public abstract class ReservationService {
                 boolean hasAll = true;
                 List<String> roomAmenityNames = room.getAmenities().stream().map(Amenity::getName).toList();
                 for (Amenity reqAm : requestedAmenities) {
-                    if (!roomAmenityNames.contains(reqAm.getName())) {
+                    if (!roomHasRequestedAmenity(room, roomAmenityNames, reqAm)) {
                         hasAll = false;
                         break;
                     }
@@ -561,6 +561,23 @@ public abstract class ReservationService {
         }
 
         return availableRooms;
+    }
+
+    private static boolean roomHasRequestedAmenity(Room room, List<String> roomAmenityNames, Amenity requestedAmenity) {
+        if (requestedAmenity == null || requestedAmenity.getName() == null) {
+            return true;
+        }
+
+        String requestedName = requestedAmenity.getName();
+        if (isViewAmenity(requestedName)) {
+            return requestedName.equalsIgnoreCase(room.getViewName());
+        }
+
+        return roomAmenityNames.stream().anyMatch(name -> name.equalsIgnoreCase(requestedName));
+    }
+
+    private static boolean isViewAmenity(String name) {
+        return "Sea View".equalsIgnoreCase(name) || "Mountain View".equalsIgnoreCase(name);
     }
 
     // Cancel reservations whose check-in date has passed and are not ongoing/completed/cancelled

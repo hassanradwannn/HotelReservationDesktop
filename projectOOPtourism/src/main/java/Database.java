@@ -61,26 +61,8 @@ public class Database {
             } catch (SQLException e) { e.printStackTrace(); }
         }
 
-        // 2. Seed Amenities only if empty
-        if (isTableEmpty("amenities")) {
-            String sql = "INSERT IGNORE INTO amenities (name, price) VALUES (?, ?)";
-            try (Connection conn = database.DatabaseConnection.getConnection();
-                 PreparedStatement stmt = conn.prepareStatement(sql)) {
-                Object[][] amens = {
-                        {"WiFi", 10.0},
-                        {"Smart TV", 15.0},
-                        {"Mini-bar", 50.0},
-                        {"Jacuzzi", 100.0},
-                        {"Gym Membership", 20.0},
-                        {"Sea View", 75.0}
-                };
-                for (Object[] a : amens) {
-                    stmt.setString(1, (String) a[0]);
-                    stmt.setDouble(2, (Double) a[1]);
-                    stmt.executeUpdate();
-                }
-            } catch (SQLException e) { e.printStackTrace(); }
-        }
+        // 2. Seed amenities individually so new defaults appear in existing databases too.
+        ensureDefaultAmenities();
 
         // 3. ONLY GENERATE ROOMS IF TABLE IS EMPTY
         // This prevents the foreign key crash and stops duplicates
@@ -156,6 +138,29 @@ public class Database {
             }
         } catch (Exception e) {
             System.out.println("Failed to delete amenity from DB: " + e.getMessage());
+        }
+    }
+
+    private static void ensureDefaultAmenities() {
+        String sql = "INSERT IGNORE INTO amenities (name, price) VALUES (?, ?)";
+        try (Connection conn = database.DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            Object[][] amens = {
+                    {"WiFi", 10.0},
+                    {"Smart TV", 15.0},
+                    {"Mini-bar", 50.0},
+                    {"Jacuzzi", 100.0},
+                    {"Gym Membership", 20.0},
+                    {"Sea View", 75.0},
+                    {"Mountain View", 75.0}
+            };
+            for (Object[] a : amens) {
+                stmt.setString(1, (String) a[0]);
+                stmt.setDouble(2, (Double) a[1]);
+                stmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
