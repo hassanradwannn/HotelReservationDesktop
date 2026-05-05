@@ -93,16 +93,15 @@ public class RoomTypeResultCardController {
     }
 
     private List<Label> createAmenityChipLabels(List<Room> rooms) {
-        List<String> amenityNames = rooms.stream()
+        List<String> amenityNames = CatalogService.uniqueFilterAmenityNames(rooms.stream()
                 .flatMap(room -> {
                     List<String> names = new ArrayList<>();
                     names.add(room.getViewName());
                     names.addAll(room.getAmenities().stream().map(Amenity::getName).toList());
                     return names.stream();
                 })
-                .distinct()
-                .sorted((left, right) -> Integer.compare(pillPriority(left), pillPriority(right)))
-                .toList();
+                .toList());
+        amenityNames.sort((left, right) -> Integer.compare(pillPriority(left), pillPriority(right)));
 
         if (amenityNames.isEmpty()) {
             amenityNames = List.of("Amenities vary by room");
@@ -132,7 +131,7 @@ public class RoomTypeResultCardController {
             return "Spacious two-room suite with fireplace, velvet chaises, a private terrace, and direct mountain views.";
         }
         if (name.contains("gustave")) {
-            return "The crown jewel of the hotel. Grand parlor, two dressing rooms, rooftop terrace, gym membership, and jacuzzi.";
+            return "The crown jewel of the hotel. Grand parlor, two dressing rooms, rooftop terrace, Gym, and jacuzzi.";
         }
         return "A carefully appointed suite with refined finishes, attentive service, and selected hotel amenities.";
     }

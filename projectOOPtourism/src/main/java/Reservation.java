@@ -1,10 +1,9 @@
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
-
 public class Reservation {
     public static final String GYM_PASS_NAME = "Gym";
     public static final double GYM_PASS_PRICE = 200.0;
+    private static final PricingService PRICING_SERVICE = new PricingService();
 
     private String reservationId;
     private Guest guest;
@@ -38,11 +37,11 @@ public class Reservation {
     }
 
     public final double getDepositAmount() {
-        return this.totalPrice * 0.25;
+        return PRICING_SERVICE.calculateDeposit(this.totalPrice);
     }
 
     public double getRemainingAmount() {
-        return this.totalPrice - getDepositAmount();
+        return PRICING_SERVICE.calculateRemaining(this.totalPrice);
     }
 
     public boolean hasGymPass() {
@@ -115,23 +114,11 @@ public class Reservation {
     }
 
     public static double calculateTotalPrice(Room room, LocalDate checkInDate, LocalDate checkOutDate, boolean hasGymPass) {
-        long nights = Math.max(1, ChronoUnit.DAYS.between(checkInDate, checkOutDate));
-        double price = room.getPricePerNight() * nights;
-        for (Amenity a : room.getAmenities()) {
-            if (hasGymPass && isGymAmenity(a)) {
-                continue;
-            }
-            price += a.getPrice();
-        }
-        if (hasGymPass) {
-            price += GYM_PASS_PRICE;
-        }
-        return price;
+        return PRICING_SERVICE.calculateTotalPrice(room, checkInDate, checkOutDate, hasGymPass);
     }
 
     public static boolean isGymAmenity(Amenity amenity) {
-        return amenity != null && amenity.getName() != null
-                && amenity.getName().toLowerCase().contains("gym");
+        return PRICING_SERVICE.isGymAmenity(amenity);
     }
 
     public double getTotalPrice() {

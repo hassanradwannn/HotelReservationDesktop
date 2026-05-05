@@ -22,15 +22,25 @@ public class EditAmenityController implements DashboardContentController {
     
     @FXML
     private void handleSave() {
+        String oldName = amenity.getName();
+        double oldPrice = amenity.getPrice();
         try {
-            amenity.setName(nameField.getText());
-            amenity.setPrice(Double.parseDouble(priceField.getText()));
+            String newName = nameField.getText();
+            double newPrice = Double.parseDouble(priceField.getText());
+            amenity.setName(newName);
+            amenity.setPrice(newPrice);
             
             Database.updateAmenity(amenity);
             
             mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/AdminAmenities.fxml", null);
         } catch (NumberFormatException e) {
+            amenity.setName(oldName);
+            amenity.setPrice(oldPrice);
             mainApp.alert("Invalid Input", "Please enter a valid number for price.");
+        } catch (Exception e) {
+            amenity.setName(oldName);
+            amenity.setPrice(oldPrice);
+            mainApp.alert("Error", e.getMessage());
         }
     }
     

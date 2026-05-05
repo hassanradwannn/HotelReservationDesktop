@@ -2,7 +2,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 
 public final class GuestPreferenceRanker {
@@ -78,6 +77,6 @@ public final class GuestPreferenceRanker {
     }
 
     private static String normalize(String value) {
-        return value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
+        return CatalogService.amenityFilterKey(value);
     }
 }

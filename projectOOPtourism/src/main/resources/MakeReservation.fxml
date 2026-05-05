@@ -23,7 +23,7 @@
                    <DatePicker fx:id="checkInPicker" maxWidth="420" promptText="Check-in Date" styleClass="date-picker" />
                    <DatePicker fx:id="checkOutPicker" maxWidth="420" promptText="Check-out Date" styleClass="date-picker" />
 
-                   <CheckBox fx:id="gymBox" styleClass="elegant-check" text="Add Gym Pass ($200)" />
+                   <CheckBox fx:id="gymBox" styleClass="elegant-check" text=" Gym Access? ($200)" />
                    <HBox spacing="12">
                       <Button onAction="#handleBack" prefHeight="44" prefWidth="120" styleClass="outline-action-btn" text="BACK" />
                       <Button onAction="#handleBookNow" prefHeight="44" prefWidth="200" styleClass="primary-action-btn" text="BOOK NOW" />

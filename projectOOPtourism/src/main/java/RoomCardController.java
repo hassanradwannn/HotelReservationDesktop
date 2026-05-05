@@ -98,6 +98,7 @@ public class RoomCardController {
         if (hasGymPass) {
             names.add(Reservation.GYM_PASS_NAME);
         }
+        names = CatalogService.uniqueFilterAmenityNames(names);
         names.sort((left, right) -> Integer.compare(pillPriority(left), pillPriority(right)));
         return names;
     }

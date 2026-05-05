@@ -50,7 +50,7 @@
 
         <Region prefHeight="18" />
 
-        <ScrollPane fx:id="scrollPane" fitToWidth="true" hbarPolicy="NEVER"
+        <ScrollPane fx:id="scrollPane" fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="NEVER"
                     style="-fx-background: transparent; -fx-background-color: transparent; -fx-border-color: transparent; -fx-padding: 0;"
                     VBox.vgrow="ALWAYS">
             <content>

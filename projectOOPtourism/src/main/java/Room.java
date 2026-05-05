@@ -84,7 +84,8 @@ public class Room {
     public String toString() {
         String amenityList = (amenities == null || amenities.isEmpty()) 
                              ? "None" 
-                             : String.join(", ", amenities.stream().map(Amenity::getName).toList());
+                             : String.join(", ", CatalogService.uniqueFilterAmenityNames(
+                                     amenities.stream().map(Amenity::getName).toList()));
         
         return String.format("Room Number: %s | Type: %s | Amenities: %s", 
                 roomNumber, 

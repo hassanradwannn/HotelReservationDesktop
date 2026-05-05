@@ -17,6 +17,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.VBox;
 
 public class ReceptionistReservationsController implements DashboardContentController {
+    private static long lastReservationRefreshVersion = -1;
 
     enum ViewMode {
         CHECKING_IN,
@@ -39,8 +40,9 @@ public class ReceptionistReservationsController implements DashboardContentContr
     private ViewMode mode = ViewMode.CHECKING_IN;
     private final Map<String, Node> reservationCardNodes = new LinkedHashMap<>();
     private final Map<String, ReceptionistReservationCardController> reservationCardControllers = new LinkedHashMap<>();
-    private Task<List<Reservation>> reservationLoadTask;
+    private Task<ReservationLoadResult> reservationLoadTask;
     private int reservationLoadRequestId;
+    private int renderRequestId;
 
     @Override
     public void initData(Main mainApp, Object data) {
@@ -69,7 +71,7 @@ public class ReceptionistReservationsController implements DashboardContentContr
 
     @FXML
     private void showAllReservations() {
-        mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/ReceptionistReservations.fxml", ViewMode.ALL);
+        setMode(ViewMode.ALL);
     }
 
     private void setMode(ViewMode mode) {
@@ -80,6 +82,11 @@ public class ReceptionistReservationsController implements DashboardContentContr
     private void loadReservations() {
         double previousVvalue = currentScrollPosition();
         int requestId = ++reservationLoadRequestId;
+        ++renderRequestId;
+        ViewMode modeSnapshot = mode;
+        titleLabel.setText(titleForMode(modeSnapshot));
+        updateActiveTab();
+        showLoadingMessage(modeSnapshot);
 
         if (reservationLoadTask != null && reservationLoadTask.isRunning()) {
             reservationLoadTask.cancel();
@@ -87,11 +94,20 @@ public class ReceptionistReservationsController implements DashboardContentContr
 
         reservationLoadTask = new Task<>() {
             @Override
-            protected List<Reservation> call() {
+            protected ReservationLoadResult call() {
+                List<Reservation> allReservations;
+                long latestDataVersion = Database.getLatestDataVersion();
                 synchronized (Database.class) {
-                    Database.refreshReservationsFromDatabase();
-                    return new ArrayList<>(Database.getReservations());
+                    if (lastReservationRefreshVersion != latestDataVersion || Database.getReservations().isEmpty()) {
+                        Database.refreshReservationsFromDatabase();
+                        lastReservationRefreshVersion = latestDataVersion;
+                    }
+                    allReservations = new ArrayList<>(Database.getReservations());
                 }
+                List<Reservation> visibleReservations = filterReservations(allReservations, modeSnapshot);
+                Map<String, ReservationPaymentSummary> paymentSummaries =
+                        ReservationService.getPaymentSummaries(visibleReservations);
+                return new ReservationLoadResult(allReservations, visibleReservations, paymentSummaries);
             }
         };
 
@@ -99,10 +115,10 @@ public class ReceptionistReservationsController implements DashboardContentContr
             if (requestId != reservationLoadRequestId) {
                 return;
             }
-            List<Reservation> reservations = reservationLoadTask.getValue();
-            updateCounts(reservations);
+            ReservationLoadResult result = reservationLoadTask.getValue();
+            updateCounts(result.allReservations);
             updateActiveTab();
-            renderReservations(filterReservations(reservations), previousVvalue);
+            renderReservations(result.visibleReservations, result.paymentSummaries, previousVvalue, modeSnapshot);
         });
 
         reservationLoadTask.setOnFailed(event -> {
@@ -133,14 +149,16 @@ public class ReceptionistReservationsController implements DashboardContentContr
         return reservations.stream().filter(r -> r.getStatus() == status).count();
     }
 
-    private List<Reservation> filterReservations(List<Reservation> reservations) {
-        titleLabel.setText(switch (mode) {
+    private String titleForMode(ViewMode mode) {
+        return switch (mode) {
             case CHECKING_IN -> "Reservations To Check In";
             case CHECKING_OUT -> "Requested Check Outs";
             case RESIDING -> "Guests Currently Residing";
             case ALL -> "All Reservations";
-        });
+        };
+    }
 
+    private List<Reservation> filterReservations(List<Reservation> reservations, ViewMode mode) {
         return switch (mode) {
             case CHECKING_IN -> reservations.stream()
                     .filter(this::isCheckingInToday)
@@ -189,14 +207,22 @@ public class ReceptionistReservationsController implements DashboardContentContr
         }
     }
 
-    private void renderReservations(List<Reservation> reservations, double previousVvalue) {
+    private void renderReservations(List<Reservation> reservations,
+                                    Map<String, ReservationPaymentSummary> paymentSummaries,
+                                    double previousVvalue,
+                                    ViewMode renderMode) {
+        if (renderMode == ViewMode.ALL && reservations.size() > 16) {
+            renderReservationsInBatches(reservations, paymentSummaries, previousVvalue);
+            return;
+        }
+
         List<Node> orderedCards = new ArrayList<>();
         Set<String> activeKeys = new HashSet<>();
         for (Reservation reservation : reservations) {
             String key = reservation.getReservationId();
             activeKeys.add(key);
             try {
-                orderedCards.add(updateReservationCard(key, reservation));
+                orderedCards.add(updateReservationCard(key, reservation, paymentSummaries.get(key)));
             } catch (IOException ex) {
                 ex.printStackTrace();
                 Label error = new Label("Could not load reservation card.");
@@ -217,7 +243,70 @@ public class ReceptionistReservationsController implements DashboardContentContr
         restoreScrollPosition(previousVvalue);
     }
 
-    private Node updateReservationCard(String key, Reservation reservation) throws IOException {
+    private void renderReservationsInBatches(List<Reservation> reservations,
+                                             Map<String, ReservationPaymentSummary> paymentSummaries,
+                                             double previousVvalue) {
+        int requestId = ++renderRequestId;
+        List<Node> orderedCards = new ArrayList<>();
+        Set<String> activeKeys = new HashSet<>();
+        cardsContainer.getChildren().clear();
+        renderNextBatch(reservations, paymentSummaries, previousVvalue, orderedCards, activeKeys, 0, requestId);
+    }
+
+    private void renderNextBatch(List<Reservation> reservations,
+                                 Map<String, ReservationPaymentSummary> paymentSummaries,
+                                 double previousVvalue,
+                                 List<Node> orderedCards,
+                                 Set<String> activeKeys,
+                                 int startIndex,
+                                 int requestId) {
+        if (requestId != renderRequestId) {
+            return;
+        }
+
+        int batchSize = 10;
+        int endIndex = Math.min(startIndex + batchSize, reservations.size());
+        for (int i = startIndex; i < endIndex; i++) {
+            Reservation reservation = reservations.get(i);
+            String key = reservation.getReservationId();
+            activeKeys.add(key);
+            try {
+                orderedCards.add(updateReservationCard(key, reservation, paymentSummaries.get(key)));
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                Label error = new Label("Could not load reservation card.");
+                error.getStyleClass().add("error-message");
+                orderedCards.add(error);
+            }
+        }
+
+        FxNodeSync.syncChildren(cardsContainer, orderedCards);
+
+        if (endIndex < reservations.size()) {
+            Platform.runLater(() -> renderNextBatch(
+                    reservations,
+                    paymentSummaries,
+                    previousVvalue,
+                    orderedCards,
+                    activeKeys,
+                    endIndex,
+                    requestId));
+            return;
+        }
+
+        reservationCardNodes.keySet().removeIf(key -> !activeKeys.contains(key));
+        reservationCardControllers.keySet().removeIf(key -> !activeKeys.contains(key));
+        restoreScrollPosition(previousVvalue);
+    }
+
+    private void showLoadingMessage(ViewMode mode) {
+        Label loading = new Label(mode == ViewMode.ALL ? "Loading all reservations..." : "Loading reservations...");
+        loading.getStyleClass().add("reservation-empty-message");
+        cardsContainer.getChildren().setAll(loading);
+    }
+
+    private Node updateReservationCard(String key, Reservation reservation,
+                                       ReservationPaymentSummary paymentSummary) throws IOException {
         Node card = reservationCardNodes.get(key);
         ReceptionistReservationCardController controller = reservationCardControllers.get(key);
         if (card == null || controller == null) {
@@ -227,7 +316,7 @@ public class ReceptionistReservationsController implements DashboardContentContr
             reservationCardNodes.put(key, card);
             reservationCardControllers.put(key, controller);
         }
-        controller.setData(mainApp, reservation, titleLabel.getText(), this::loadReservations);
+        controller.setData(mainApp, reservation, paymentSummary, titleLabel.getText(), this::loadReservations);
         return card;
     }
 
@@ -241,5 +330,19 @@ public class ReceptionistReservationsController implements DashboardContentContr
         }
         scrollPane.setVvalue(vvalue);
         Platform.runLater(() -> scrollPane.setVvalue(vvalue));
+    }
+
+    private static class ReservationLoadResult {
+        private final List<Reservation> allReservations;
+        private final List<Reservation> visibleReservations;
+        private final Map<String, ReservationPaymentSummary> paymentSummaries;
+
+        private ReservationLoadResult(List<Reservation> allReservations,
+                                      List<Reservation> visibleReservations,
+                                      Map<String, ReservationPaymentSummary> paymentSummaries) {
+            this.allReservations = allReservations;
+            this.visibleReservations = visibleReservations;
+            this.paymentSummaries = paymentSummaries;
+        }
     }
 }

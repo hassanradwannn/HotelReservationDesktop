@@ -27,7 +27,11 @@ public class ManageAmenitiesController implements DashboardContentController {
     @FXML
     private void handleAdd() {
         try {
-            CatalogService.createAmenity(nameField.getText().trim(), Double.parseDouble(priceField.getText().trim()));
+            Amenity amenity = new Amenity(
+                    nameField.getText().trim(),
+                    Double.parseDouble(priceField.getText().trim()));
+            Database.insertAmenity(amenity);
+            Database.loadAllAmenities();
             
             mainApp.alert("Success", "Amenity added.");
             nameField.clear();

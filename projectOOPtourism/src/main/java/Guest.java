@@ -2,7 +2,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 
 import exceptions.InvalidCredentialsException;
 
@@ -54,9 +53,9 @@ public class Guest extends User {
                 continue;
             }
 
-            String key = trimmed.toLowerCase(Locale.ROOT);
+            String key = CatalogService.amenityFilterKey(trimmed);
             if (seen.add(key)) {
-                preferences.add(trimmed);
+                preferences.add(CatalogService.displayAmenityName(trimmed));
             }
         }
         return preferences;
@@ -82,9 +81,9 @@ public class Guest extends User {
             return false;
         }
 
-        String requested = amenityName.trim().toLowerCase(Locale.ROOT);
+        String requested = CatalogService.amenityFilterKey(amenityName);
         return getRoomPreferenceNames().stream()
-                .map(name -> name.toLowerCase(Locale.ROOT))
+                .map(CatalogService::amenityFilterKey)
                 .anyMatch(requested::equals);
     }
 

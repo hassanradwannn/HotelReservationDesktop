@@ -46,12 +46,19 @@ public class ReceptionistReservationCardController {
 
     private Main mainApp;
     private Reservation reservation;
+    private ReservationPaymentSummary paymentSummary;
     private String sourceTitle;
     private Runnable refreshHandler;
 
     public void setData(Main mainApp, Reservation reservation, String sourceTitle, Runnable refreshHandler) {
+        setData(mainApp, reservation, null, sourceTitle, refreshHandler);
+    }
+
+    public void setData(Main mainApp, Reservation reservation, ReservationPaymentSummary paymentSummary,
+                        String sourceTitle, Runnable refreshHandler) {
         this.mainApp = mainApp;
         this.reservation = reservation;
+        this.paymentSummary = paymentSummary;
         this.sourceTitle = sourceTitle;
         this.refreshHandler = refreshHandler;
         render();
@@ -99,8 +106,13 @@ public class ReceptionistReservationCardController {
         checkInValueLabel.setText(reservation.getCheckInDate().format(DATE_FMT));
         checkOutValueLabel.setText(reservation.getCheckOutDate().format(DATE_FMT));
 
-        double paid = ReservationService.getGrossPaidAmountBeforeRefunds(reservation);
-        double refunded = ReservationService.getEarlyCheckOutRefundAmount(reservation);
+        ReservationPaymentSummary summary = paymentSummary == null
+                ? new ReservationPaymentSummary(
+                        ReservationService.getGrossPaidAmountBeforeRefunds(reservation),
+                        ReservationService.getEarlyCheckOutRefundAmount(reservation))
+                : paymentSummary;
+        double paid = summary.getGrossPaidAmountBeforeRefunds();
+        double refunded = summary.getEarlyCheckOutRefundAmount();
         double refundDue = Math.max(0, paid - refunded - reservation.getTotalPrice());
         double refundDisplay = refunded > 0.009 ? refunded : refundDue;
         double outstanding = reservation.getStatus() == ReservationStatus.COMPLETED

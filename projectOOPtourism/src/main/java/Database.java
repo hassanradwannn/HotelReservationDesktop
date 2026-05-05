@@ -4,10 +4,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import database.DatabaseConnection;
 
 public class Database {
+
+    private static final SystemSettingsRepository SYSTEM_SETTINGS = new SystemSettingsRepository();
 
     private static List<RoomType> roomTypes = new ArrayList<>();
     private static List<Amenity> amenities = new ArrayList<>();
@@ -61,11 +65,9 @@ public class Database {
             } catch (SQLException e) { e.printStackTrace(); }
         }
 
-        // 2. Seed amenities individually so new defaults appear in existing databases too.
         ensureDefaultAmenities();
-
-        // 3. ONLY GENERATE ROOMS IF TABLE IS EMPTY
-        // This prevents the foreign key crash and stops duplicates
+        normalizeGymAmenityData();
+  // ONLY GENERATE ROOMS IF TABLE IS EMPTY
         if (isTableEmpty("rooms")) {
             System.out.println("Rooms table empty. Generating hotel floors...");
 
@@ -96,7 +98,7 @@ public class Database {
                         assignedAmenities.add("Smart TV");
                         if (floor >= 3) assignedAmenities.add("Mini-bar");
                         if (floor >= 5) assignedAmenities.add("Jacuzzi");
-                        if (floor == 6) assignedAmenities.add("Gym Membership");
+                        if (floor == 6) assignedAmenities.add("Gym");
 
                         for (String amenityName : assignedAmenities) {
                             amenityStmt.setString(1, roomNumber);
@@ -108,6 +110,107 @@ public class Database {
             } catch (SQLException e) { e.printStackTrace(); }
         }
     }
+
+    private static void normalizeGymAmenityData() {
+        try (Connection conn = database.DatabaseConnection.getConnection()) {
+            boolean originalAutoCommit = conn.getAutoCommit();
+            conn.setAutoCommit(false);
+
+            try {
+                try (PreparedStatement stmt = conn.prepareStatement(
+                        "INSERT IGNORE INTO amenities (name, price) VALUES ('Gym', 20.0)")) {
+                    stmt.executeUpdate();
+                }
+
+                List<String> gymRoomNumbers = new ArrayList<>();
+                try (PreparedStatement stmt = conn.prepareStatement(
+                        "SELECT DISTINCT room_number FROM room_amenities WHERE LOWER(amenity_name) LIKE '%gym%'");
+                     ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        gymRoomNumbers.add(rs.getString("room_number"));
+                    }
+                }
+
+                try (PreparedStatement stmt = conn.prepareStatement(
+                        "INSERT IGNORE INTO room_amenities (room_number, amenity_name) VALUES (?, 'Gym')")) {
+                    for (String roomNumber : gymRoomNumbers) {
+                        stmt.setString(1, roomNumber);
+                        stmt.executeUpdate();
+                    }
+                }
+
+                try (PreparedStatement stmt = conn.prepareStatement(
+                        "DELETE FROM room_amenities WHERE LOWER(amenity_name) LIKE '%gym%' AND LOWER(amenity_name) <> 'gym'")) {
+                    stmt.executeUpdate();
+                }
+
+                try (PreparedStatement stmt = conn.prepareStatement(
+                        "DELETE FROM amenities WHERE LOWER(name) LIKE '%gym%' AND LOWER(name) <> 'gym'")) {
+                    stmt.executeUpdate();
+                }
+
+                normalizeGuestGymPreferences(conn);
+
+                conn.commit();
+                conn.setAutoCommit(originalAutoCommit);
+            } catch (Exception ex) {
+                conn.rollback();
+                conn.setAutoCommit(originalAutoCommit);
+                throw ex;
+            }
+        } catch (Exception e) {
+            System.out.println("Failed to normalize Gym amenity data: " + e.getMessage());
+        }
+    }
+
+    private static void normalizeGuestGymPreferences(Connection conn) throws SQLException {
+        List<String[]> updates = new ArrayList<>();
+        try (PreparedStatement stmt = conn.prepareStatement(
+                "SELECT username, room_preferences FROM users WHERE room_preferences IS NOT NULL AND TRIM(room_preferences) <> ''");
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                String username = rs.getString("username");
+                String preferences = rs.getString("room_preferences");
+                String normalized = normalizeRoomPreferences(preferences);
+                if (!normalized.equals(preferences)) {
+                    updates.add(new String[]{username, normalized});
+                }
+            }
+        } catch (SQLException ex) {
+            return;
+        }
+
+        try (PreparedStatement stmt = conn.prepareStatement(
+                "UPDATE users SET room_preferences = ? WHERE username = ?")) {
+            for (String[] update : updates) {
+                stmt.setString(1, update[1]);
+                stmt.setString(2, update[0]);
+                stmt.executeUpdate();
+            }
+        }
+    }
+
+    private static String normalizeRoomPreferences(String preferences) {
+        if (preferences == null || preferences.trim().isEmpty()) {
+            return "";
+        }
+
+        Set<String> seenKeys = new LinkedHashSet<>();
+        List<String> normalizedPreferences = new ArrayList<>();
+        for (String preference : preferences.split(",")) {
+            String trimmed = preference.trim();
+            if (trimmed.isEmpty()) {
+                continue;
+            }
+
+            String key = CatalogService.amenityFilterKey(trimmed);
+            if (seenKeys.add(key)) {
+                normalizedPreferences.add(CatalogService.displayAmenityName(trimmed));
+            }
+        }
+        return String.join(", ", normalizedPreferences);
+    }
+
     public static void deleteAmenityFromDB(Amenity amenity) {
         String deleteRoomAmenitiesSql = "DELETE FROM room_amenities WHERE amenity_name = ?";
         String deleteAmenitySql = "DELETE FROM amenities WHERE name = ?";
@@ -150,7 +253,7 @@ public class Database {
                     {"Smart TV", 15.0},
                     {"Mini-bar", 50.0},
                     {"Jacuzzi", 100.0},
-                    {"Gym Membership", 20.0},
+                    {"Gym", 20.0},
                     {"Sea View", 75.0},
                     {"Mountain View", 75.0}
             };
@@ -253,10 +356,19 @@ public class Database {
                         try (ResultSet amRs = amStmt.executeQuery()) {
                             while (amRs.next()) {
                                 String amName = amRs.getString("amenity_name");
-                                amenities.stream()
+                                Amenity amenity = amenities.stream()
                                         .filter(a -> a.getName().equals(amName))
                                         .findFirst()
-                                        .ifPresent(room.getAmenities()::add);
+                                        .orElse(null);
+                                if (amenity == null && CatalogService.isGymAmenityName(amName)) {
+                                    amenity = amenities.stream()
+                                            .filter(a -> CatalogService.isGymAmenityName(a.getName()))
+                                            .findFirst()
+                                            .orElse(null);
+                                }
+                                if (amenity != null) {
+                                    room.getAmenities().add(amenity);
+                                }
                             }
                         }
                     }
@@ -424,6 +536,12 @@ public class Database {
     }
 
     public static void insertAmenity(Amenity a) {
+        a.setName(CatalogService.displayAmenityName(a.getName()));
+        CatalogService.validateAmenityNameAvailable(a.getName(), null);
+        if (amenityNameExistsInDatabase(a.getName(), null)) {
+            throw new IllegalArgumentException("Amenity with name '" + a.getName() + "' already exists.");
+        }
+
         String sql = "INSERT INTO amenities (name, price) VALUES (?, ?)";
         try (Connection conn = database.DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -433,11 +551,17 @@ public class Database {
             notifyDataChanged();
         } catch (Exception e) {
             System.out.println("Error inserting amenity: " + e.getMessage());
-            e.printStackTrace();
+            throw new IllegalArgumentException("Could not add amenity: " + e.getMessage(), e);
         }
     }
 
     public static void updateAmenity(Amenity a) {
+        a.setName(CatalogService.displayAmenityName(a.getName()));
+        CatalogService.validateAmenityNameAvailable(a.getName(), a);
+        if (amenityNameExistsInDatabase(a.getName(), a.getId())) {
+            throw new IllegalArgumentException("Amenity with name '" + a.getName() + "' already exists.");
+        }
+
         String sql = "UPDATE amenities SET name = ?, price = ? WHERE id = ?";
         try (Connection conn = database.DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -454,8 +578,29 @@ public class Database {
             notifyDataChanged();
         } catch (Exception e) {
             System.out.println("Error updating amenity: " + e.getMessage());
-            e.printStackTrace();
+            throw new IllegalArgumentException("Could not update amenity: " + e.getMessage(), e);
         }
+    }
+
+    private static boolean amenityNameExistsInDatabase(String name, Integer excludedId) {
+        String key = CatalogService.amenityFilterKey(name);
+        String sql = "SELECT id, name FROM amenities";
+        try (Connection conn = database.DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                if (excludedId != null && id == excludedId) {
+                    continue;
+                }
+                if (CatalogService.amenityFilterKey(rs.getString("name")).equals(key)) {
+                    return true;
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalArgumentException("Could not validate amenity name: " + e.getMessage(), e);
+        }
+        return false;
     }
 
     public static boolean isFirstInstance() {
@@ -463,76 +608,19 @@ public class Database {
         // would otherwise permanently block login. Multi-instance sync still works
         // via the last_update version mechanism, so this counter is only used for
         // the date-reset logic on first launch.
-        String resetSql = "UPDATE system_settings SET setting_value = '1' WHERE setting_key = 'active_instances'";
-        String checkSql = "SELECT setting_value FROM system_settings WHERE setting_key = 'active_instances'";
-        String insertSql = "INSERT IGNORE INTO system_settings (setting_key, setting_value) VALUES ('active_instances', '1')";
-        try (Connection conn = database.DatabaseConnection.getConnection()) {
-            // Try to read current value first to detect true first-instance
-            try (PreparedStatement stmt = conn.prepareStatement(checkSql);
-                 ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    int current = Integer.parseInt(rs.getString("setting_value"));
-                    // Reset counter to 1 (this instance)
-                    try (PreparedStatement update = conn.prepareStatement(resetSql)) {
-                        update.executeUpdate();
-                    }
-                    // If counter was 0, this is genuinely the first instance
-                    return current == 0;
-                } else {
-                    try (PreparedStatement ins = conn.prepareStatement(insertSql)) {
-                        ins.executeUpdate();
-                    }
-                    return true;
-                }
-            }
-        } catch (Exception e) {
-            return true;
-        }
+        return SYSTEM_SETTINGS.isFirstInstance();
     }
 
     public static void unregisterInstance() {
-        String checkSql = "SELECT setting_value FROM system_settings WHERE setting_key = 'active_instances'";
-        String updateSql = "UPDATE system_settings SET setting_value = ? WHERE setting_key = 'active_instances'";
-        try (Connection conn = database.DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(checkSql);
-             ResultSet rs = stmt.executeQuery()) {
-            if (rs.next()) {
-                int instances = Integer.parseInt(rs.getString("setting_value"));
-                if (instances > 0) {
-                    try (PreparedStatement update = conn.prepareStatement(updateSql)) {
-                        update.setString(1, String.valueOf(instances - 1));
-                        update.executeUpdate();
-                    }
-                }
-            }
-        } catch (Exception e) {
-            System.out.println("Could not unregister instance: " + e.getMessage());
-            e.printStackTrace();
-        }
+        SYSTEM_SETTINGS.unregisterInstance();
     }
 
     public static long getLatestDataVersion() {
-        String sql = "SELECT setting_value FROM system_settings WHERE setting_key = 'last_update'";
-        try (Connection conn = database.DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            if (rs.next()) {
-                return Long.parseLong(rs.getString("setting_value"));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return 0;
+        return SYSTEM_SETTINGS.getLatestDataVersion();
     }
 
     public static void notifyDataChanged() {
-        String sql = "UPDATE system_settings SET setting_value = setting_value + 1 WHERE setting_key = 'last_update'";
-        try (Connection conn = database.DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.executeUpdate();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        SYSTEM_SETTINGS.notifyDataChanged();
     }
 
     public static void updateRoomAmenities(int roomId, List<Amenity> amenities) {
@@ -565,9 +653,14 @@ public class Database {
 
                 if (amenities != null && !amenities.isEmpty()) {
                     try (PreparedStatement insStmt = conn.prepareStatement(insertSql)) {
+                        Set<String> insertedAmenityKeys = new LinkedHashSet<>();
                         for (Amenity amenity : amenities) {
+                            String amenityName = CatalogService.displayAmenityName(amenity.getName());
+                            if (!insertedAmenityKeys.add(CatalogService.amenityFilterKey(amenityName))) {
+                                continue;
+                            }
                             insStmt.setString(1, roomNumber);
-                            insStmt.setString(2, amenity.getName());
+                            insStmt.setString(2, amenityName);
                             insStmt.executeUpdate();
                         }
                     }

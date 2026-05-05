@@ -258,38 +258,53 @@ public class GuestHomeController implements DashboardContentController {
     }
 
     private void buildAmenityPills() {
-        List<Amenity> amenities = Database.getAmenities();
+        List<Amenity> amenities = CatalogService.listFilterAmenities();
         if (amenities.isEmpty() && !selectedAmenities.isEmpty()) {
             return;
         }
 
         amenityPillsPane.getChildren().clear();
-        selectedAmenities.retainAll(
-                amenities.stream().map(Amenity::getName).toList()
-        );
+        retainSelectedAmenityFilters(amenities);
 
         for (Amenity amenity : amenities) {
             ToggleButton pill = new ToggleButton(amenity.getName());
             pill.getStyleClass().add("amenity-pill");
-            pill.setSelected(selectedAmenities.contains(amenity.getName()));
+            pill.setSelected(isAmenitySelected(amenity.getName()));
             if (pill.isSelected()) {
                 pill.getStyleClass().add("amenity-pill-active");
             }
 
             pill.selectedProperty().addListener((obs, wasSelected, isSelected) -> {
                 if (isSelected) {
-                    selectedAmenities.add(amenity.getName());
+                    setAmenitySelected(amenity.getName(), true);
                     if (!pill.getStyleClass().contains("amenity-pill-active")) {
                         pill.getStyleClass().add("amenity-pill-active");
                     }
                 } else {
-                    selectedAmenities.remove(amenity.getName());
+                    setAmenitySelected(amenity.getName(), false);
                     pill.getStyleClass().remove("amenity-pill-active");
                 }
                 saveGuestHomeSearchContext();
             });
 
             amenityPillsPane.getChildren().add(pill);
+        }
+    }
+
+    private void retainSelectedAmenityFilters(List<Amenity> amenities) {
+        selectedAmenities.removeIf(selectedName -> amenities.stream()
+                .noneMatch(amenity -> CatalogService.isSameAmenityFilter(selectedName, amenity.getName())));
+    }
+
+    private boolean isAmenitySelected(String amenityName) {
+        return selectedAmenities.stream()
+                .anyMatch(selectedName -> CatalogService.isSameAmenityFilter(selectedName, amenityName));
+    }
+
+    private void setAmenitySelected(String amenityName, boolean selected) {
+        selectedAmenities.removeIf(selectedName -> CatalogService.isSameAmenityFilter(selectedName, amenityName));
+        if (selected) {
+            selectedAmenities.add(amenityName);
         }
     }
 
@@ -444,14 +459,14 @@ public class GuestHomeController implements DashboardContentController {
     }
 
     private List<Amenity> getSelectedAmenityObjects() {
-        List<Amenity> amenityFilter = new ArrayList<>();
+        Map<String, Amenity> amenityFilter = new LinkedHashMap<>();
         for (String name : selectedAmenities) {
-            Amenity amenity = CatalogService.findAmenity(name);
+            Amenity amenity = CatalogService.findAmenityForFilter(name);
             if (amenity != null) {
-                amenityFilter.add(amenity);
+                amenityFilter.put(CatalogService.amenityFilterKey(amenity.getName()), amenity);
             }
         }
-        return amenityFilter;
+        return new ArrayList<>(amenityFilter.values());
     }
 
     private Double parseBudget() {

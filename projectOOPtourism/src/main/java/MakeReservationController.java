@@ -50,7 +50,7 @@ public class MakeReservationController implements DashboardContentController {
 
         setupDatePickerFormat(checkInPicker);
         setupDatePickerFormat(checkOutPicker);
-        gymBox.setText("Add Gym Pass ($" + mainApp.money(Reservation.GYM_PASS_PRICE) + ")");
+        setGymAddOnText();
         setupBlackoutDates();
         resolveSelectedRoomType(searchContext);
         applyInitialValues(searchContext);
@@ -89,7 +89,7 @@ public class MakeReservationController implements DashboardContentController {
         }
         List<Amenity> current = new ArrayList<>();
         for (Amenity amenity : amenities) {
-            Amenity fresh = CatalogService.findAmenity(amenity.getName());
+            Amenity fresh = CatalogService.findAmenityForFilter(amenity.getName());
             if (fresh != null) {
                 current.add(fresh);
             }
@@ -152,17 +152,29 @@ public class MakeReservationController implements DashboardContentController {
 
     private void updateGymPassState(RoomType roomType) {
         if (roomType == null) {
+            setGymAddOnText();
             gymBox.setSelected(false);
             gymBox.setDisable(true);
             return;
         }
 
-        if (roomType.getName().toLowerCase().contains("gustave")) {
-            gymBox.setSelected(true);
+        if (roomTypeIncludesGym(roomType)) {
+            gymBox.setText("Gym included");
+            gymBox.setSelected(false);
             gymBox.setDisable(true);
         } else {
+            setGymAddOnText();
             gymBox.setDisable(false);
         }
+    }
+
+    private void setGymAddOnText() {
+        gymBox.setText("Add Gym ($" + mainApp.money(Reservation.GYM_PASS_PRICE) + ")");
+    }
+
+    private boolean roomTypeIncludesGym(RoomType roomType) {
+        return roomType != null && CatalogService.getDefaultAmenitiesForType(roomType.getName()).stream()
+                .anyMatch(Reservation::isGymAmenity);
     }
 
     private void setupDatePickerFormat(DatePicker picker) {
@@ -353,11 +365,25 @@ public class MakeReservationController implements DashboardContentController {
 
         List<String> roomAmenityNames = room.getAmenities().stream().map(Amenity::getName).toList();
         for (Amenity amenity : requestedAmenities) {
-            if (!roomAmenityNames.contains(amenity.getName())) {
+            if (!roomHasRequestedAmenity(room, roomAmenityNames, amenity)) {
                 return false;
             }
         }
         return true;
+    }
+
+    private boolean roomHasRequestedAmenity(Room room, List<String> roomAmenityNames, Amenity requestedAmenity) {
+        if (requestedAmenity == null || requestedAmenity.getName() == null) {
+            return true;
+        }
+
+        String requestedName = requestedAmenity.getName();
+        if ("Sea View".equalsIgnoreCase(requestedName) || "Mountain View".equalsIgnoreCase(requestedName)) {
+            return requestedName.equalsIgnoreCase(room.getViewName());
+        }
+
+        return roomAmenityNames.stream()
+                .anyMatch(name -> CatalogService.isSameAmenityFilter(name, requestedName));
     }
 
     private void updateSelectedRoomTypeDisplay() {

@@ -1,6 +1,7 @@
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -58,29 +59,47 @@ public class RegisterController {
 
     private void buildPreferencePills() {
         prefsPillsPane.getChildren().clear();
-        selectedPreferences.retainAll(Database.getAmenities().stream().map(Amenity::getName).toList());
+        List<Amenity> amenities = CatalogService.listFilterAmenities();
+        retainSelectedPreferenceFilters(amenities);
 
-        for (Amenity amenity : Database.getAmenities()) {
+        for (Amenity amenity : amenities) {
             ToggleButton pill = new ToggleButton(amenity.getName());
             pill.getStyleClass().add("amenity-pill");
-            pill.setSelected(selectedPreferences.contains(amenity.getName()));
+            pill.setSelected(isPreferenceSelected(amenity.getName()));
             if (pill.isSelected()) {
                 pill.getStyleClass().add("amenity-pill-active");
             }
 
             pill.selectedProperty().addListener((obs, wasSelected, isSelected) -> {
                 if (isSelected) {
-                    selectedPreferences.add(amenity.getName());
+                    setPreferenceSelected(amenity.getName(), true);
                     if (!pill.getStyleClass().contains("amenity-pill-active")) {
                         pill.getStyleClass().add("amenity-pill-active");
                     }
                 } else {
-                    selectedPreferences.remove(amenity.getName());
+                    setPreferenceSelected(amenity.getName(), false);
                     pill.getStyleClass().remove("amenity-pill-active");
                 }
             });
 
             prefsPillsPane.getChildren().add(pill);
+        }
+    }
+
+    private void retainSelectedPreferenceFilters(List<Amenity> amenities) {
+        selectedPreferences.removeIf(selectedName -> amenities.stream()
+                .noneMatch(amenity -> CatalogService.isSameAmenityFilter(selectedName, amenity.getName())));
+    }
+
+    private boolean isPreferenceSelected(String amenityName) {
+        return selectedPreferences.stream()
+                .anyMatch(selectedName -> CatalogService.isSameAmenityFilter(selectedName, amenityName));
+    }
+
+    private void setPreferenceSelected(String amenityName, boolean selected) {
+        selectedPreferences.removeIf(selectedName -> CatalogService.isSameAmenityFilter(selectedName, amenityName));
+        if (selected) {
+            selectedPreferences.add(amenityName);
         }
     }
 
