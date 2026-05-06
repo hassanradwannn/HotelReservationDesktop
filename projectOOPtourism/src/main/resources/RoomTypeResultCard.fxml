@@ -10,10 +10,7 @@
 <?import javafx.scene.layout.VBox?>
 
 <HBox fx:id="root"
-      fillHeight="true"
       maxWidth="Infinity"
-      minHeight="196"
-      prefHeight="196"
       spacing="0"
       styleClass="room-type-result-row"
       stylesheets="@styles.css"
@@ -27,7 +24,7 @@
                    prefWidth="226"
                    styleClass="room-type-result-visual">
             <children>
-                <Label fx:id="typeIconLabel" />
+                <Label fx:id="typeIconLabel" styleClass="room-type-icon-label" />
             </children>
         </StackPane>
 

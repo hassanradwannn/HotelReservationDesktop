@@ -245,6 +245,14 @@ public class ReservationPaymentService {
         return true;
     }
 
+    public void lateCheckOutFee(Reservation reservation, Guest guest){
+        LocalDate today = SystemTime.getToday();
+        if (reservation.getStatus() != ReservationStatus.ONGOING && reservation.getRemainingAmount() > 0 && reservation.getCheckOutDate().isBefore(today)){
+            double price = reservation.getTotalPrice();
+            price += (10/100 * price);
+        }
+    }
+
     private double paidAmountWithDepositFallback(Reservation reservation, double paidTotal, boolean hasDepositMarker) {
         double deposit = getDepositAmount(reservation);
         boolean depositWasPaid = reservation.isDepositPaid()

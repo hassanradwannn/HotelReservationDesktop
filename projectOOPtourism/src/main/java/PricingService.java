@@ -26,6 +26,8 @@ public class PricingService {
         return totalPrice - calculateDeposit(totalPrice);
     }
 
+    public double calculateLateFee(double totalPrice) { return totalPrice += (1/10 * totalPrice);}
+
     public boolean isGymAmenity(Amenity amenity) {
         return amenity != null && CatalogService.isGymAmenityName(amenity.getName());
     }

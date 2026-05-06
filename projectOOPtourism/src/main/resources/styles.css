@@ -1648,6 +1648,13 @@
     -fx-border-width: 0 1 0 0;
 }
 
+.room-type-icon-label {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 60px;
+    -fx-text-fill: #8F1D3F;
+    -fx-font-style: italic;
+}
+
 .room-type-result-visual-0 {
     -fx-background-color: #E8879A;
 }

@@ -161,7 +161,7 @@ public abstract class ReservationService {
         return true;
     }
 
-    public static void markTodaysConfirmedReservationsCheckingIn() {
+    public static void markTodayCheckingIn() {
         LocalDate today = SystemTime.getToday();
         for (Reservation reservation : new ArrayList<>(Database.getReservations())) {
             if (reservation.getStatus() == ReservationStatus.CONFIRMED
@@ -258,6 +258,12 @@ public abstract class ReservationService {
                     && reservation.getCheckOutDate().isEqual(today)) {
                 reservation.setStatus(ReservationStatus.CHECKING_OUT);
                 DatabaseSaver.updateReservationStatus(reservation.getReservationId(), ReservationStatus.CHECKING_OUT.toString());
+            }
+
+            if (reservation.getStatus() == ReservationStatus.CHECKING_OUT  && reservation.getCheckOutDate() != null && reservation.getCheckOutDate().isBefore(today)){
+                reservation.setStatus(ReservationStatus.COMPLETED);
+                DatabaseSaver.updateReservationStatus(reservation.getReservationId(), ReservationStatus.COMPLETED.toString());
+
             }
 
             if (reservation.getStatus() == ReservationStatus.CANCELLED

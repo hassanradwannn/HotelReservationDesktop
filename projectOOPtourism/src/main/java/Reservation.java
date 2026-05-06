@@ -16,6 +16,15 @@ public class Reservation {
     private LocalDate depositDeadline;
     private boolean depositPaid;
     private boolean fullPaid;
+    private boolean isLateCheckout;
+
+    public boolean isLateCheckout() {
+        return isLateCheckout;
+    }
+
+    public void setLateCheckout(boolean lateCheckout) {
+        isLateCheckout = lateCheckout;
+    }
 
     public Reservation(String reservationId, Guest guest, Room room,
                        LocalDate checkInDate, LocalDate checkOutDate,
@@ -43,6 +52,8 @@ public class Reservation {
     public double getRemainingAmount() {
         return PRICING_SERVICE.calculateRemaining(this.totalPrice);
     }
+
+    public double getLateFee() {return PRICING_SERVICE.calculateLateFee(this.totalPrice); }
 
     public boolean hasGymPass() {
         return hasGymPass;
