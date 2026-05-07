@@ -1,8 +1,11 @@
 package DatabaseInitializer;
 
 import java.sql.Connection;
+import java.sql.Date;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDate;
 
 /**
  * Initializes the database schema and creates necessary tables
@@ -13,6 +16,7 @@ public class DatabaseInitializer {
     public static void initializeDatabase() {
         try {
             createTables();
+            insertDemoUsers();
             System.out.println("Database initialization completed successfully.");
         } catch (SQLException e) {
             System.out.println("Error initializing database: " + e.getMessage());
@@ -213,6 +217,65 @@ public class DatabaseInitializer {
     private static void executeUpdate(Connection conn, String sql) throws SQLException {
         try (Statement stmt = conn.createStatement()) {
             stmt.execute(sql);
+        }
+    }
+
+    private static void insertDemoUsers() throws SQLException {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            // Check if users already exist
+            try (PreparedStatement checkStmt = conn.prepareStatement("SELECT COUNT(*) FROM users")) {
+                var rs = checkStmt.executeQuery();
+                if (rs.next() && rs.getInt(1) > 0) {
+                    System.out.println("Demo users already exist, skipping insertion.");
+                    return;
+                }
+            }
+
+            String insertUserSql = """
+                INSERT INTO users (username, password, role, date_of_birth, gender, address, balance, room_preferences)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """;
+
+            try (PreparedStatement stmt = conn.prepareStatement(insertUserSql)) {
+                // Admin user: Admin/Admin@123
+                stmt.setString(1, "Admin");
+                stmt.setString(2, "Admin@123");
+                stmt.setString(3, "Admin");
+                stmt.setDate(4, Date.valueOf(LocalDate.now().minusYears(30)));
+                stmt.setString(5, null); // gender
+                stmt.setString(6, null); // address
+                stmt.setDouble(7, 0.0); // balance
+                stmt.setString(8, null); // room_preferences
+                stmt.executeUpdate();
+                System.out.println("Demo admin user 'Admin' created.");
+
+                // Receptionist user: Manar/Manar2002
+                stmt.setString(1, "Manar");
+                stmt.setString(2, "Manar2002");
+                stmt.setString(3, "Receptionist");
+                stmt.setDate(4, Date.valueOf(LocalDate.now().minusYears(25)));
+                stmt.setString(5, null); // gender
+                stmt.setString(6, null); // address
+                stmt.setDouble(7, 0.0); // balance
+                stmt.setString(8, null); // room_preferences
+                stmt.executeUpdate();
+                System.out.println("Demo receptionist user 'Manar' created.");
+
+                // Guest user: Hassan/Hassan123
+                stmt.setString(1, "Hassan");
+                stmt.setString(2, "Hassan123");
+                stmt.setString(3, "Guest");
+                stmt.setDate(4, Date.valueOf(LocalDate.now().minusYears(28)));
+                stmt.setString(5, "MALE"); // gender
+                stmt.setString(6, "123 Main Street"); // address
+                stmt.setDouble(7, 100.0); // balance
+                stmt.setString(8, "WiFi, Smart TV"); // room_preferences
+                stmt.executeUpdate();
+                System.out.println("Demo guest user 'Hassan' created.");
+            }
+        } catch (SQLException e) {
+            System.out.println("Error inserting demo users: " + e.getMessage());
+            throw e;
         }
     }
 }
