@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox spacing="0" style="-fx-padding: 10;" stylesheets="@styles.css"
+      xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="LateCheckoutPaymentController">
+    <children>
+
+        <!-- Header -->
+        <Label text="BILLING" styleClass="panel-eyebrow"/>
+        <Label text="Late Checkout Fee" styleClass="panel-title"/>
+        <Region prefHeight="4"/>
+        <Label text="An outstanding fee must be settled before you may continue."
+               styleClass="panel-subtitle"/>
+        <Region prefHeight="18"/>
+
+        <!-- Fee details card -->
+        <VBox spacing="14" styleClass="form-card" maxWidth="500">
+            <children>
+
+                <!-- Reservation info -->
+                <Label fx:id="reservationIdLabel"
+                       styleClass="profile-field"/>
+
+                <!-- Fee amount — highlighted -->
+                <VBox styleClass="late-fee-amount-box" spacing="2">
+                    <children>
+                        <Label text="AMOUNT DUE" styleClass="panel-eyebrow"/>
+                        <Label fx:id="feeAmountLabel" styleClass="late-fee-amount"/>
+                    </children>
+                </VBox>
+
+                <!-- Guest balance -->
+                <Label fx:id="balanceLabel" styleClass="profile-field"/>
+
+                <Separator style="-fx-background-color: #C8A97E;"/>
+
+                <!-- Payment method -->
+                <ComboBox fx:id="paymentCombo"
+                          maxWidth="420.0"
+                          promptText="Select Payment Method"
+                          styleClass="elegant-input"/>
+
+                <Button onAction="#handlePay"
+                        prefHeight="44.0"
+                        prefWidth="220.0"
+                        text="SETTLE FEE"
+                        styleClass="primary-action-btn"/>
+
+            </children>
+        </VBox>
+
+    </children>
+</VBox>
