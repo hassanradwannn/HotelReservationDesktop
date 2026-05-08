@@ -10,17 +10,16 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
+import javafx.scene.layout.VBox;
 
 public class ReceptionistReservationCardController {
 
     @FXML private StackPane root;
     @FXML private HBox cardBody;
     @FXML private Region accentBar;
+    @FXML private StackPane avatarPane;
     @FXML private Label iconLabel;
-    @FXML private TextFlow typeNameFlow;
-    @FXML private Text typeNameText;
+    @FXML private Label typeNameText;
     @FXML private Label subLineLabel;
     @FXML private Label guestHeaderLabel;
     @FXML private Label guestValueLabel;
@@ -36,13 +35,15 @@ public class ReceptionistReservationCardController {
     @FXML private HBox actionBox;
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("d/M/yyyy");
-    private static final String CREAM = "#F9F3EA";
+
+    // Palette
+    private static final String CREAM   = "#F9F3EA";
     private static final String CRIMSON = "#C4415D";
-    private static final String BURGUNDY = "#8B2040";
-    private static final String GOLD = "#C8A97E";
-    private static final String DARK = "#2C2523";
-    private static final String BLUSH = "#F7D6D9";
-    private static final String ROSE = "#E8879A";
+    private static final String BURGUNDY= "#8B2040";
+    private static final String GOLD    = "#C8A97E";
+    private static final String DARK    = "#2C2523";
+    private static final String BLUSH   = "#F7D6D9";
+    private static final String ROSE    = "#E8879A";
 
     private Main mainApp;
     private Reservation reservation;
@@ -66,115 +67,137 @@ public class ReceptionistReservationCardController {
 
     private void render() {
         boolean isCancelled = reservation.getStatus() == ReservationStatus.CANCELLED;
-        String roomTypeName = reservation.getRoom().getRoomType().getName();
+        String guestName = reservation.getGuest().getUsername();
+        String accentColor = statusAccentColor(reservation.getStatus());
 
-        accentBar.setStyle("-fx-background-color: " + statusAccentColor(reservation.getStatus()) + ";");
-        boolean isLobbyDeluxe = roomTypeName.toLowerCase().contains("deluxe")
-                || roomTypeName.toLowerCase().contains("lobby");
-        iconLabel.setText(roomTypeIcon(roomTypeName));
+        // --- Accent bar ---
+        accentBar.setStyle("-fx-background-color: " + accentColor + "; -fx-min-height: 120; -fx-pref-height: 120;");
+
+        // --- Avatar ---
+        String initials = getInitials(guestName);
+        String avatarBg = avatarColor(reservation.getStatus());
+        avatarPane.setStyle(
+                "-fx-background-color: " + avatarBg + ";"
+                + "-fx-background-radius: 50;"
+                + "-fx-min-width: 56; -fx-min-height: 56;"
+                + "-fx-max-width: 56; -fx-max-height: 56;"
+                + (isCancelled ? "-fx-opacity: 0.65;" : ""));
+        iconLabel.setText(initials);
         iconLabel.setStyle(
-                "-fx-font-size: " + iconFontSize(roomTypeName) + "px;"
-                        + "-fx-text-fill: " + iconForeground(roomTypeName) + ";"
-                        + "-fx-background-color: " + iconBackground(roomTypeName) + ";"
-                        + "-fx-background-radius: 10;"
-                        + "-fx-border-color: " + (isLobbyDeluxe ? GOLD : "transparent") + ";"
-                        + "-fx-border-width: " + (isLobbyDeluxe ? "2.5" : "0") + ";"
-                        + "-fx-border-radius: 10;"
-                        + "-fx-min-width: 72px; -fx-min-height: 72px;"
-                        + "-fx-max-width: 72px; -fx-max-height: 72px;"
-                        + "-fx-alignment: center;"
-                        + (isMendleClassic(roomTypeName) ? "-fx-font-weight: bold;" : "")
-                        + (isCancelled ? "-fx-opacity: 0.6;" : ""));
+                "-fx-font-family: 'Georgia';"
+                + "-fx-font-size: 18px;"
+                + "-fx-font-weight: bold;"
+                + "-fx-text-fill: white;"
+                + "-fx-alignment: center;");
 
-        typeNameText.setText(roomTypeName);
+        // --- Guest name ---
+        typeNameText.setText(guestName);
         typeNameText.setStyle(
                 "-fx-font-family: 'Georgia';"
-                        + "-fx-font-size: 18px;"
-                        + "-fx-fill: " + (isCancelled ? "#9e8880" : DARK) + ";");
-        typeNameText.setStrikethrough(isCancelled);
-        typeNameFlow.setStyle("-fx-font-family: 'Georgia';");
+                + "-fx-font-size: 20px;"
+                + "-fx-font-weight: bold;"
+                + "-fx-text-fill: " + (isCancelled ? "#9e8880" : DARK) + ";");
 
+        // --- Sub line: Room · Reservation ID ---
         subLineLabel.setText("Room " + reservation.getRoom().getRoomNumber()
-                + " - " + reservation.getReservationId());
+                + " · " + reservation.getReservationId());
         subLineLabel.setStyle(
                 "-fx-font-family: 'Georgia';"
-                        + "-fx-font-size: 12px;"
-                        + "-fx-text-fill: " + (isCancelled ? "#c4a098" : CRIMSON) + ";");
+                + "-fx-font-size: 12px;"
+                + "-fx-text-fill: " + (isCancelled ? "#c4a098" : CRIMSON) + ";");
 
-        styleMetricLabels(isCancelled);
-        guestValueLabel.setText(reservation.getGuest().getUsername());
+        // --- Metric headers ---
+        String headerColor = isCancelled ? "#c4a8a0" : BURGUNDY;
+        String valueColor  = isCancelled ? "#b8a8a4" : DARK;
+        styleMetricLabel(checkInHeaderLabel,  "CHECK-IN",  headerColor, 10);
+        styleMetricLabel(checkOutHeaderLabel, "CHECK-OUT", headerColor, 10);
+        styleMetricLabel(paidHeaderLabel,     "TOTAL",     headerColor, 10);
+
+        checkInValueLabel.setStyle(metricValueStyle(valueColor));
+        checkOutValueLabel.setStyle(metricValueStyle(valueColor));
+        paidValueLabel.setStyle(metricValueStyle(valueColor));
+
         checkInValueLabel.setText(reservation.getCheckInDate().format(DATE_FMT));
         checkOutValueLabel.setText(reservation.getCheckOutDate().format(DATE_FMT));
 
+        // Payment total
         ReservationPaymentSummary summary = paymentSummary == null
                 ? new ReservationPaymentSummary(
                         ReservationService.getGrossPaidAmountBeforeRefunds(reservation),
                         ReservationService.getEarlyCheckOutRefundAmount(reservation))
                 : paymentSummary;
         double paid = summary.getGrossPaidAmountBeforeRefunds();
-        double refunded = summary.getEarlyCheckOutRefundAmount();
-        double refundDue = Math.max(0, paid - refunded - reservation.getTotalPrice());
-        double refundDisplay = refunded > 0.009 ? refunded : refundDue;
-        double outstanding = reservation.getStatus() == ReservationStatus.COMPLETED
-                ? 0
-                : Math.max(0, reservation.getTotalPrice() - paid);
-        paidValueLabel.setText("$" + mainApp.money(reservation.getStatus() == ReservationStatus.COMPLETED
-                ? Math.max(paid, reservation.getTotalPrice())
-                : paid));
-        if (refundDisplay > 0.009) {
-            outstandingHeaderLabel.setText("REFUND");
-            outstandingValueLabel.setText("$" + mainApp.money(refundDisplay));
-        } else {
-            outstandingHeaderLabel.setText("OUTSTANDING");
-            outstandingValueLabel.setText("$" + mainApp.money(outstanding));
-        }
+        double total = reservation.getTotalPrice();
+        paidValueLabel.setText("$" + mainApp.money(total));
 
+        // Hidden fields (controller contract)
+        guestValueLabel.setText(guestName);
+        outstandingValueLabel.setText("$" + mainApp.money(Math.max(0, total - paid)));
+
+        // --- Status badge ---
         styleStatusBadge();
+
+        // --- Action buttons ---
         addActionButtons();
 
-        root.setAlignment(javafx.geometry.Pos.TOP_LEFT);
-        root.setMaxWidth(Double.MAX_VALUE);
+        // --- Card shell ---
         root.setCursor(Cursor.HAND);
         cardBody.setStyle(cardStyle(isCancelled));
-        root.setOnMouseEntered(e ->
-                cardBody.setStyle(cardStyle(isCancelled)
-                        + "-fx-effect: dropshadow(gaussian, rgba(44,37,35,0.16), 14, 0.1, 0, 4);"));
-        root.setOnMouseExited(e -> cardBody.setStyle(cardStyle(isCancelled)));
+        root.setOnMouseEntered(e -> cardBody.setStyle(cardHoverStyle(isCancelled)));
+        root.setOnMouseExited(e  -> cardBody.setStyle(cardStyle(isCancelled)));
         root.setOnMouseClicked(e -> {
-            if (isInsideButton(e.getPickResult().getIntersectedNode())) {
-                return;
-            }
+            if (isInsideButton(e.getPickResult().getIntersectedNode())) return;
             openReservationDetail();
         });
     }
 
-    private void styleMetricLabels(boolean faded) {
-        styleMetricHeader(guestHeaderLabel, faded);
-        styleMetricHeader(checkInHeaderLabel, faded);
-        styleMetricHeader(checkOutHeaderLabel, faded);
-        styleMetricHeader(paidHeaderLabel, faded);
-        styleMetricHeader(outstandingHeaderLabel, faded);
-        styleMetricValue(guestValueLabel, faded);
-        styleMetricValue(checkInValueLabel, faded);
-        styleMetricValue(checkOutValueLabel, faded);
-        styleMetricValue(paidValueLabel, faded);
-        styleMetricValue(outstandingValueLabel, faded);
+    // ── helpers ──────────────────────────────────────────────────────────────
+
+    private String getInitials(String name) {
+        if (name == null || name.isBlank()) return "?";
+        String[] parts = name.trim().split("\\s+");
+        if (parts.length == 1) return parts[0].substring(0, Math.min(2, parts[0].length())).toUpperCase();
+        return (parts[0].charAt(0) + "" + parts[parts.length - 1].charAt(0)).toUpperCase();
     }
 
-    private void styleMetricHeader(Label label, boolean faded) {
-        label.setStyle(
-                "-fx-font-family: 'Georgia';"
-                        + "-fx-font-size: 10px;"
-                        + "-fx-font-weight: bold;"
-                        + "-fx-text-fill: " + (faded ? "#c4a8a0" : BURGUNDY) + ";");
+    private String avatarColor(ReservationStatus status) {
+        return switch (status) {
+            case PENDING      -> "#8B2040";
+            case CONFIRMED    -> "#5F94CD";
+            case CHECKING_IN  -> "#5F94CD";
+            case ONGOING      -> "#46A85F";
+            case CHECKING_OUT -> "#C4415D";
+            case COMPLETED    -> "#9B9491";
+            case CANCELLED    -> "#D0828E";
+        };
     }
 
-    private void styleMetricValue(Label label, boolean faded) {
+    private String statusAccentColor(ReservationStatus status) {
+        return switch (status) {
+            case PENDING      -> "#DCA032";
+            case CONFIRMED    -> "#5F94CD";
+            case CHECKING_IN  -> "#5F94CD";
+            case ONGOING      -> "#46A85F";
+            case CHECKING_OUT -> CRIMSON;
+            case COMPLETED    -> "#9B9491";
+            case CANCELLED    -> "#D0828E";
+        };
+    }
+
+    private void styleMetricLabel(Label label, String text, String color, int size) {
+        label.setText(text);
         label.setStyle(
                 "-fx-font-family: 'Georgia';"
-                        + "-fx-font-size: 15px;"
-                        + "-fx-font-weight: bold;"
-                        + "-fx-text-fill: " + (faded ? "#b8a8a4" : DARK) + ";");
+                + "-fx-font-size: " + size + "px;"
+                + "-fx-font-weight: bold;"
+                + "-fx-text-fill: " + color + ";");
+    }
+
+    private String metricValueStyle(String color) {
+        return "-fx-font-family: 'Georgia';"
+                + "-fx-font-size: 16px;"
+                + "-fx-font-weight: bold;"
+                + "-fx-text-fill: " + color + ";";
     }
 
     private void styleStatusBadge() {
@@ -182,21 +205,39 @@ public class ReceptionistReservationCardController {
         String[] c = badgeColors(reservation.getStatus());
         statusBadgeLabel.setStyle(
                 "-fx-background-color: " + c[0] + ";"
-                        + "-fx-text-fill: " + c[1] + ";"
-                        + "-fx-font-family: 'Georgia';"
-                        + "-fx-font-size: 11px;"
-                        + "-fx-font-weight: bold;"
-                        + "-fx-padding: 5 18 5 18;"
-                        + "-fx-background-radius: 20;");
+                + "-fx-text-fill: " + c[1] + ";"
+                + "-fx-font-family: 'Georgia';"
+                + "-fx-font-size: 11px;"
+                + "-fx-font-weight: bold;"
+                + "-fx-padding: 5 18 5 18;"
+                + "-fx-background-radius: 20;");
+    }
+
+    private String[] badgeColors(ReservationStatus status) {
+        return switch (status) {
+            case PENDING      -> new String[]{"rgba(220,158,45,0.88)",  "#FFFFFF"};
+            case CONFIRMED    -> new String[]{"rgba(95,148,205,0.85)",  "#FFFFFF"};
+            case CHECKING_IN  -> new String[]{"rgba(95,148,205,0.92)",  "#FFFFFF"};
+            case ONGOING      -> new String[]{"rgba(70,168,95,0.88)",   "#FFFFFF"};
+            case CHECKING_OUT -> new String[]{"rgba(196,65,93,0.88)",   "#FFFFFF"};
+            case COMPLETED    -> new String[]{"rgba(155,148,145,0.82)", "#FFFFFF"};
+            case CANCELLED    -> new String[]{"rgba(208,130,142,0.84)", "#FFFFFF"};
+        };
+    }
+
+    private String displayStatus(ReservationStatus status) {
+        return status.toString().replace('_', ' ');
     }
 
     private void addActionButtons() {
         actionBox.getChildren().clear();
         switch (reservation.getStatus()) {
-            case CHECKING_IN -> actionBox.getChildren().add(outlineBtn("CHECK IN", e -> handleCheckIn()));
-            case CHECKING_OUT -> actionBox.getChildren().add(outlineBtn("CHECK OUT", e -> openReservationDetail()));
-            case ONGOING -> actionBox.getChildren().add(outlineBtn("EXTEND STAY", e -> openReservationDetail(true)));
-            default -> actionBox.getChildren().add(outlineBtn("DETAILS", e -> openReservationDetail()));
+            case PENDING      -> actionBox.getChildren().add(outlineBtn("CANCEL",      e -> openReservationDetail()));
+            case CONFIRMED    -> actionBox.getChildren().add(outlineBtn("CHECK IN",    e -> handleCheckIn()));
+            case CHECKING_IN  -> actionBox.getChildren().add(outlineBtn("CHECK IN",    e -> handleCheckIn()));
+            case ONGOING      -> actionBox.getChildren().add(outlineBtn("EXTEND STAY", e -> openReservationDetail(true)));
+            case CHECKING_OUT -> actionBox.getChildren().add(outlineBtn("CHECK OUT",   e -> openReservationDetail()));
+            default           -> actionBox.getChildren().add(outlineBtn("DETAILS",     e -> openReservationDetail()));
         }
     }
 
@@ -210,9 +251,7 @@ public class ReceptionistReservationCardController {
         }
     }
 
-    private void openReservationDetail() {
-        openReservationDetail(false);
-    }
+    private void openReservationDetail() { openReservationDetail(false); }
 
     private void openReservationDetail(boolean extendStay) {
         mainApp.switchDashboardContent(
@@ -223,9 +262,7 @@ public class ReceptionistReservationCardController {
 
     private boolean isInsideButton(Node node) {
         while (node != null) {
-            if (node instanceof Button) {
-                return true;
-            }
+            if (node instanceof Button) return true;
             node = node.getParent();
         }
         return false;
@@ -235,106 +272,54 @@ public class ReceptionistReservationCardController {
         Button btn = new Button(text);
         String base =
                 "-fx-background-color: transparent;"
-                        + "-fx-border-color: " + GOLD + ";"
-                        + "-fx-border-width: 1.5;"
-                        + "-fx-border-radius: 0;"
-                        + "-fx-background-radius: 0;"
-                        + "-fx-text-fill: " + BURGUNDY + ";"
-                        + "-fx-font-family: 'Georgia';"
-                        + "-fx-font-size: 11px;"
-                        + "-fx-font-weight: bold;"
-                        + "-fx-padding: 6 16 6 16;"
-                        + "-fx-cursor: hand;";
+                + "-fx-border-color: " + GOLD + ";"
+                + "-fx-border-width: 1.5;"
+                + "-fx-border-radius: 0;"
+                + "-fx-background-radius: 0;"
+                + "-fx-text-fill: " + BURGUNDY + ";"
+                + "-fx-font-family: 'Georgia';"
+                + "-fx-font-size: 11px;"
+                + "-fx-font-weight: bold;"
+                + "-fx-padding: 7 18 7 18;"
+                + "-fx-cursor: hand;";
         String hover =
                 "-fx-background-color: " + BLUSH + ";"
-                        + "-fx-border-color: " + CRIMSON + ";"
-                        + "-fx-border-width: 1.5;"
-                        + "-fx-border-radius: 0;"
-                        + "-fx-background-radius: 0;"
-                        + "-fx-text-fill: " + CRIMSON + ";"
-                        + "-fx-font-family: 'Georgia';"
-                        + "-fx-font-size: 11px;"
-                        + "-fx-font-weight: bold;"
-                        + "-fx-padding: 6 16 6 16;"
-                        + "-fx-cursor: hand;";
+                + "-fx-border-color: " + CRIMSON + ";"
+                + "-fx-border-width: 1.5;"
+                + "-fx-border-radius: 0;"
+                + "-fx-background-radius: 0;"
+                + "-fx-text-fill: " + CRIMSON + ";"
+                + "-fx-font-family: 'Georgia';"
+                + "-fx-font-size: 11px;"
+                + "-fx-font-weight: bold;"
+                + "-fx-padding: 7 18 7 18;"
+                + "-fx-cursor: hand;";
         btn.setStyle(base);
         btn.setFocusTraversable(false);
-        btn.setMinWidth(140);
+        btn.setMinWidth(110);
         btn.setOnMouseEntered(e -> btn.setStyle(hover));
-        btn.setOnMouseExited(e -> btn.setStyle(base));
+        btn.setOnMouseExited(e  -> btn.setStyle(base));
         btn.setOnAction(handler);
         return btn;
     }
 
-    private String[] badgeColors(ReservationStatus status) {
-        return switch (status) {
-            case PENDING -> new String[]{"rgba(220, 158, 45, 0.85)", "#FFFFFF"};
-            case CONFIRMED -> new String[]{"rgba(95, 148, 205, 0.82)", "#FFFFFF"};
-            case CHECKING_IN -> new String[]{"rgba(95, 148, 205, 0.92)", "#FFFFFF"};
-            case ONGOING -> new String[]{"rgba(70, 168, 95, 0.85)", "#FFFFFF"};
-            case CHECKING_OUT -> new String[]{"rgba(196, 65, 93, 0.86)", "#FFFFFF"};
-            case COMPLETED -> new String[]{"rgba(155, 148, 145, 0.80)", "#FFFFFF"};
-            case CANCELLED -> new String[]{"rgba(208, 130, 142, 0.82)", "#FFFFFF"};
-        };
-    }
-
     private String cardStyle(boolean cancelled) {
-        return "-fx-background-color: " + CREAM + ";"
-                + "-fx-background-radius: 0;"
-                + "-fx-border-color: " + GOLD + ";"
-                + "-fx-border-radius: 0;"
+        return "-fx-background-color: white;"
+                + "-fx-border-color: #E8DDD4;"
                 + "-fx-border-width: 1;"
+                + "-fx-border-radius: 0;"
+                + "-fx-background-radius: 0;"
                 + (cancelled ? "-fx-opacity: 0.72;" : "")
-                + "-fx-effect: dropshadow(gaussian, rgba(44,37,35,0.08), 8, 0.08, 0, 2);";
+                + "-fx-effect: dropshadow(gaussian, rgba(44,37,35,0.06), 6, 0.06, 0, 2);";
     }
 
-    private String statusAccentColor(ReservationStatus status) {
-        return switch (status) {
-            case PENDING -> "#DCA032";
-            case CONFIRMED -> "#5F94CD";
-            case CHECKING_IN -> "#5F94CD";
-            case ONGOING -> "#46A85F";
-            case CHECKING_OUT -> CRIMSON;
-            case COMPLETED -> "#9B9491";
-            case CANCELLED -> "#D0828E";
-        };
-    }
-
-    private String displayStatus(ReservationStatus status) {
-        return status.toString().replace('_', ' ');
-    }
-
-    private String iconBackground(String name) {
-        String n = name.toLowerCase();
-        if (n.contains("alpine") || n.contains("grand") || n.contains("suite")) return BURGUNDY;
-        if (n.contains("penthouse") || n.contains("gustave")) return CRIMSON;
-        if (n.contains("deluxe") || n.contains("lobby")) return "#F3EADF";
-        if (n.contains("classic") || n.contains("mendle")) return ROSE;
-        return CRIMSON;
-    }
-
-    private String iconForeground(String name) {
-        String n = name.toLowerCase();
-        if (n.contains("deluxe") || n.contains("lobby")) return GOLD;
-        return CREAM;
-    }
-
-    private String iconFontSize(String name) {
-        if (isMendleClassic(name)) return "36";
-        return "26";
-    }
-
-    private boolean isMendleClassic(String name) {
-        String n = name.toLowerCase();
-        return n.contains("classic") || n.contains("mendle");
-    }
-
-    private String roomTypeIcon(String name) {
-        String n = name.toLowerCase();
-        if (n.contains("suite") || n.contains("grand") || n.contains("alpine")) return "\u2726";
-        if (n.contains("penthouse") || n.contains("gustave")) return "\u2767";
-        if (n.contains("deluxe") || n.contains("lobby")) return "\u25C6";
-        if (n.contains("classic") || n.contains("mendle")) return "\u2299";
-        return "\u25C8";
+    private String cardHoverStyle(boolean cancelled) {
+        return "-fx-background-color: white;"
+                + "-fx-border-color: " + GOLD + ";"
+                + "-fx-border-width: 1;"
+                + "-fx-border-radius: 0;"
+                + "-fx-background-radius: 0;"
+                + (cancelled ? "-fx-opacity: 0.72;" : "")
+                + "-fx-effect: dropshadow(gaussian, rgba(44,37,35,0.14), 12, 0.1, 0, 4);";
     }
 }

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane prefHeight="500.0" prefWidth="650.0" styleClass="credit-card-modal-root" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="CreditCardModal">
+   <children>
+      <VBox layoutX="14.0" layoutY="14.0" spacing="15.0" AnchorPane.bottomAnchor="20.0" AnchorPane.leftAnchor="30.0" AnchorPane.rightAnchor="30.0" AnchorPane.topAnchor="30.0">
+         <children>
+            <VBox alignment="CENTER" spacing="5">
+                <Label styleClass="panel-title" text="Enter Payment Details">
+                   <font>
+                      <Font name="Georgia" size="26.0" />
+                   </font>
+                </Label>
+                <Label text="Secure checkout for your reservation." style="-fx-text-fill: #8A726B; -fx-font-size: 14px;"/>
+            </VBox>
+
+            <Region prefHeight="10.0" />
+
+            <HBox alignment="CENTER_LEFT" spacing="15.0">
+               <children>
+                  <VBox HBox.hgrow="ALWAYS">
+                     <children>
+                        <Label text="Card Number" style="-fx-font-weight: bold; -fx-text-fill: #2B2421; -fx-padding: 0 0 5 0;"/>
+                        <TextField fx:id="cardNumberField" promptText="XXXX XXXX XXXX XXXX" styleClass="elegant-input" />
+                        <Label fx:id="cardNumberErrorLabel" styleClass="error-message" wrapText="true" />
+                     </children>
+                  </VBox>
+                  <ImageView fx:id="cardTypeImageView" fitHeight="60.0" fitWidth="100.0" pickOnBounds="true" preserveRatio="true" smooth="true" />
+               </children>
+            </HBox>
+            <VBox>
+               <children>
+                  <Label text="Cardholder Name" style="-fx-font-weight: bold; -fx-text-fill: #2B2421; -fx-padding: 0 0 5 0;"/>
+                  <TextField fx:id="cardholderNameField" promptText="e.g. J. Smith" styleClass="elegant-input" />
+                  <Label fx:id="cardholderNameErrorLabel" styleClass="error-message" wrapText="true"/>
+               </children>
+            </VBox>
+            <HBox spacing="25.0">
+               <children>
+                  <VBox HBox.hgrow="ALWAYS">
+                     <children>
+                        <Label text="Expiry Date (MM/YY)" style="-fx-font-weight: bold; -fx-text-fill: #2B2421; -fx-padding: 0 0 5 0;"/>
+                        <TextField fx:id="expiryDateField" promptText="MM/YY" styleClass="elegant-input" />
+                        <Label fx:id="expiryDateErrorLabel" styleClass="error-message" wrapText="true"/>
+                     </children>
+                  </VBox>
+                  <VBox HBox.hgrow="ALWAYS">
+                     <children>
+                        <Label text="CVV" style="-fx-font-weight: bold; -fx-text-fill: #2B2421; -fx-padding: 0 0 5 0;"/>
+                        <TextField fx:id="cvvField" promptText="XXX" styleClass="elegant-input" />
+                        <Label fx:id="cvvErrorLabel" styleClass="error-message" wrapText="true"/>
+                     </children>
+                  </VBox>
+               </children>
+            </HBox>
+
+            <Region VBox.vgrow="ALWAYS" />
+
+            <HBox alignment="CENTER" spacing="20.0">
+               <children>
+                  <Button fx:id="cancelButton" mnemonicParsing="false" onAction="#handleCancel" prefHeight="44.0" prefWidth="180.0" styleClass="outline-action-btn" text="CANCEL" />
+                  <Button fx:id="confirmButton" mnemonicParsing="false" onAction="#handleConfirm" prefHeight="44.0" prefWidth="250.0" styleClass="primary-action-btn" text="CONFIRM PAYMENT" />
+               </children>
+               <padding>
+                  <Insets top="10.0" />
+               </padding>
+            </HBox>
+
+            <HBox alignment="CENTER" spacing="12.0">
+               <children>
+                  <Label text="Supports:" style="-fx-text-fill: #8A726B; -fx-font-size: 13px;" />
+                  <ImageView fitHeight="40.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true" smooth="true">
+                     <image>
+                        <Image url="@icons/visa.png" requestedWidth="60" requestedHeight="40" preserveRatio="true" smooth="true"/>
+                     </image>
+                  </ImageView>
+                  <ImageView fitHeight="40.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true" smooth="true">
+                     <image>
+                        <Image url="@icons/mastercard.png" requestedWidth="60" requestedHeight="40" preserveRatio="true" smooth="true"/>
+                     </image>
+                  </ImageView>
+                  <ImageView fitHeight="40.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true" smooth="true">
+                     <image>
+                        <Image url="@icons/amex.png" requestedWidth="60" requestedHeight="40" preserveRatio="true" smooth="true"/>
+                     </image>
+                  </ImageView>
+                  <ImageView fitHeight="40.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true" smooth="true">
+                     <image>
+                        <Image url="@icons/discover.png" requestedWidth="60" requestedHeight="40" preserveRatio="true" smooth="true"/>
+                     </image>
+                  </ImageView>
+               </children>
+               <padding>
+                  <Insets top="15.0" />
+               </padding>
+            </HBox>
+         </children>
+      </VBox>
+   </children>
+</AnchorPane>

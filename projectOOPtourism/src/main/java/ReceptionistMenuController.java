@@ -3,17 +3,25 @@ import java.util.function.Supplier;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.application.Platform;
-import javafx.util.Duration;
 import javafx.fxml.FXML;
-import javafx.scene.control.ListView;
+import javafx.scene.control.Button;
+import javafx.scene.layout.HBox;
+import javafx.util.Duration;
 
 public class ReceptionistMenuController {
     private Main mainApp;
     private Receptionist receptionist;
 
-    @FXML private ListView<Reservation> allReservationsList;
-    @FXML private ListView<Reservation> todaysReservationsList;
+    @FXML private HBox navBar;
+
+    // Nav buttons — fx:id must match ReceptionistMenu.fxml
+    @FXML private Button btnReservations;
+    @FXML private Button btnGuests;
+    @FXML private Button btnRooms;
+    @FXML private Button btnChat;
+    @FXML private Button btnTime;
+
+    private Button activeButton;
 
     private Timeline syncTimeline;
     private long localDataVersion = -1;
@@ -21,13 +29,7 @@ public class ReceptionistMenuController {
     @FXML
     public void initialize() {
         Database.loadAll();
-        if (allReservationsList != null) {
-            allReservationsList.getItems().setAll(Database.getReservations());
-        }
-        if (todaysReservationsList != null) {
-            todaysReservationsList.getItems().setAll(Database.getTodaysReservations());
-        }
-        
+
         if (syncTimeline != null) syncTimeline.stop();
         syncTimeline = new Timeline(new KeyFrame(Duration.seconds(2), event -> {
             new Thread(() -> {
@@ -37,14 +39,6 @@ public class ReceptionistMenuController {
                 } else if (currentVersion > localDataVersion) {
                     localDataVersion = currentVersion;
                     Database.refreshReservationsFromDatabase();
-                    Platform.runLater(() -> {
-                        if (allReservationsList != null) {
-                            allReservationsList.getItems().setAll(Database.getReservations());
-                        }
-                        if (todaysReservationsList != null) {
-                            todaysReservationsList.getItems().setAll(Database.getTodaysReservations());
-                        }
-                    });
                 }
             }).start();
         }));
@@ -55,50 +49,80 @@ public class ReceptionistMenuController {
     public void initData(Main mainApp, Receptionist receptionist) {
         this.mainApp = mainApp;
         this.receptionist = receptionist;
-        Database.loadAll(); // Uniform initialization safety net
+        Database.loadAll();
+        // Set initial active button to Reservations
+        setActiveButton(btnReservations);
     }
 
     public void loadDefaultView() {
-        showReservationDashboard();
+        showAllReservations();
     }
 
+    // ── active-state management ───────────────────────────────────────────────
+
+    private void setActiveButton(Button btn) {
+        if (activeButton != null) {
+            activeButton.getStyleClass().remove("nav-btn-active");
+        }
+        activeButton = btn;
+        if (activeButton != null && !activeButton.getStyleClass().contains("nav-btn-active")) {
+            activeButton.getStyleClass().add("nav-btn-active");
+        }
+    }
+
+    // ── nav actions ───────────────────────────────────────────────────────────
+
+    @FXML private void showAllReservations() {
+        setActiveButton(btnReservations);
+        mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/ReceptionistReservations.fxml",
+                ReceptionistReservationsController.ViewMode.ALL);
+    }
+
+    @FXML private void showGuests() {
+        setActiveButton(btnGuests);
+        mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GenericList.fxml",
+                new Object[]{"All Guests", (Supplier<List<?>>) () -> {
+                    Database.refreshUsersFromDatabase();
+                    return Database.getGuests();
+                }});
+    }
+
+    @FXML private void showRooms() {
+        setActiveButton(btnRooms);
+        mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GenericList.fxml",
+                new Object[]{"Rooms", (Supplier<List<?>>) () -> Database.getRooms()});
+    }
+
+    @FXML private void showTime() {
+        setActiveButton(btnTime);
+        mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/AdvanceTime.fxml", null);
+    }
+
+    @FXML private void showChat() {
+        setActiveButton(btnChat);
+        mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/Chat.fxml", receptionist);
+    }
+
+    @FXML private void doLogout() {
+        mainApp.showLoginScreen();
+    }
+
+    // Kept for backward compat
     @FXML private void showToday() {
+        setActiveButton(btnReservations);
         mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/ReceptionistReservations.fxml",
                 ReceptionistReservationsController.ViewMode.CHECKING_IN);
     }
-    
+
     @FXML private void showCheckIn() {
+        setActiveButton(btnReservations);
         mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/ReceptionistReservations.fxml",
                 ReceptionistReservationsController.ViewMode.CHECKING_IN);
     }
 
     @FXML private void showCheckOut() {
+        setActiveButton(btnReservations);
         mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/ReceptionistReservations.fxml",
                 ReceptionistReservationsController.ViewMode.CHECKING_OUT);
-    }
-    
-    @FXML private void showAllReservations() {
-        mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/ReceptionistReservations.fxml",
-                ReceptionistReservationsController.ViewMode.ALL);
-    }
-
-    private void showReservationDashboard() {
-        mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/ReceptionistReservations.fxml",
-                ReceptionistReservationsController.ViewMode.CHECKING_IN);
-    }
-    
-    @FXML private void showGuests() {
-        mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GenericList.fxml", new Object[]{"All Guests", (Supplier<List<?>>) () -> {
-            Database.refreshUsersFromDatabase();
-            return Database.getGuests();
-        }});
-    }
-    
-    @FXML private void showRooms() { mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GenericList.fxml", new Object[]{"Rooms", (Supplier<List<?>>) () -> Database.getRooms()}); }
-    @FXML private void showTime() { mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/AdvanceTime.fxml", null); }
-    @FXML private void showChat() { mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/Chat.fxml", receptionist); }
-    
-    @FXML private void doLogout() { 
-        mainApp.showLoginScreen(); 
     }
 }

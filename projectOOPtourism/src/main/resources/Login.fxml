@@ -18,7 +18,7 @@
                   <padding><Insets bottom="60" left="65" right="65" top="60" /></padding>
                   <children>
                      <Label style="-fx-text-fill: #F9F3EA;" styleClass="hero-text-light" text="Your stay," textFill="#F9F3EA" />
-                     <Label style="-fx-text-fill: #C8B8B0;" styleClass="hero-text-italic" text="remembered" textFill="#e8c9b9" />
+                     <Label styleClass="hero-text-italic" text="remembered" textFill="#e8c9b9" />
                      <Label style="-fx-text-fill: #F9F3EA;" styleClass="hero-text-light" text="forever." textFill="#F9F3EA" />
                      <Region prefHeight="18" />
                      <Label maxWidth="400" style="-fx-text-fill: #D4C4BC;" styleClass="hero-subtext" text="&quot;A person's life is his identity. Let us help you maintain yours.&quot; Sign in to your account to view availability and manage your upcoming stay." textFill="WHITE" wrapText="true" />

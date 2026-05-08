@@ -1,35 +1,135 @@
-Desktop Hotel Reservation System
+# Hotel Reservation System - OOP Project
 
-Project Overview
-This project is a comprehensive Desktop Hotel Reservation System developed for the CSE241 Object-Oriented Computer Programming course (2nd Semester 2025/2026) at the Faculty of Engineering, Ain Shams University.
+## Overview
+This is a JavaFX-based hotel reservation system built using Object-Oriented Programming principles. The system allows guests, receptionists, and administrators to manage hotel operations including room reservations, check-ins/check-outs, payments, and system configurations.
 
-- Key Features
-User Roles & Capabilities
-Guests: Can register, log in, browse available rooms with filters (type, price, amenities), make and cancel reservations, and securely check out/pay invoices.
+## Technologies Used
+- **Java 21** - Core programming language
+- **JavaFX 21** - GUI framework
+- **Maven** - Build and dependency management
+- **MySQL** - Database for persistent storage
+- **FXML** - Declarative UI markup
 
-Receptionists: Can view all hotel data, manage guest check-ins, process check-outs, and communicate with guests via live chat.
+## Project Structure
+```
+projectOOPtourism/
+├── src/
+│   └── main/
+│       ├── java/
+│       │   ├── [Controllers] - JavaFX controller classes
+│       │   ├── [Models] - Entity classes (Guest, Room, Reservation, etc.)
+│       │   ├── [Services] - Business logic services
+│       │   ├── [Repositories] - Data access layers
+│       │   ├── [Utils] - Utility classes
+│       │   └── Main.java - Application entry point
+│       └── resources/
+│           ├── [FXML files] - UI layouts
+│           └── styles.css - Styling
+├── pom.xml - Maven configuration
+└── README.md - This file
+```
 
-Administrators: Have full system control with CRUD capabilities for rooms, room types, and amenities.
+## Key Components
 
-💻 Technical Highlights
-Strict OOP Design: Built utilizing advanced Object-Oriented principles including encapsulation, inheritance, abstract classes, and interface contracts (Payable, Manageable).
+### 1. Application Entry Point (`Main.java`)
+- Extends `javafx.application.Application`
+- Manages application state (current user, selected room, etc.)
+- Handles scene switching between different views
+- Implements auto-refresh mechanism for real-time data synchronization
+- Initializes database and checks for first-time setup
 
-Interactive GUI: Fully designed using JavaFX (FXML and CSS) with distinct screens for dashboards, room browsing, and reservation management.
+### 2. Database Layer (`Database.java`)
+- Centralized data management using the Singleton pattern
+- Handles all database operations (CRUD) for:
+  - RoomTypes, Amenities, Rooms, Guests, Staff, Reservations, Invoices
+- Implements lazy loading and caching of data
+- Provides methods for data synchronization between instances
+- Includes utility methods for checking table emptiness and data versioning
 
-Multi-threading: Utilizes Java threads/JavaFX Tasks for real-time room availability updates without freezing the main UI thread.
+### 3. Model Classes
+- **User Hierarchy**: `User` (abstract) → `Guest`, `Staff` → `Admin`, `Receptionist`
+- **Hotel Entities**: `Room`, `RoomType`, `Amenity`
+- **Reservation System**: `Reservation`, `ReservationStatus`, `Invoice`
+- **Support Classes**: `SystemTime`, `Gender`, `PaymentMethod`, `Payable`
 
-Client-Server Networking: Implements Java Sockets to support a concurrent, real-time live chat feature between guests and receptionists.
+### 4. Services
+- **Authentication**: Handles user login/logout and session management
+- **AuthService**: Manages authentication logic and password hashing
+- **AvailabilityService**: Checks room availability for given dates
+- **PricingService**: Calculates reservation costs
+- **ReservationService**: Handles reservation lifecycle operations
+- **CatalogService**: Manages room types and amenities catalog
+- **GuestPreferenceRanker**: Ranks room recommendations based on guest preferences
 
-Data Validation: Comprehensive input validation and custom exception handling (RoomNotAvailableException, InvalidPaymentException) ensure system stability.
+### 5. Controllers (JavaFX)
+Each FXML file has a corresponding controller class that handles:
+- User interactions (button clicks, form submissions)
+- Data binding between UI and model objects
+- Navigation between different views
+- Validation of user input
+- Examples:
+  - `LoginController`: Handles user authentication
+  - `MakeReservationController`: Manages the reservation creation flow
+  - `GuestHomeController`: Main interface for guest users
+  - `AdminMenuController`: Navigation for admin functions
+  - `GenericListController`: Reusable controller for displaying lists of entities
 
-🛠️ Technology Stack
-Language: Java
+### 6. Repositories
+- Data access objects that encapsulate SQL queries:
+  - `UserRepository`, `RoomRepository`, `ReservationRepository`, etc.
+  - Handle mapping between database records and Java objects
+  - Provide methods for finding, saving, updating, and deleting records
 
-GUI Framework: JavaFX
+### 7. Utilities
+- **DatabaseConnection**: Manages JDBC connections to MySQL
+- **DatabaseInitializer**: Sets up default data on first run
+- **DatabaseSaver**: Handles asynchronous database updates
+- **DatabaseSync**: Synchronizes data between multiple application instances
+- **FxNodeSync**: Synchronizes JavaFX node properties
+- **Exception Classes**: Custom exceptions for business logic validation
 
-Networking: java.net.Socket, java.net.ServerSocket
+## How the Application Works
 
-Concurrency: Java Threads & Platform.runLater()
+### Startup Sequence
+1. `Main.start()` initializes the application
+2. `DatabaseInitializer.initializeDatabase()` sets up default data if needed
+3. `Database.loadAll()` fetches all data from the database into memory
+4. Login screen is displayed (`/Login.fxml`)
 
-Version Control: Git & GitHub
+### User Roles and Dashboards
+- **Guest**: Views available rooms, makes reservations, manages profile
+- **Receptionist**: Handles check-ins/check-outs, manages reservations, processes payments
+- **Administrator**: Manages room types, amenities, staff, and system settings
 
+### Data Synchronization
+- The application uses a versioning system (`SystemSettingsRepository`) to detect changes
+- Each instance polls the database periodically (via `Timeline`) for updates
+- When changes are detected, local caches are refreshed and active views are updated
+- This allows multiple instances to stay in sync without requiring a database trigger
+
+### Reservation Flow
+1. Guest searches for available rooms via `AvailabilityService`
+2. Selects a room and room type
+3. Enters guest information and reservation dates
+4. System calculates pricing and creates a `Reservation` object
+5. Reservation is saved to database and appears in relevant views
+6. On check-in date, status automatically updates to `CHECKING_IN`
+7. On check-out date, status updates to `CHECKING_OUT` then to `COMPLETED` after payment
+
+## Configuration
+- Database connection details are in `database/DatabaseConnection.java`
+- JavaFX module path and VM arguments are configured in `nbactions.xml`
+- Maven dependencies are managed in `pom.xml`
+
+## Running the Application
+1. Ensure MySQL is running and create the database schema
+2. Update database credentials in `DatabaseConnection.java` if needed
+3. Run: `mvn javafx:run` or use the configured Maven actions in your IDE
+
+## Design Patterns Used
+- **MVC**: Separation of concerns (Model-View-Controller)
+- **Singleton**: Database and SystemSettings classes
+- **Factory**: Object creation in various services
+- **Observer**: Property change listeners in JavaFX bindings
+- **Strategy**: Different pricing algorithms in `PricingService`
+- **Template Method**: Common workflows in controller classes

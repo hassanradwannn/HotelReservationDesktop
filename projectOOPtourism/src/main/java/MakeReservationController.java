@@ -226,7 +226,7 @@ public class MakeReservationController implements DashboardContentController {
     @FXML
     private void handleBack() {
         if (sourceSearchContext != null) {
-            mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GuestHome.fxml", currentSearchContext());
+            mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GuestHome.fxml", new GuestHomeController.HomeSearchState(currentSearchContext(), true));
         } else {
             mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GuestHome.fxml", guest);
         }
