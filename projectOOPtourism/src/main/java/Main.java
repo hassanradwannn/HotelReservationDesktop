@@ -12,6 +12,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import javafx.scene.image.Image; // Import Image class
+import java.util.List;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -22,6 +24,7 @@ public class Main extends Application {
     private Room selectedRoomForReservation;
     private RoomType selectedRoomTypeForReservation;
     private ReservationSearchContext guestHomeSearchContext;
+    private List<Room> lastGuestSearchResults;
     private VBox currentContentArea;
     private DashboardController currentDashboardController;
     private Timeline autoRefreshTimeline;
@@ -72,6 +75,7 @@ public class Main extends Application {
 
         this.stage = stage;
         stage.setTitle("Grand Budapest Hotel Reservation System");
+        stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/grandbudapestlogo.jpg"))); // Set taskbar icon
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             Authentication.logout(currentUser);
@@ -93,6 +97,7 @@ public class Main extends Application {
         selectedRoomForReservation = null;
         selectedRoomTypeForReservation = null;
         guestHomeSearchContext = null;
+        lastGuestSearchResults = null;
 
         // Stop any running auto-refresh when returning to login screen
         if (autoRefreshTimeline != null) {
@@ -135,6 +140,9 @@ public class Main extends Application {
                     && data instanceof Guest
                     && guestHomeSearchContext != null) {
                 viewData = new GuestHomeController.HomeSearchState(guestHomeSearchContext, false);
+            } else if (currentUser instanceof Guest && "/GuestHome.fxml".equals(fxmlFile)
+                    && data instanceof GuestHomeController.HomeSearchState) {
+                viewData = data;
             }
 
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlFile));
@@ -235,6 +243,14 @@ public class Main extends Application {
 
     public void setGuestHomeSearchContext(ReservationSearchContext guestHomeSearchContext) {
         this.guestHomeSearchContext = guestHomeSearchContext;
+    }
+
+    public List<Room> getLastGuestSearchResults() {
+        return lastGuestSearchResults;
+    }
+
+    public void setLastGuestSearchResults(List<Room> lastGuestSearchResults) {
+        this.lastGuestSearchResults = lastGuestSearchResults;
     }
 
     public User getCurrentUser() {

@@ -2,6 +2,8 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
@@ -19,6 +21,14 @@
                 <Label fx:id="titleLabel" text="Dashboard" styleClass="topbar-title"/>
                 <Region HBox.hgrow="ALWAYS"/>
                 <Label fx:id="userLabel" text="Logged in as: " styleClass="topbar-user"/>
+                <ImageView fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true">
+                    <image>
+                        <Image url="@icons/grandbudapestlogo.jpg" />
+                    </image>
+                    <HBox.margin>
+                        <Insets left="10.0" />
+                    </HBox.margin>
+                </ImageView>
             </HBox>
             <!-- Nav bar slot — populated and styled for receptionist; zero-height for others -->
             <HBox fx:id="navBar" prefHeight="0" minHeight="0" maxHeight="0"

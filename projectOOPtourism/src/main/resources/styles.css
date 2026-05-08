@@ -43,7 +43,7 @@
     -fx-font-family: "Georgia";
     -fx-font-size: 52px;
     -fx-font-style: italic;
-    -fx-text-fill: #C8B8B0;
+    -fx-text-fill: #faf0c9;
     -fx-wrap-text: true;
 }
 
@@ -398,7 +398,7 @@
 /* ─── Panel inner content (Dashboard content panes) ─── */
 .panel-eyebrow {
     -fx-font-family: "Georgia";
-    -fx-font-size: 11px;
+    -fx-font-size: 16px; /* BUMPED THIS UP SO THE TEXT IS BIGGER */
     -fx-font-weight: bold;
     -fx-text-fill: #C4415D;
     -fx-letter-spacing: 2;
@@ -826,9 +826,9 @@
 }
 
 .search-field-combo .list-cell {
-    -fx-background-color: #F7D6D9;
-    -fx-text-fill: #2C2523;
     -fx-font-family: "Georgia";
+    -fx-text-fill: #2C2523;
+    -fx-background-color: #F7D6D9;
 }
 
 .search-field-combo > .arrow-button {
@@ -1383,7 +1383,7 @@
     -fx-font-family: "Georgia";
     -fx-font-size: 46px;
     -fx-font-style: italic;
-    -fx-text-fill: #D4B8C0;
+    -fx-text-fill: #faf0c9;
 }
 
 .hero-sub {
@@ -2052,4 +2052,90 @@
     -fx-font-family: "Georgia";
     -fx-font-size: 13px;
     -fx-text-fill: #C4415D;
+}
+
+/* CreditCardModal styles */
+.credit-card-modal-root {
+    -fx-background-color: #F9F3EA; /* Cream background */
+    -fx-border-color: #C8A97E; /* Gold border */
+    -fx-border-width: 2;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+    -fx-effect: dropshadow(gaussian, rgba(44,37,35,0.18), 24, 0.18, 0, 8);
+}
+
+.header-label {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 24px;
+    -fx-text-fill: #8B2040; /* Burgundy */
+    -fx-font-weight: bold;
+}
+
+.error-label {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 11px;
+    -fx-text-fill: #C4415D; /* Crimson */
+    -fx-font-style: italic;
+    -fx-max-width: Infinity;
+    -fx-pref-height: 15px; /* Give it some height even when empty */
+}
+
+.primary-button {
+    -fx-background-color: #8B2040; /* Burgundy */
+    -fx-text-fill: #F9F3EA; /* Cream */
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 0;
+    -fx-cursor: hand;
+    -fx-letter-spacing: 1;
+    -fx-padding: 10 20 10 20;
+}
+
+.primary-button:hover {
+    -fx-background-color: #C4415D; /* Crimson */
+}
+
+.outline-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #8B2040; /* Burgundy */
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-border-color: #8B2040; /* Burgundy */
+    -fx-border-width: 1.5;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-cursor: hand;
+    -fx-padding: 10 20 10 20;
+}
+
+.outline-button:hover {
+    -fx-background-color: #F7D6D9; /* Blush */
+    -fx-text-fill: #C4415D; /* Crimson */
+    -fx-border-color: #C4415D; /* Crimson */
+}
+
+/* Text fields in modal */
+.text-field {
+    -fx-background-color: #F9F3EA;
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+    -fx-padding: 8 10 8 10;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 14px;
+    -fx-text-fill: #2C2523;
+    -fx-prompt-text-fill: #A88984;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+}
+
+.text-field:focused {
+    -fx-border-color: #8B2040;
+    -fx-background-color: #FFF7E6;
+}
+
+/* Ensure search input fields in guest home have the correct background */
+.guest-home-root .search-field-input {
+    -fx-background-color: #F7D6D9;
 }

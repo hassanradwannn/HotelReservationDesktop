@@ -1,15 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.layout.FlowPane?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
 
-<VBox spacing="20" style="-fx-padding: 30; -fx-background-color: #F7EFE5;" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="AvailableRoomsController">
-    <Label style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #2B2421;" text="Select Your Room" />
-    <Label style="-fx-font-size: 16px; -fx-text-fill: #8A726B;" text="Choose one of the available rooms below to complete your reservation." />
-    
-    <ScrollPane fitToWidth="true" style="-fx-background: #F7EFE5; -fx-border-color: transparent;" VBox.vgrow="ALWAYS">
+<VBox spacing="20" styleClass="content-area" stylesheets="@styles.css"
+      xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="AvailableRoomsController">
+
+    <padding>
+        <Insets bottom="30" left="32" right="32" top="30" />
+    </padding>
+
+    <Label styleClass="panel-title" text="Select Your Room" />
+
+    <Label styleClass="panel-eyebrow"
+           text="Choose one of the available rooms below to complete your reservation."
+           wrapText="true" />
+
+    <ScrollPane fitToWidth="true" styleClass="transparent-scroll" VBox.vgrow="ALWAYS">
         <content>
             <VBox fx:id="roomCards" spacing="20" style="-fx-background-color: transparent; -fx-padding: 10;" />
         </content>

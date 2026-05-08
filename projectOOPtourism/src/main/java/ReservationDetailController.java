@@ -14,6 +14,7 @@ import javafx.scene.control.DateCell;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import javafx.util.StringConverter;
 
 public class ReservationDetailController implements DashboardContentController {
@@ -277,6 +278,12 @@ public class ReservationDetailController implements DashboardContentController {
                 mainApp.alert("Error", "Please select a payment method.");
                 return;
             }
+            if (paymentMethod == PaymentMethod.CREDIT_CARD) {
+                boolean paymentConfirmed = CreditCardModal.showAndWait((Stage) titleLabel.getScene().getWindow());
+                if (!paymentConfirmed) {
+                    return; // User cancelled the payment
+                }
+            }
             ReservationService.checkOutGuest(reservation, paymentMethod);
             mainApp.alert("Success", "Guest checked out.");
             refreshCurrentReservation();
@@ -296,6 +303,12 @@ public class ReservationDetailController implements DashboardContentController {
             if (paymentMethod == null) {
                 mainApp.alert("Error", "Please select a payment method.");
                 return;
+            }
+            if (paymentMethod == PaymentMethod.CREDIT_CARD) {
+                boolean paymentConfirmed = CreditCardModal.showAndWait((Stage) titleLabel.getScene().getWindow());
+                if (!paymentConfirmed) {
+                    return; // User cancelled the payment
+                }
             }
             ReservationService.payDeposit(reservation, currentGuest, paymentMethod);
             setMessage("Deposit paid. Reservation confirmed.");

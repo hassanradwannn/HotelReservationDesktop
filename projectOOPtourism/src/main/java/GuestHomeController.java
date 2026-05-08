@@ -56,14 +56,16 @@ public class GuestHomeController implements DashboardContentController {
         this.mainApp = mainApp;
 
         ReservationSearchContext context = null;
-        boolean openResults = false;
+        boolean shouldSearch = false;
+        boolean shouldRestore = false;
+
         if (data instanceof ReservationSearchContext searchContext) {
             context = searchContext;
-            openResults = true;
+            shouldSearch = true;
             this.guest = searchContext.getGuest();
         } else if (data instanceof HomeSearchState homeSearchState) {
             context = homeSearchState.context();
-            openResults = homeSearchState.openResults();
+            shouldRestore = homeSearchState.restorePreviousResults();
             this.guest = context.getGuest();
         } else {
             this.guest = (Guest) data;
@@ -94,8 +96,24 @@ public class GuestHomeController implements DashboardContentController {
 
         if (context != null) {
             applySearchContext(context);
-            if (openResults) {
+            if (shouldSearch) {
                 handleSearch();
+            } else if (shouldRestore) {
+                List<Room> cachedResults = mainApp.getLastGuestSearchResults();
+                if (cachedResults != null) {
+                    buildRoomTypeResults(
+                        cachedResults,
+                        context.getCheckIn(),
+                        context.getCheckOut(),
+                        context.getGuests(),
+                        context.getRequestedAmenities(),
+                        context.getMaxPrice(),
+                        context.getSearchRoomType()
+                    );
+                    showResults(true);
+                } else {
+                    handleSearch(); // Fallback to search if cache is empty
+                }
             }
         }
 
@@ -424,6 +442,7 @@ public class GuestHomeController implements DashboardContentController {
                 return;
             }
             List<Room> available = roomSearchTask.getValue();
+            mainApp.setLastGuestSearchResults(available);
             if (available.isEmpty()) {
                 if (request.preserveCurrentResultsOnEmpty()) {
                     return;
@@ -597,6 +616,6 @@ public class GuestHomeController implements DashboardContentController {
             boolean preserveCurrentResultsOnEmpty) {
     }
 
-    public record HomeSearchState(ReservationSearchContext context, boolean openResults) {
+    public record HomeSearchState(ReservationSearchContext context, boolean restorePreviousResults) {
     }
 }
