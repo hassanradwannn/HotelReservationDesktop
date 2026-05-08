@@ -6,12 +6,11 @@
 
 <VBox xmlns="http://javafx.com/javafx/21"
       xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="GuestHomeController"
+      fx:controller="Controllers.GuestHomeController"
       styleClass="guest-home-root"
       stylesheets="@styles.css"
       spacing="0">
 
-    <!-- HERO BANNER — now tall enough to contain the floating search card -->
     <VBox fx:id="heroArea" styleClass="guest-hero" spacing="6" alignment="TOP_LEFT">
         <padding><Insets top="36" right="60" bottom="40" left="60"/></padding>
 
@@ -27,7 +26,6 @@
             <Label fx:id="heroDateLabel" text="Date: DD/MM/YYYY" styleClass="guest-date-label"/>
         </HBox>
 
-        <!-- SEARCH CARD — floats inside the pink hero -->
         <VBox fx:id="searchArea" styleClass="search-card-inner" spacing="0">
             <VBox.margin><Insets top="24"/></VBox.margin>
             <padding><Insets top="18" right="24" bottom="18" left="24"/></padding>
@@ -83,7 +81,6 @@
 
     </VBox>
 
-    <!-- RESULTS AREA — shown after search -->
     <VBox fx:id="resultsArea" spacing="0" visible="false" managed="false" VBox.vgrow="ALWAYS">
         <VBox styleClass="results-summary-band" spacing="22">
             <padding><Insets top="28" right="48" bottom="22" left="48"/></padding>
@@ -130,11 +127,9 @@
         </VBox>
     </VBox>
 
-    <!-- BOTTOM QUICK-ACCESS CARDS — hidden during search results -->
     <HBox fx:id="quickCardsArea" spacing="24" VBox.vgrow="ALWAYS" alignment="TOP_LEFT">
         <padding><Insets top="28" right="48" bottom="28" left="48"/></padding>
 
-        <!-- MY RESERVATIONS — rose/pink fill -->
         <VBox styleClass="quick-card-rose" spacing="16" minWidth="216" prefWidth="216" maxWidth="Infinity" maxHeight="Infinity" HBox.hgrow="ALWAYS">
             <padding><Insets top="24" right="20" bottom="24" left="20"/></padding>
             <VBox spacing="6">
@@ -146,7 +141,6 @@
                    styleClass="quick-card-body" wrapText="true"/>
         </VBox>
 
-        <!-- THE FRONT DESK — cream with quote -->
         <VBox styleClass="quick-card-cream" spacing="16" minWidth="216" prefWidth="216" maxWidth="Infinity" maxHeight="Infinity" HBox.hgrow="ALWAYS" onMouseClicked="#showChat">
             <padding><Insets top="24" right="20" bottom="24" left="20"/></padding>
             <Label text="THE FRONT DESK" styleClass="quick-card-link-dark"/>
@@ -155,7 +149,6 @@
                    styleClass="quick-card-quote" wrapText="true"/>
         </VBox>
 
-        <!-- PATRON'S DOSSIER — dark burgundy fill -->
         <VBox styleClass="quick-card-burgundy" spacing="16" minWidth="216" prefWidth="216" maxWidth="Infinity" maxHeight="Infinity" HBox.hgrow="ALWAYS" onMouseClicked="#showProfile">
             <padding><Insets top="24" right="20" bottom="24" left="20"/></padding>
             <Label text="PATRON'S DOSSIER" styleClass="quick-card-link-light"/>
@@ -164,7 +157,6 @@
                    styleClass="quick-card-body-light" wrapText="true"/>
         </VBox>
 
-        <!-- DIRECTOR'S CABINET — cream with two buttons -->
         <VBox styleClass="quick-card-cream" spacing="12" minWidth="216" prefWidth="216" maxWidth="Infinity" maxHeight="Infinity" HBox.hgrow="ALWAYS">
             <padding><Insets top="24" right="20" bottom="24" left="20"/></padding>
             <Label text="DIRECTOR'S CABINET" styleClass="quick-card-muted"/>

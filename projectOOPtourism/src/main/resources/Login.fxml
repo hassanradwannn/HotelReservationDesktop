@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane prefHeight="720.0" prefWidth="1280.0" styleClass="root-pane" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="LoginController">
+<AnchorPane prefHeight="720.0" prefWidth="1280.0" styleClass="root-pane" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Controllers.LoginController">
    <children>
       <HBox AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
 
@@ -25,7 +25,7 @@
                   </children>
                </VBox>
 
-               <Label style="-fx-text-fill: #B8A89E;" styleClass="hotel-footer-label" text="Est. 1908  ·  Cairo, Arab Republic of Egypt" textFill="#B8A89E">
+               <Label style="-fx-text-fill: #B8A89E;" styleClass="hotel-footer-label" text="Est. 1908  &#183;  Cairo, Arab Republic of Egypt" textFill="#B8A89E">
                   <padding><Insets bottom="35" left="65" /></padding>
                </Label>
             </children>
@@ -68,3 +68,4 @@
       </HBox>
    </children>
 </AnchorPane>
+

@@ -7,7 +7,7 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ListView?>
 
-<VBox alignment="CENTER" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="EditRoomController">
+<VBox alignment="CENTER" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Controllers.EditRoomController">
     <VBox styleClass="form-card" maxWidth="500" spacing="15">
         <Label text="ADMINISTRATION" styleClass="section-eyebrow"/>
         <Label text="Edit Room" styleClass="section-heading"/>

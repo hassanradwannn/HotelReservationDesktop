@@ -7,7 +7,7 @@
 <HBox alignment="CENTER_LEFT" spacing="0" styleClass="topnav" stylesheets="@styles.css"
       xmlns="http://javafx.com/javafx/19"
       xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="ReceptionistMenuController">
+      fx:controller="Controllers.ReceptionistMenuController">
     <Button fx:id="btnReservations" text="RESERVATIONS"  onAction="#showAllReservations" styleClass="nav-btn, nav-btn-active" />
     <Button fx:id="btnGuests"       text="GUESTS"        onAction="#showGuests"          styleClass="nav-btn" />
     <Button fx:id="btnRooms"        text="ROOMS"         onAction="#showRooms"           styleClass="nav-btn" />

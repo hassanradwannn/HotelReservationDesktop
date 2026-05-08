@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="720.0" prefWidth="1280.0" styleClass="root-pane" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="RegisterController">
+<AnchorPane prefHeight="720.0" prefWidth="1280.0" styleClass="root-pane" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Controllers.RegisterController">
    <children>
       <HBox AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
 
@@ -23,7 +23,7 @@
                      <Label text="A glimmer of civilization in this barbaric slaughterhouse. Dedicated to the highest standards of hospitality." styleClass="hero-subtext" wrapText="true" maxWidth="380"/>
                   </children>
                </VBox>
-               <Label text="Est. 1908  ·  Cairo, Arab Republic of Egypt" styleClass="hotel-footer-label">
+               <Label text="Est. 1908  &#183;  Cairo, Arab Republic of Egypt" styleClass="hotel-footer-label">
                   <padding><Insets left="65" bottom="35"/></padding>
                </Label>
             </children>
@@ -81,3 +81,4 @@
       </HBox>
    </children>
 </AnchorPane>
+

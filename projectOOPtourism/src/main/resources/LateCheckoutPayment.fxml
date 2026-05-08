@@ -11,7 +11,7 @@
 <VBox spacing="0" style="-fx-padding: 10;" stylesheets="@styles.css"
       xmlns="http://javafx.com/javafx/21"
       xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="LateCheckoutPaymentController">
+      fx:controller="Controllers.LateCheckoutPaymentController">
     <children>
 
         <!-- Header -->
@@ -30,7 +30,6 @@
                 <Label fx:id="reservationIdLabel"
                        styleClass="profile-field"/>
 
-                <!-- Fee amount — highlighted -->
                 <VBox styleClass="late-fee-amount-box" spacing="2">
                     <children>
                         <Label text="AMOUNT DUE" styleClass="panel-eyebrow"/>

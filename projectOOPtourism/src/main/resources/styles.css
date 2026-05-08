@@ -1,5 +1,4 @@
 /* =====================================================
-   GRAND BUDAPEST HOTEL — styles.css  (Revamped)
    Palette:
      Blush:       #F7D6D9
      Rose:        #E8879A
@@ -11,12 +10,10 @@
      Warm BG:     #EDE4D8
    ===================================================== */
 
-/* ─── Root ──────────────────────────────────────────── */
 .root-pane {
     -fx-background-color: #EDE4D8;
 }
 
-/* ─── Login / Register Split Panels ─────────────────── */
 .login-left-panel {
     -fx-background-color: #C4415D;
     -fx-pref-width: 520;
@@ -27,9 +24,7 @@
     -fx-pref-width: 760;
 }
 
-/* Greek meander border — left (crimson bg, lighter marks) */
 
-/* Greek meander border — right (cream bg, rose marks) */
 
 /* Hero typography on left panel */
 .hero-text-light {
@@ -115,7 +110,6 @@
     -fx-wrap-text: true;
 }
 
-/* ─── Elegant Input (used across forms) ─────────────── */
 .elegant-input {
     -fx-background-color: #EFD9DF;
     -fx-background-radius: 0;
@@ -290,7 +284,6 @@
     -fx-opacity: 0.72;
 }
 
-/* ─── Primary Action Button ──────────────────────────── */
 .primary-action-btn {
     -fx-background-color: #8B2040;
     -fx-text-fill: #F9F3EA;
@@ -310,7 +303,6 @@
     -fx-background-color: #6d1832;
 }
 
-/* ─── Outline Action Button ──────────────────────────── */
 .outline-action-btn {
     -fx-background-color: transparent;
     -fx-text-fill: #8B2040;
@@ -372,7 +364,6 @@
     -fx-pref-width: 270;
 }
 
-/* ─── Danger Button ───────────────────────────────────── */
 .danger-action-btn {
     -fx-background-color: #C4415D;
     -fx-text-fill: #F9F3EA;
@@ -387,7 +378,6 @@
     -fx-background-color: #8B2040;
 }
 
-/* ─── Message label ──────────────────────────────────── */
 .message-label {
     -fx-text-fill: #C4415D;
     -fx-font-family: "Georgia";
@@ -395,7 +385,6 @@
     -fx-font-size: 13px;
 }
 
-/* ─── Panel inner content (Dashboard content panes) ─── */
 .panel-eyebrow {
     -fx-font-family: "Georgia";
     -fx-font-size: 16px; /* BUMPED THIS UP SO THE TEXT IS BIGGER */
@@ -501,7 +490,6 @@
     -fx-text-fill: #FFFFFF;
 }
 
-/* ─── Form card (content panel grouping) ─────────────── */
 .form-card {
     -fx-background-color: #FFFFFF;
     -fx-background-radius: 0;
@@ -646,7 +634,6 @@
     -fx-padding: 18 20 18 20;
 }
 
-/* ─── Elegant ListView ───────────────────────────────── */
 .elegant-list {
     -fx-font-family: "Georgia";
     -fx-font-size: 14px;
@@ -676,7 +663,6 @@
     -fx-text-fill: #8B2040;
 }
 
-/* ─── Topbar (Dashboard header) ─────────────────────── */
 .topbar {
     -fx-background-color: #8B2040;
 }
@@ -693,18 +679,15 @@
     -fx-text-fill: #D8CCC6;
 }
 
-/* ─── Sidebar ────────────────────────────────────────── */
 .sidebar {
     -fx-background-color: #F9F3EA;
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 2, 0);
 }
 
-/* ─── Content area ───────────────────────────────────── */
 .content-area {
     -fx-background-color: #EDE4D8;
 }
 
-/* ─── Room Browser ───────────────────────────────────── */
 .room-hero-banner {
     -fx-background-color: #C4415D;
     -fx-min-height: 210;
@@ -914,7 +897,6 @@
     -fx-text-fill: #2C2523;
 }
 
-/* ─── Room card (created in Java) ────────────────────── */
 .room-card {
     -fx-background-color: #FFFFFF;
     -fx-padding: 22;
@@ -988,7 +970,6 @@
     -fx-background-color: #C4415D;
 }
 
-/* ─── Room image placeholder ─────────────────────────── */
 .room-image-placeholder {
     -fx-background-color: linear-gradient(to bottom right, #EFE4D6, #E6A4B4);
     -fx-background-radius: 0;
@@ -1003,7 +984,6 @@
     -fx-font-style: italic;
 }
 
-/* ─── Chat card ──────────────────────────────────────── */
 .chat-card {
     -fx-background-color: #FFFFFF;
     -fx-border-color: #C8A97E;
@@ -1018,7 +998,6 @@
     -fx-text-fill: #2C2523;
 }
 
-/* ─── Scroll pane ────────────────────────────────────── */
 .transparent-scroll {
     -fx-background-color: transparent;
     -fx-background: transparent;
@@ -1103,7 +1082,6 @@
     -fx-border-width: 0;
 }
 
-/* ─── TableView ──────────────────────────────────────── */
 .table-view {
     -fx-background-color: #F9F3EA;
     -fx-border-color: #C8A97E;
@@ -1135,7 +1113,6 @@
     -fx-text-fill: #2C2523;
 }
 
-/* ─── Sidebar nav buttons ────────────────────────────── */
 .side-btn {
     -fx-background-color: transparent;
     -fx-text-fill: #2C2523;
@@ -1168,7 +1145,6 @@
     -fx-padding: 0 0 0 16;
 }
 
-/* ─── Legacy classes preserved for compatibility ─────── */
 .root-pane { -fx-background-color: #EDE4D8; }
 
 .card-container {
@@ -1284,7 +1260,6 @@
 
 .outline-button:hover { -fx-background-color: #F7D6D9; }
 
-/* .label global removed — was overriding all label colors */
 
 .section-title {
     -fx-font-family: "Georgia";
@@ -1362,12 +1337,10 @@
     -fx-border-width: 1;
 }
 
-/* ─── Guest Home Page ────────────────────────────────── */
 .guest-home-root {
     -fx-background-color: #EDE4D8;
 }
 
-/* Hero banner — no fixed height; grows to contain the floating search card */
 .guest-hero {
     -fx-background-color: #C4415D;
 }
@@ -1393,7 +1366,6 @@
     -fx-font-weight: bold;
 }
 
-/* Search card wrapper — kept for backward compat, no longer used in layout */
 .guest-search-card-wrapper {
     -fx-background-color: #C4415D;
     -fx-padding: 0 0 38 0;
@@ -1475,7 +1447,6 @@
     -fx-border-color: #C4415D;
 }
 
-/* ─── Quick-access cards ─────────────────────────────── */
 .quick-card-rose {
     -fx-background-color: #C4415D;
     -fx-cursor: hand;
@@ -1860,11 +1831,9 @@
 
 
 /* =====================================================
-   RECEPTIONIST DASHBOARD — REVAMPED NAV & CARDS
    Matches new horizontal-nav + avatar-card design.
    ===================================================== */
 
-/* ─── Override root & content for receptionist shell ── */
 .root-pane {
     -fx-background-color: #EDE4D8;
 }
@@ -1874,7 +1843,6 @@
     -fx-padding: 0;
 }
 
-/* ─── Top info bar (date left · role badge right) ───── */
 .topbar-info {
     -fx-background-color: #C4415D;
     -fx-min-height: 42;
@@ -1898,7 +1866,6 @@
     -fx-background-radius: 0;
 }
 
-/* ─── Horizontal navigation bar ─────────────────────── */
 .topnav {
     -fx-background-color: #C4415D;
     -fx-min-height: 58;
@@ -1956,7 +1923,6 @@
     -fx-text-fill: white;
 }
 
-/* ─── Filter bar ─────────────────────────────────────── */
 .filter-label {
     -fx-font-family: "Georgia";
     -fx-font-size: 13px;
@@ -1999,7 +1965,6 @@
     -fx-border-color: #8B2040;
 }
 
-/* ─── Reservation card (new avatar style) ────────────── */
 .card-guest-name {
     -fx-font-family: "Georgia";
     -fx-font-size: 20px;
@@ -2036,7 +2001,6 @@
     -fx-text-fill: white;
 }
 
-/* ─── Empty / error states ───────────────────────────── */
 .reservation-empty-message {
     -fx-font-family: "Georgia";
     -fx-font-size: 16px;

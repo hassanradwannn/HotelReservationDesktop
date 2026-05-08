@@ -9,7 +9,7 @@
       stylesheets="@styles.css"
       xmlns="http://javafx.com/javafx/17"
       xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="ReservationListRowController">
+      fx:controller="Controllers.ReservationListRowController">
     <children>
         <Label fx:id="reservationIdLabel" styleClass="reservation-list-column" />
         <Label fx:id="guestLabel" styleClass="reservation-list-column" />

@@ -15,7 +15,7 @@
       VBox.vgrow="ALWAYS"
       xmlns="http://javafx.com/javafx/21"
       xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="ReceptionistReservationsController">
+      fx:controller="Controllers.ReceptionistReservationsController">
     <children>
 
         <!-- Filter bar -->

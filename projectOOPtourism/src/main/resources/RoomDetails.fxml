@@ -4,9 +4,9 @@
 <?import javafx.scene.control.*?>
 <?import javafx.geometry.Insets?>
 
-<VBox spacing="0" style="-fx-padding: 10;" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="RoomDetailsController">
+<VBox spacing="0" style="-fx-padding: 10;" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Controllers.RoomDetailsController">
     <children>
-       <Button text="← BACK TO ROOMS" prefWidth="170" prefHeight="40" onAction="#handleBack" styleClass="outline-action-btn"/>
+       <Button text="&#8592; BACK TO ROOMS" prefWidth="170" prefHeight="40" onAction="#handleBack" styleClass="outline-action-btn"/>
        <Region prefHeight="14"/>
 
        <Label fx:id="titleLabel" styleClass="panel-title"/>
@@ -22,3 +22,4 @@
        <Button text="RESERVE THIS ROOM" prefWidth="220" prefHeight="46" onAction="#handleReserve" styleClass="primary-action-btn"/>
     </children>
 </VBox>
+

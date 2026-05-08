@@ -4,7 +4,7 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.Button?>
 
-<VBox alignment="CENTER" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="EditRoomTypeController">
+<VBox alignment="CENTER" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Controllers.EditRoomTypeController">
     <VBox styleClass="form-card" maxWidth="500" spacing="15">
         <Label text="ADMINISTRATION" styleClass="section-eyebrow"/>
         <Label text="Edit Room Type" styleClass="section-heading"/>

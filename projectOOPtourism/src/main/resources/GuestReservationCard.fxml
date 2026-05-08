@@ -15,7 +15,7 @@
            stylesheets="@styles.css"
            xmlns="http://javafx.com/javafx/17"
            xmlns:fx="http://javafx.com/fxml/1"
-           fx:controller="GuestReservationCardController">
+           fx:controller="Controllers.GuestReservationCardController">
     <children>
         <HBox fx:id="cardBody"
               alignment="CENTER_LEFT"

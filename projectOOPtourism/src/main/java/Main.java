@@ -1,4 +1,12 @@
-import DatabaseInitializer.DatabaseInitializer;
+import Controllers.*;
+import Models.*;
+import Repositories.*;
+import Services.*;
+import Utils.*;
+import Utils.exceptions.*;
+import Repositories.database.DatabaseConnection;
+import Repositories.DatabaseInitializer.*;
+import Repositories.DatabaseInitializer.DatabaseInitializer;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
@@ -17,7 +25,7 @@ import java.util.List;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class Main extends Application {
+public class Main extends Application implements AppContext {
 
     private Stage stage;
     private User currentUser;
@@ -118,7 +126,7 @@ public class Main extends Application {
             if (controller != null) {
                 try {
                     // Decoupled dependency injection: Check if controller has a setMainApp method
-                    controller.getClass().getMethod("setMainApp", Main.class).invoke(controller, this);
+                    controller.getClass().getMethod("setMainApp", AppContext.class).invoke(controller, this);
                 } catch (Exception e) {
                     // Controller doesn't require mainApp reference, safely ignore
                 }
@@ -311,7 +319,6 @@ public class Main extends Application {
             autoRefreshTimeline.setCycleCount(Timeline.INDEFINITE);
             autoRefreshTimeline.play();
 
-            // Guest gets a full-page home screen — no sidebar dashboard
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/Dashboard.fxml"));
             BorderPane root = loader.load();
 
@@ -441,11 +448,9 @@ public class Main extends Application {
 
             // Restyle the topbar labels to match the info bar design
             controller.styleAsReceptionistInfoBar();
-            // Override labels: title → date, userLabel → role badge text
             controller.setTitle(receptionistDateText());
             controller.setUserInfo("RECEPTIONIST");
 
-            // Hide the sidebar — receptionist uses a top nav bar instead
             VBox sidebar = controller.getSideMenu();
             sidebar.setManaged(false);
             sidebar.setVisible(false);

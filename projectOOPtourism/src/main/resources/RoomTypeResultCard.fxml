@@ -16,7 +16,7 @@
       stylesheets="@styles.css"
       xmlns="http://javafx.com/javafx/17"
       xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="RoomTypeResultCardController">
+      fx:controller="Controllers.RoomTypeResultCardController">
     <children>
         <StackPane fx:id="visual"
                    maxWidth="226"

@@ -12,10 +12,9 @@
 <BorderPane styleClass="root-pane" stylesheets="@styles.css"
             xmlns="http://javafx.com/javafx/19"
             xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="DashboardController">
+            fx:controller="Controllers.DashboardController">
     <top>
         <VBox>
-            <!-- Primary topbar — shown for admin; hidden for receptionist via Main.java -->
             <HBox fx:id="topBar" alignment="CENTER_LEFT" prefHeight="46" styleClass="topbar">
                 <padding><Insets left="28" right="28"/></padding>
                 <Label fx:id="titleLabel" text="Dashboard" styleClass="topbar-title"/>
@@ -30,7 +29,6 @@
                     </HBox.margin>
                 </ImageView>
             </HBox>
-            <!-- Nav bar slot — populated and styled for receptionist; zero-height for others -->
             <HBox fx:id="navBar" prefHeight="0" minHeight="0" maxHeight="0"
                   styleClass="topnav"/>
         </VBox>
