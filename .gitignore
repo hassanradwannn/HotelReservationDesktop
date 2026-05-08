@@ -23,6 +23,9 @@ bin/
 /nbdist/
 /.nb-gradle/
 
+### Maven ###
+target/
+
 ### VS Code ###
 .vscode/
 

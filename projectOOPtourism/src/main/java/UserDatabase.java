@@ -59,7 +59,7 @@ public class UserDatabase {
                         }
                     }
                     
-                    String roomPreferences = ""; // Default since we don't store it
+                    String roomPreferences = readRoomPreferences(rs);
 
                     user = new Guest(username, password, dateOfBirth, balance, address, gender, roomPreferences);
                 }
@@ -123,7 +123,7 @@ public class UserDatabase {
                         }
                     }
                     
-                    String roomPreferences = "";
+                    String roomPreferences = readRoomPreferences(rs);
 
                     user = new Guest(username, password, dateOfBirth, balance, address, gender, roomPreferences);
                 }
@@ -137,5 +137,54 @@ public class UserDatabase {
         }
 
         return null;
+    }
+
+    public static boolean isUserLoggedIn(String username) {
+        String sql = "SELECT is_logged_in FROM users WHERE username = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, username);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getBoolean("is_logged_in");
+            }
+        } catch (SQLException e) {
+            System.out.println("Error checking user logged in status:");
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public static void setUserLoggedIn(String username, boolean loggedIn) {
+        String sql = "UPDATE users SET is_logged_in = ? WHERE username = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setBoolean(1, loggedIn);
+            stmt.setString(2, username);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println("Error updating user logged in status:");
+            e.printStackTrace();
+        }
+    }
+
+    public static void clearLoggedInUsers() {
+        String sql = "UPDATE users SET is_logged_in = FALSE";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println("Error clearing logged in users:");
+            e.printStackTrace();
+        }
+    }
+
+    private static String readRoomPreferences(ResultSet rs) {
+        try {
+            String roomPreferences = rs.getString("room_preferences");
+            return roomPreferences == null ? "" : roomPreferences;
+        } catch (SQLException ex) {
+            return "";
+        }
     }
 }

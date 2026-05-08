@@ -1,23 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
 
-<VBox spacing="20" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="LiveChatController">
-    <Label text="Live Reception Chat" textFill="WHITE" style="-fx-font-family: 'Georgia'; -fx-font-size: 29;"/>
-    <VBox spacing="14" style="-fx-background-color: #FFFFFF; -fx-background-radius: 18; -fx-border-color: #C9AA7C; -fx-border-radius: 18; -fx-effect: dropshadow(gaussian, rgba(80,45,35,0.10), 16, 0.25, 0, 5); -fx-padding: 18;">
-        <HBox spacing="12" alignment="CENTER_LEFT">
-            <StackPane prefWidth="46" prefHeight="46" style="-fx-background-color: #C74261; -fx-background-radius: 50;">
-                <Label fx:id="avatarLabel" text="U" textFill="WHITE" style="-fx-font-weight: bold; -fx-font-size: 20;"/>
-            </StackPane>
-            <VBox spacing="2">
-                <Label text="Hotel Live Chat" textFill="#2B2421" style="-fx-font-family: 'Georgia'; -fx-font-size: 18;"/>
-                <Label fx:id="chatStatus" text="Connected to reception desk" textFill="#8A726B" style="-fx-font-size: 12;"/>
-            </VBox>
-        </HBox>
-        <TextArea fx:id="chatArea" editable="false" prefHeight="390" wrapText="true" style="-fx-control-inner-background: #F9F3EA; -fx-text-fill: #2B2421; -fx-font-size: 14px; -fx-background-radius: 14; -fx-border-color: #EFE4D6; -fx-border-radius: 14; -fx-padding: 10;"/>
-        <HBox spacing="10" alignment="CENTER">
-            <TextField fx:id="inputField" promptText="Write your message..." HBox.hgrow="ALWAYS" onAction="#handleSend" style="-fx-background-color: #FFFFFF; -fx-background-radius: 8; -fx-border-color: #C9AA7C; -fx-border-radius: 8; -fx-padding: 10; -fx-font-size: 14px; -fx-text-fill: #2B2421;"/>
-            <Button text="SEND" prefWidth="110" prefHeight="42" onAction="#handleSend" style="-fx-background-color: #C74261; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 7; -fx-font-size: 13px; -fx-cursor: hand;"/>
-        </HBox>
-    </VBox>
+<VBox spacing="0" style="-fx-padding: 10;" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="LiveChatController">
+    <children>
+       <Label text="CONCIERGE" styleClass="panel-eyebrow"/>
+       <Label text="Live Reception Chat" styleClass="panel-title"/>
+       <Region prefHeight="14"/>
+
+       <VBox styleClass="chat-card" VBox.vgrow="ALWAYS" spacing="14">
+          <children>
+             <HBox spacing="14" alignment="CENTER_LEFT">
+                <StackPane prefWidth="46" prefHeight="46" style="-fx-background-color: #C74261; -fx-background-radius: 50;">
+                   <Label fx:id="avatarLabel" text="U" style="-fx-text-fill: WHITE; -fx-font-weight: bold; -fx-font-size: 20;"/>
+                </StackPane>
+                <VBox spacing="2">
+                   <Label text="Hotel Live Chat" styleClass="chat-name"/>
+                   <Label fx:id="chatStatus" text="Connected to reception desk" styleClass="chat-status"/>
+                </VBox>
+             </HBox>
+
+             <TextArea fx:id="chatArea" editable="false" prefHeight="380" styleClass="chat-area" wrapText="true" VBox.vgrow="ALWAYS"/>
+
+             <HBox spacing="10" alignment="CENTER">
+                <TextField fx:id="inputField" promptText="Write your message..." HBox.hgrow="ALWAYS" onAction="#handleSend" styleClass="elegant-input"/>
+                <Button text="SEND" prefWidth="110" prefHeight="44" onAction="#handleSend" styleClass="primary-action-btn"/>
+             </HBox>
+          </children>
+       </VBox>
+    </children>
 </VBox>

@@ -32,7 +32,7 @@ public abstract class User {
         this.dateOfBirth = dateOfBirth;
     }
 
-    public static User login(String username, String password) throws InvalidCredentialsException {
+    public static User login(String username, String password) throws InvalidCredentialsException, exceptions.UserAlreadyLoggedInException {
         return Authentication.login(username, password);
     }
 

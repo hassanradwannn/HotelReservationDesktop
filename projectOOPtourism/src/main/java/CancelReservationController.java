@@ -1,7 +1,6 @@
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
 
 public class CancelReservationController implements DashboardContentController {
 
@@ -23,7 +22,7 @@ public class CancelReservationController implements DashboardContentController {
         reservationCombo.setItems(FXCollections.observableArrayList(
                 Database.getReservations().stream()
                         .filter(r -> r.getGuest().getUsername().equalsIgnoreCase(guest.getUsername()))
-                        .filter(r -> r.getStatus() != ReservationStatus.CANCELLED)
+                        .filter(r -> r.getStatus() == ReservationStatus.PENDING)
                         .toList()
         ));
     }

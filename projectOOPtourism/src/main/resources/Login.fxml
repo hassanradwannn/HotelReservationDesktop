@@ -3,65 +3,68 @@
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
 
 <AnchorPane prefHeight="720.0" prefWidth="1280.0" styleClass="root-pane" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="LoginController">
    <children>
-      <HBox layoutX="140.0" layoutY="60.0" prefHeight="600.0" prefWidth="1000.0" styleClass="card-container">
-         <children>
+      <HBox AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
 
-            <!-- Left Side: Login Form -->
-            <VBox alignment="CENTER" prefWidth="500.0" spacing="18.0" styleClass="left-panel">
-               <padding>
-                  <Insets bottom="45.0" left="45.0" right="45.0" top="45.0" />
-               </padding>
-               <children>
-                  <Label text="GRAND BUDAPEST HOTEL" textFill="#8f1d3f">
-                     <font><Font name="Georgia" size="13.0" /></font>
-                  </Label>
-                  <Label text="WELCOME BACK" textFill="#2b2421">
-                     <font><Font name="Georgia" size="34.0" /></font>
-                  </Label>
-                  <Label text="Sign in to continue your reservation experience" textFill="#8a726b" />
+         <!-- Left Panel: Branding -->
+         <VBox alignment="BOTTOM_LEFT" prefWidth="560.0" styleClass="login-left-panel">
+            <padding><Insets bottom="0" left="0" right="0" top="0" /></padding>
+            <children>
+               <!-- Greek meander border top -->
 
-                  <TextField fx:id="usernameField" maxWidth="360.0" promptText="Username" styleClass="input-field" />
-                  <PasswordField fx:id="passwordField" maxWidth="350.0" promptText="Password" styleClass="input-field" />
+               <VBox alignment="CENTER_LEFT" spacing="20" VBox.vgrow="ALWAYS">
+                  <padding><Insets bottom="60" left="65" right="65" top="60" /></padding>
+                  <children>
+                     <Label style="-fx-text-fill: #F9F3EA;" styleClass="hero-text-light" text="Your stay," textFill="#F9F3EA" />
+                     <Label styleClass="hero-text-italic" text="remembered" textFill="#e8c9b9" />
+                     <Label style="-fx-text-fill: #F9F3EA;" styleClass="hero-text-light" text="forever." textFill="#F9F3EA" />
+                     <Region prefHeight="18" />
+                     <Label maxWidth="400" style="-fx-text-fill: #D4C4BC;" styleClass="hero-subtext" text="&quot;A person's life is his identity. Let us help you maintain yours.&quot; Sign in to your account to view availability and manage your upcoming stay." textFill="WHITE" wrapText="true" />
+                  </children>
+               </VBox>
 
-                  <Button fx:id="loginBtn" mnemonicParsing="false" onAction="#handleLogin" prefHeight="45.0" prefWidth="210.0" styleClass="main-btn" text="SIGN IN">
-                     <font>
-                        <Font size="15.0" />
-                     </font></Button>
-                  <Button mnemonicParsing="false" onAction="#handleRegister" prefHeight="42.0" prefWidth="210.0" styleClass="outline-btn" text="REGISTER AS GUEST" />
-            
-            <Hyperlink onAction="#handleForgotPassword" text="Forgot Password?" textFill="#8f1d3f" underline="true">
-               <font><Font name="System Bold" size="13.0" /></font>
-            </Hyperlink>
+               <Label style="-fx-text-fill: #B8A89E;" styleClass="hotel-footer-label" text="Est. 1908  ·  Cairo, Arab Republic of Egypt" textFill="#B8A89E">
+                  <padding><Insets bottom="35" left="65" /></padding>
+               </Label>
+            </children>
+         </VBox>
 
-                  <Label fx:id="messageLabel" textFill="#c74261" />
-                  <Label maxWidth="360.0" text="Demo users: Admin / Admin@123 | Hassan / Hassan123 | Manar / Manar2002" textFill="#8a726b" wrapText="true" />
-               </children>
-            </VBox>
+         <!-- Right Panel: Form -->
+         <VBox alignment="TOP_LEFT" prefWidth="720.0" styleClass="login-right-panel">
+            <children>
+               <!-- Greek meander border top -->
 
-            <!-- Right Side: Hotel Info -->
-            <VBox alignment="CENTER_LEFT" prefWidth="500.0" spacing="16.0" styleClass="right-panel">
-               <padding>
-                  <Insets bottom="65.0" left="65.0" right="65.0" top="65.0" />
-               </padding>
-               <children>
-                  <Label text="EXPERIENCE EGYPTIAN HOTELS LIKE NEVER BEFORE" textFill="#8f1d3f" />
-                  <Label text="RESERVE YOUR&#10;SUITE" textFill="#2b2421">
-                     <font><Font name="Georgia" size="42.0" /></font>
-                  </Label>
-                  <Label text="Cairo, Arab Republic of Egypt - Est. 1908" textFill="#8f1d3f" />
-                  <Separator maxWidth="270.0" style="-fx-background-color: #C9AA7C;" />
-                  <Button mnemonicParsing="false" onAction="#handleRegister" prefHeight="45.0" prefWidth="160.0" styleClass="book-btn" text="BOOK NOW">
-                     <font>
-                        <Font size="14.0" />
-                     </font></Button>
-               </children>
-            </VBox>
+               <VBox alignment="CENTER_LEFT" spacing="22" VBox.vgrow="ALWAYS">
+                  <padding><Insets bottom="60" left="100" right="100" top="60" /></padding>
+                  <children>
+                     <Label style="-fx-text-fill: #C4415D;" styleClass="form-eyebrow" text="WELCOME BACK" textFill="#C4415D" />
+                     <Label style="-fx-text-fill: #2C2523;" styleClass="form-title" text="Sign in to your account" textFill="#2C2523" />
 
-         </children>
+                     <Region prefHeight="10" />
+
+                     <TextField fx:id="usernameField" maxWidth="460" promptText="username" styleClass="elegant-input" />
+                     <PasswordField fx:id="passwordField" maxWidth="460" promptText="password" styleClass="elegant-input" />
+
+                     <Region prefHeight="4" />
+
+                     <Button fx:id="loginBtn" onAction="#handleLogin" prefHeight="50" prefWidth="220" styleClass="primary-action-btn" text="LOGIN" />
+
+                     <HBox alignment="CENTER_LEFT" spacing="6">
+                        <Label styleClass="form-link-label" text="Don't have an account?" />
+                        <Hyperlink onAction="#handleRegister" styleClass="form-link" text="Sign up" />
+                     </HBox>
+
+                     <Hyperlink onAction="#handleForgotPassword" styleClass="form-link" text="Forgot your password?" />
+
+                     <Label fx:id="messageLabel" maxWidth="460" styleClass="message-label" wrapText="true" />
+                     <Label maxWidth="460" styleClass="demo-hint" text="Demo: Admin / Admin@123 | Hassan / Hassan123 | Manar / Manar2002" wrapText="true" />
+                  </children>
+               </VBox>
+            </children>
+         </VBox>
+
       </HBox>
    </children>
 </AnchorPane>

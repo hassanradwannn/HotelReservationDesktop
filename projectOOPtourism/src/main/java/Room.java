@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 
 public class Room {
+    private int id;
     private String roomNumber;
     private RoomType roomType;
     private ArrayList<Amenity> amenities = new ArrayList<>();
@@ -9,11 +10,36 @@ public class Room {
     public Room(String roomNumber, RoomType roomType) {
         this.roomNumber = roomNumber;
         this.roomType = roomType;
-        addAmenity(Database.getAmenities().get(0), Database.getAmenities().get(1));
+        // Removed unsafe hardcoded defaults. 
+        // Database.java now handles fetching and linking proper amenities from SQL.
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getRoomNumber() {
         return roomNumber;
+    }
+
+    public String getViewName() {
+        return isSeaView() ? "Sea View" : "Mountain View";
+    }
+
+    public boolean isSeaView() {
+        int number;
+        try {
+            number = Integer.parseInt(roomNumber);
+        } catch (NumberFormatException ex) {
+            return true;
+        }
+
+        int positionOnFloor = Math.floorMod(number, 100);
+        return positionOnFloor <= 10;
     }
 
     public void setRoomNumber(String roomNumber) {
@@ -56,9 +82,14 @@ public class Room {
 
     @Override
     public String toString() {
-        return "Room Number: " + roomNumber +
-                ", Type: " + roomType.getName() +
-                "\nAmenties: ";
+        String amenityList = (amenities == null || amenities.isEmpty()) 
+                             ? "None" 
+                             : String.join(", ", CatalogService.uniqueFilterAmenityNames(
+                                     amenities.stream().map(Amenity::getName).toList()));
+        
+        return String.format("Room Number: %s | Type: %s | Amenities: %s", 
+                roomNumber, 
+                roomType.getName(), 
+                amenityList + " | View: " + getViewName());
     }
-
 }

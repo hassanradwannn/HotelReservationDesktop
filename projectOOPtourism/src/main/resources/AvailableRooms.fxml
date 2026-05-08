@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="20" styleClass="content-area" stylesheets="@styles.css"
+      xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="AvailableRoomsController">
+
+    <padding>
+        <Insets bottom="30" left="32" right="32" top="30" />
+    </padding>
+
+    <Label styleClass="panel-title" text="Select Your Room" />
+
+    <Label styleClass="panel-eyebrow"
+           text="Choose one of the available rooms below to complete your reservation."
+           wrapText="true" />
+
+    <ScrollPane fitToWidth="true" styleClass="transparent-scroll" VBox.vgrow="ALWAYS">
+        <content>
+            <VBox fx:id="roomCards" spacing="20" style="-fx-background-color: transparent; -fx-padding: 10;" />
+        </content>
+    </ScrollPane>
+</VBox>

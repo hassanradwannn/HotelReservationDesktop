@@ -1,4 +1,3 @@
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -9,12 +8,8 @@ public class Receptionist extends Staff {
         super(username, password, dateOfBirth, Role.RECEPTIONIST, workingHours);
     }
 
-      
-
-   
-
     public void viewReservations(LocalDate checkIn) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         System.out.println("Viewing reservations for " + checkIn.format(formatter));
         Database.getReservations().stream().filter(
                 r -> r.getCheckInDate().isEqual(checkIn))
@@ -32,7 +27,7 @@ public class Receptionist extends Staff {
 
     public void viewReservationsForToday() {
         LocalDate today = SystemTime.getToday();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         System.out.println("\n=== Reservations for Today (" + today.format(formatter) + ") ===");
         List<Reservation> todayRes = Database.getReservations().stream()
                 .filter(r -> r.getCheckInDate().isEqual(today) ||
@@ -118,7 +113,7 @@ public class Receptionist extends Staff {
         System.out.println(String.format("  %-25s: %s", "Room Type", room.getRoomType()));
 
         // Dates
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         System.out.println("\nSTAY DETAILS:");
         System.out.println(String.format("  %-25s: %s", "Check-In Date", reservation.getCheckInDate().format(formatter)));
         System.out.println(String.format("  %-25s: %s", "Check-Out Date", reservation.getCheckOutDate().format(formatter)));

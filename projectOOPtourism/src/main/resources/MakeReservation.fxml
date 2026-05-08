@@ -1,21 +1,74 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.CheckBox?>
-<?import javafx.scene.control.ComboBox?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 
-<VBox spacing="10" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="MakeReservationController">
-    <Label style="-fx-font-family: 'Georgia'; -fx-font-size: 29;" text="Make Reservation" />
-    <ComboBox fx:id="typeBox" maxWidth="360" promptText="Select Room Type" style="-fx-background-color: #FFFFFF; -fx-background-radius: 8; -fx-border-color: #C9AA7C; -fx-border-radius: 8;" />
-    <TextField fx:id="guestsField" maxWidth="360" promptText="Number of Guests" style="-fx-background-color: #FFFFFF; -fx-background-radius: 8; -fx-border-color: #C9AA7C; -fx-border-radius: 8; -fx-padding: 10; -fx-font-size: 14px; -fx-text-fill: #2B2421;" />
-    <TextField fx:id="checkInField" maxWidth="360" promptText="Check-in DD-MM-YYYY" style="-fx-background-color: #FFFFFF; -fx-background-radius: 8; -fx-border-color: #C9AA7C; -fx-border-radius: 8; -fx-padding: 10; -fx-font-size: 14px; -fx-text-fill: #2B2421;" />
-    <TextField fx:id="checkOutField" maxWidth="360" promptText="Check-out DD-MM-YYYY" style="-fx-background-color: #FFFFFF; -fx-background-radius: 8; -fx-border-color: #C9AA7C; -fx-border-radius: 8; -fx-padding: 10; -fx-font-size: 14px; -fx-text-fill: #2B2421;" />
-    <CheckBox fx:id="gymBox" text="Add Gym Pass ($200)" style="-fx-text-fill: black;" />
-    <Button onAction="#handleSearch" prefHeight="42" prefWidth="180" style="-fx-background-color: #C74261; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 7; -fx-font-size: 13px; -fx-cursor: hand;" text="SEARCH ROOMS" />
-    <ComboBox fx:id="roomBox" maxWidth="360" promptText="Search first, then choose room" style="-fx-background-color: #FFFFFF; -fx-background-radius: 8; -fx-border-color: #C9AA7C; -fx-border-radius: 8;" />
-    <Button onAction="#handleCreate" prefHeight="42" prefWidth="220" style="-fx-background-color: #C74261; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 7; -fx-font-size: 13px; -fx-cursor: hand;" text="CREATE RESERVATION" />
-    <Label fx:id="msgLabel" style="-fx-font-size: 13px;" textFill="#C74261" />
+<VBox spacing="0" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="MakeReservationController">
+    <padding><Insets bottom="10" left="10" right="10" top="10" /></padding>
+    <children>
+       <Label styleClass="panel-eyebrow" text="RESERVATIONS" />
+       <Label styleClass="panel-title" text="Make a Reservation" />
+       <Region prefHeight="18" />
+
+       <HBox alignment="TOP_LEFT" spacing="26" styleClass="reservation-layout">
+          <children>
+             <VBox maxWidth="500" prefWidth="500" spacing="14" styleClass="form-card">
+                <children>
+                   <Label styleClass="reservation-field-label" text="SELECTED ROOM TYPE" />
+                   <Label fx:id="selectedRoomTypeLabel" maxWidth="449.0" prefHeight="45.0" prefWidth="449.0" styleClass="reservation-selected-type" wrapText="true" />
+                   <TextField fx:id="guestsField" maxWidth="420" promptText="Number of Guests" styleClass="elegant-input" />
+
+                   <!-- Width fixed to 420 to match the boxes above -->
+                   <DatePicker fx:id="checkInPicker" maxWidth="420" promptText="Check-in Date" styleClass="date-picker" />
+                   <DatePicker fx:id="checkOutPicker" maxWidth="420" promptText="Check-out Date" styleClass="date-picker" />
+
+                   <CheckBox fx:id="gymBox" styleClass="elegant-check" text=" Gym Access? ($200)" />
+                   <HBox spacing="12">
+                      <Button onAction="#handleBack" prefHeight="44" prefWidth="120" styleClass="outline-action-btn" text="BACK" />
+                      <Button onAction="#handleBookNow" prefHeight="44" prefWidth="200" styleClass="primary-action-btn" text="BOOK NOW" />
+                   </HBox>
+                   <Label fx:id="msgLabel" styleClass="message-label" wrapText="true" />
+                   <Hyperlink onAction="#handleChooseRoom" styleClass="hero-italic-link" text="Picky Guest? Choose your own room number" />
+                </children>
+             </VBox>
+
+             <VBox prefWidth="330" spacing="16" styleClass="reservation-summary-panel">
+                <children>
+                   <Label styleClass="reservation-summary-title" text="STAY SUMMARY" />
+
+                   <VBox spacing="4">
+                      <Label styleClass="reservation-summary-label" text="TOTAL NIGHTS" />
+                      <Label fx:id="summaryNightsLabel" styleClass="reservation-summary-value" text="-" />
+                   </VBox>
+                   <Region styleClass="reservation-summary-rule" />
+
+                   <VBox spacing="4">
+                      <Label styleClass="reservation-summary-label" text="ROOM TYPE" />
+                      <Label fx:id="summaryRoomTypeLabel" styleClass="reservation-summary-value" text="-" wrapText="true" />
+                   </VBox>
+
+                   <VBox spacing="4">
+                      <Label styleClass="reservation-summary-label" text="PRICE PER NIGHT" />
+                      <Label fx:id="summaryPricePerNightLabel" styleClass="reservation-summary-value" text="-" />
+                   </VBox>
+                   <Region styleClass="reservation-summary-rule" />
+
+                   <Label styleClass="reservation-summary-title" text="INCLUDED AMENITIES" />
+                   <VBox fx:id="summaryAmenitiesBox" spacing="8" />
+
+                   <Region prefHeight="8" />
+                   <VBox spacing="4" styleClass="reservation-total-box">
+                      <Label styleClass="reservation-total-label" text="TOTAL COST" />
+                      <Label fx:id="summaryTotalCostLabel" styleClass="reservation-total-value" text="-" />
+                      <VBox fx:id="summaryDepositDueBox" spacing="2">
+                         <Label styleClass="reservation-total-label" text="DEPOSIT DUE" />
+                         <Label fx:id="summaryDepositDueLabel" styleClass="reservation-summary-value" text="-" />
+                      </VBox>
+                   </VBox>
+                </children>
+             </VBox>
+          </children>
+       </HBox>
+    </children>
 </VBox>

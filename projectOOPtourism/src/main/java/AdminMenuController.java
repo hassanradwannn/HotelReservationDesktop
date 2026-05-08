@@ -34,11 +34,21 @@ public class AdminMenuController {
         }});
     }
     
-    @FXML private void showRoomTypes() { mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/ManageRoomTypes.fxml", null); }
-    @FXML private void showAmenities() { mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/ManageAmenities.fxml", null); }
-    @FXML private void showAddRoom() { mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/AddRoom.fxml", null); }
-    @FXML private void showAddReceptionist() { mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/AddReceptionist.fxml", admin); }
-    @FXML private void showChat() { mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/Chat.fxml", admin); }
+    @FXML private void showRoomTypes() {
+        mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GenericList.fxml", new Object[]{"Room Types", (Supplier<List<?>>) () -> Database.getRoomTypes()});
+    }
+
+    @FXML private void showAmenities() {
+        mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/AdminAmenities.fxml", null);
+    }
+
+    @FXML private void showAddReceptionist() {
+        mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/AddReceptionist.fxml", admin);
+    }
+
+    @FXML private void showChat() {
+        mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/Chat.fxml", admin);
+    }
     
     @FXML private void doLogout() { 
         mainApp.showLoginScreen(); 

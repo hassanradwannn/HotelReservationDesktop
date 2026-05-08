@@ -1,10 +1,19 @@
 public class Amenity {
+    private int id;
     private String name;
     private double price;
 
     public Amenity(String name, double price) {
         this.name = name;
         this.price = price;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getName() {
@@ -41,4 +50,3 @@ public class Amenity {
         return "Name: " + name + ", Price: " + price;
     }
 }
-

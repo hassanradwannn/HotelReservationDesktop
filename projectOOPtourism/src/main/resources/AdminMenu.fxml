@@ -9,7 +9,6 @@
     <Button text="View Reservations" onAction="#showReservations" styleClass="side-btn" />
     <Button text="Manage Room Types" onAction="#showRoomTypes" styleClass="side-btn" />
     <Button text="Manage Amenities" onAction="#showAmenities" styleClass="side-btn" />
-    <Button text="Add Room" onAction="#showAddRoom" styleClass="side-btn" />
     <Button text="Add Receptionist" onAction="#showAddReceptionist" styleClass="side-btn" />
     <Button text="Live Chat" onAction="#showChat" styleClass="side-btn" />
     <Button text="Logout" onAction="#doLogout" styleClass="side-btn" />

@@ -1,217 +1,73 @@
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-
-import database.DatabaseConnection;
-
 public class DatabaseSaver {
+
+    private static final InvoiceRepository INVOICE_REPOSITORY = new InvoiceRepository();
+    private static final UserRepository USER_REPOSITORY = new UserRepository();
+    private static final CatalogRepository CATALOG_REPOSITORY = new CatalogRepository();
+    private static final ReservationRepository RESERVATION_REPOSITORY = new ReservationRepository();
 
     public static boolean silentSync = false;
 
+    public static void ensureInvoiceSchema() {
+        INVOICE_REPOSITORY.ensureSchema();
+    }
+
     public static void saveUser(User user) {
-        String sql = """
-            INSERT IGNORE INTO users 
-            (username, password, role, date_of_birth, gender, address, salary, balance)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """;
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, user.getUsername());
-            stmt.setString(2, user.getPassword());
-            stmt.setString(3, user.getClass().getSimpleName());
-
-            if (user.getDateOfBirth() != null) {
-                stmt.setDate(4, java.sql.Date.valueOf(user.getDateOfBirth()));
-            } else {
-                stmt.setNull(4, java.sql.Types.DATE);
-            }
-
-            if (user instanceof Guest guest) {
-                stmt.setString(5, guest.getGender() != null ? guest.getGender().toString() : null);
-                stmt.setString(6, guest.getAddress());
-                stmt.setDouble(8, guest.getBalance());
-            } else {
-                stmt.setNull(5, java.sql.Types.VARCHAR);
-                stmt.setNull(6, java.sql.Types.VARCHAR);
-                stmt.setNull(8, java.sql.Types.DOUBLE);
-            }
-
-            // Salary is not in your current User/Staff models, safely set to null
-            stmt.setNull(7, java.sql.Types.DOUBLE);
-
-            if (stmt.executeUpdate() > 0 && !silentSync) {
-                Database.notifyDataChanged();
-            }
-
-        } catch (Exception e) {
-            System.out.println("User database save failed: " + e.getMessage());
-        }
+        USER_REPOSITORY.saveUser(user);
     }
 
     public static void saveRoomType(RoomType type) {
-        String sql = """
-            INSERT IGNORE INTO room_types (name, price_per_night, capacity)
-            VALUES (?, ?, ?)
-        """;
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, type.getName());
-            stmt.setDouble(2, type.getPricePerNight());
-            stmt.setInt(3, type.getCapacity());
-            if (stmt.executeUpdate() > 0 && !silentSync) {
-                Database.notifyDataChanged();
-            }
-
-        } catch (Exception e) {
-            System.out.println("Room type database save failed: " + e.getMessage());
-        }
+        CATALOG_REPOSITORY.saveRoomType(type);
     }
 
     public static void saveRoom(Room room) {
-        String sql = """
-            INSERT IGNORE INTO rooms (room_number, room_type_name)
-            VALUES (?, ?)
-        """;
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, room.getRoomNumber());
-            stmt.setString(2, room.getRoomType().getName());
-            if (stmt.executeUpdate() > 0 && !silentSync) {
-                Database.notifyDataChanged();
-            }
-
-        } catch (Exception e) {
-            System.out.println("Room database save failed: " + e.getMessage());
-        }
+        CATALOG_REPOSITORY.saveRoom(room);
     }
 
     public static void saveAmenity(Amenity amenity) {
-        String sql = """
-            INSERT IGNORE INTO amenities (name, price)
-            VALUES (?, ?)
-        """;
+        CATALOG_REPOSITORY.saveAmenity(amenity);
+    }
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, amenity.getName());
-            stmt.setDouble(2, amenity.getPrice());
-            if (stmt.executeUpdate() > 0 && !silentSync) {
-                Database.notifyDataChanged();
-            }
-
-        } catch (Exception e) {
-            System.out.println("Amenity database save failed: " + e.getMessage());
-        }
+    public static void saveRoomAmenities(Room room) {
+        CATALOG_REPOSITORY.saveRoomAmenities(room);
     }
 
     public static void saveReservation(String reservationId, String guestUsername, String roomNumber,
                                        java.time.LocalDate checkIn,
                                        java.time.LocalDate checkOut,
+                                       boolean hasGymPass,
                                        String status) {
-        String sql = """
-            INSERT INTO reservations 
-            (reservation_id, guest_username, room_number, check_in_date, check_out_date, status)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """;
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, reservationId);
-            stmt.setString(2, guestUsername);
-            stmt.setString(3, roomNumber);
-            stmt.setDate(4, java.sql.Date.valueOf(checkIn));
-            stmt.setDate(5, java.sql.Date.valueOf(checkOut));
-            stmt.setString(6, status);
-            if (stmt.executeUpdate() > 0 && !silentSync) {
-                Database.notifyDataChanged();
-            }
-
-        } catch (Exception e) {
-            System.out.println("Reservation database save failed: " + e.getMessage());
-        }
+        RESERVATION_REPOSITORY.saveReservation(reservationId, guestUsername, roomNumber, checkIn, checkOut, hasGymPass, status);
     }
 
     public static void saveInvoice(String guestUsername, String roomNumber,
                                    double totalAmount, String paymentMethod,
                                    boolean paid) {
-        String sql = """
-            INSERT INTO invoices
-            (guest_username, room_number, total_amount, payment_method, paid)
-            VALUES (?, ?, ?, ?, ?)
-        """;
+        INVOICE_REPOSITORY.saveInvoice(guestUsername, roomNumber, totalAmount, paymentMethod, paid);
+    }
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, guestUsername);
-            stmt.setString(2, roomNumber);
-            stmt.setDouble(3, totalAmount);
-            stmt.setString(4, paymentMethod);
-            stmt.setBoolean(5, paid);
-            if (stmt.executeUpdate() > 0 && !silentSync) {
-                Database.notifyDataChanged();
-            }
-
-        } catch (Exception e) {
-            System.out.println("Invoice database save failed: " + e.getMessage());
-        }
+    public static void saveInvoice(String reservationId, String guestUsername, String roomNumber,
+                                   double totalAmount, String paymentMethod,
+                                   boolean paid) {
+        INVOICE_REPOSITORY.saveInvoice(reservationId, guestUsername, roomNumber, totalAmount, paymentMethod, paid);
     }
 
     public static void updateUserBalance(String username, double newBalance) {
-        String sql = "UPDATE users SET balance = ? WHERE username = ?";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setDouble(1, newBalance);
-            stmt.setString(2, username);
-            if (stmt.executeUpdate() > 0 && !silentSync) {
-                Database.notifyDataChanged();
-            }
-
-        } catch (Exception e) {
-            System.out.println("Failed to update user balance: " + e.getMessage());
-        }
+        USER_REPOSITORY.updateBalance(username, newBalance);
     }
 
     public static void updateReservationStatus(String reservationId, String newStatus) {
-        String sql = "UPDATE reservations SET status = ? WHERE reservation_id = ?";
+        RESERVATION_REPOSITORY.updateStatus(reservationId, newStatus);
+    }
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, newStatus);
-            stmt.setString(2, reservationId);
-            if (stmt.executeUpdate() > 0 && !silentSync) {
-                Database.notifyDataChanged();
-            }
-
-        } catch (Exception e) {
-            System.out.println("Failed to update reservation status: " + e.getMessage());
-        }
+    public static void updateReservationDates(String reservationId, java.time.LocalDate checkIn, java.time.LocalDate checkOut) {
+        RESERVATION_REPOSITORY.updateDates(reservationId, checkIn, checkOut);
     }
 
     public static void updateUserPassword(String username, String newPassword) {
-        String sql = "UPDATE users SET password = ? WHERE username = ?";
+        USER_REPOSITORY.updatePassword(username, newPassword);
+    }
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, newPassword);
-            stmt.setString(2, username);
-            if (stmt.executeUpdate() > 0 && !silentSync) {
-                Database.notifyDataChanged();
-            }
-
-        } catch (Exception e) {
-            System.out.println("Failed to update user password: " + e.getMessage());
-        }
+    public static void updateGuestProfile(String oldUsername, Guest guest) throws Exception {
+        USER_REPOSITORY.updateGuestProfile(oldUsername, guest);
     }
 }

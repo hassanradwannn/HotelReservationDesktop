@@ -2,11 +2,11 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
-import javafx.scene.paint.Color;
 
 public class PayDepositController implements DashboardContentController {
 
     @FXML private ComboBox<Reservation> pendingCombo;
+    @FXML private ComboBox<PaymentMethod> paymentCombo;
     @FXML private Label detailsLabel;
 
     private Main mainApp;
@@ -17,6 +17,7 @@ public class PayDepositController implements DashboardContentController {
         this.mainApp = mainApp;
         if (data instanceof Guest g) {
             this.guest = g;
+            paymentCombo.setItems(FXCollections.observableArrayList(PaymentMethod.values()));
             loadPendingReservations();
         }
     }
@@ -49,10 +50,16 @@ public class PayDepositController implements DashboardContentController {
                 mainApp.alert("Error", "Please select a reservation first.");
                 return;
             }
-            ReservationService.payDeposit(selected, guest);
-            mainApp.alert("Success", "Deposit paid. Reservation confirmed.");
+            PaymentMethod paymentMethod = paymentCombo.getValue();
+            if (paymentMethod == null) {
+                mainApp.alert("Error", "Please select a payment method.");
+                return;
+            }
+            ReservationService.payDeposit(selected, guest, paymentMethod);
+            mainApp.alert("Success", "Deposit paid. Reservation confirmed.\nNew Balance: $" + mainApp.money(guest.getBalance()));
             pendingCombo.getItems().remove(selected);
             pendingCombo.setValue(null);
+            paymentCombo.setValue(null);
             handleSelection();
         } catch (Exception ex) {
             mainApp.alert("Payment Failed", ex.getMessage());

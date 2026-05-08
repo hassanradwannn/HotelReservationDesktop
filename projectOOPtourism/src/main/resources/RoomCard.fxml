@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<HBox fx:id="root"
+      alignment="CENTER_LEFT"
+      fillHeight="true"
+      maxWidth="Infinity"
+      spacing="20"
+      styleClass="room-card"
+      stylesheets="@styles.css"
+      xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="RoomCardController">
+    <padding>
+        <Insets bottom="15" left="15" right="15" top="15" />
+    </padding>
+    <children>
+        <StackPane fx:id="imageBox"
+                   maxHeight="160"
+                   maxWidth="160"
+                   minHeight="160"
+                   minWidth="160"
+                   styleClass="room-image-box">
+            <children>
+                <Label fx:id="imageTextLabel"
+                       alignment="CENTER"
+                       styleClass="room-image-text"
+                       textAlignment="CENTER" />
+            </children>
+        </StackPane>
+
+        <VBox fx:id="detailsBox"
+              alignment="CENTER_LEFT"
+              minWidth="400"
+              spacing="7"
+              HBox.hgrow="ALWAYS">
+            <padding>
+                <Insets bottom="10" left="10" right="10" top="10" />
+            </padding>
+            <children>
+                <Label fx:id="roomTitleLabel" styleClass="room-title" />
+                <Label fx:id="priceLabel" styleClass="room-price" />
+                <FlowPane fx:id="amenityChips" hgap="10" vgap="8" />
+            </children>
+        </VBox>
+
+        <Region HBox.hgrow="ALWAYS" />
+
+        <VBox alignment="CENTER_RIGHT" spacing="15">
+            <children>
+                <Button fx:id="detailsButton"
+                        minWidth="130"
+                        prefHeight="38"
+                        prefWidth="130"
+                        styleClass="outline-action-btn"
+                        text="DETAILS" />
+                <Button fx:id="reserveButton"
+                        minWidth="130"
+                        prefHeight="38"
+                        prefWidth="130"
+                        styleClass="primary-action-btn"
+                        text="BOOK NOW" />
+            </children>
+        </VBox>
+    </children>
+</HBox>

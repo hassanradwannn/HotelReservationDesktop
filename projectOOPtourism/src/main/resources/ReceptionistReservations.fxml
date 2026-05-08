@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="0"
+      style="-fx-background-color: #F5EFE6; -fx-padding: 32 40 32 40;"
+      stylesheets="@styles.css"
+      maxHeight="Infinity"
+      VBox.vgrow="ALWAYS"
+      xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="ReceptionistReservationsController">
+    <children>
+
+        <!-- Filter bar -->
+        <HBox alignment="CENTER_LEFT" spacing="14" style="-fx-padding: 0 0 24 0;">
+            <children>
+                <Label text="Filter Reservations:" styleClass="filter-label"/>
+                <ComboBox fx:id="filterComboBox"
+                          styleClass="filter-combo"
+                          promptText="All Reservations"
+                          prefWidth="210"
+                          onAction="#onFilterChanged"/>
+            </children>
+        </HBox>
+
+        <!-- Hidden state labels needed by controller -->
+        <Label fx:id="titleLabel"  visible="false" managed="false" text="All Reservations"/>
+        <Label fx:id="checkInCountLabel"  visible="false" managed="false" text="0"/>
+        <Label fx:id="checkOutCountLabel" visible="false" managed="false" text="0"/>
+        <Label fx:id="residingCountLabel" visible="false" managed="false" text="0"/>
+
+        <!-- Hidden tab VBoxes (controller uses them for active-state tracking) -->
+        <VBox fx:id="checkInTab"   visible="false" managed="false"/>
+        <VBox fx:id="checkOutTab"  visible="false" managed="false"/>
+        <VBox fx:id="residingTab"  visible="false" managed="false"/>
+
+        <!-- Reservation cards -->
+        <ScrollPane fx:id="scrollPane"
+                    fitToWidth="true"
+                    hbarPolicy="NEVER"
+                    vbarPolicy="AS_NEEDED"
+                    style="-fx-background: transparent; -fx-background-color: transparent; -fx-border-color: transparent; -fx-padding: 0;"
+                    VBox.vgrow="ALWAYS">
+            <content>
+                <VBox fx:id="cardsContainer" spacing="16"
+                      style="-fx-background-color: transparent; -fx-padding: 2 2 24 2;"/>
+            </content>
+        </ScrollPane>
+
+    </children>
+</VBox>

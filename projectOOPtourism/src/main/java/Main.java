@@ -1,52 +1,43 @@
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.util.List;
-import javafx.util.Duration;
-
 import DatabaseInitializer.DatabaseInitializer;
-import javafx.application.Application;
-import javafx.collections.FXCollections;
-import javafx.fxml.FXMLLoader;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
+import javafx.util.Duration;
+import javafx.scene.image.Image; // Import Image class
+import java.util.List;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Main extends Application {
 
     private Stage stage;
     private User currentUser;
     private Room selectedRoomForReservation;
+    private RoomType selectedRoomTypeForReservation;
+    private ReservationSearchContext guestHomeSearchContext;
+    private List<Room> lastGuestSearchResults;
     private VBox currentContentArea;
     private DashboardController currentDashboardController;
     private Timeline autoRefreshTimeline;
     private Runnable currentViewRefresher;
     private volatile long localDataVersion = -1;
+    private final AtomicBoolean refreshInProgress = new AtomicBoolean(false);
+    private String currentView = "";
+    private static Main instance;
 
     private final int WIDTH = 1280;
     private final int HEIGHT = 720;
+
+    public static Main getInstance() { return instance; }
 
     public void setCurrentViewRefresher(Runnable currentViewRefresher) {
         this.currentViewRefresher = currentViewRefresher;
@@ -70,36 +61,44 @@ public class Main extends Application {
 
     @Override
     public void start(Stage stage) {
+        instance = this;
         DatabaseInitializer.initializeDatabase();
+        ChatServer.startInBackgroundIfAvailable();
+        UserDatabase.clearLoggedInUsers();
         if (Database.isFirstInstance()) {
             SystemTime.resetToRealToday();
         } else {
             SystemTime.syncFromDatabase();
         }
-        Database.getRooms();
-        
-        // Sync generated rooms to MySQL so reservations don't fail Foreign Key constraints!
-        new Thread(() -> {
-            DatabaseSync.syncDefaultDataToMySQL();
-        }).start();
-        
+
+        Database.loadAll(); // Seeds empty DBs, fetches all data fresh
+
         this.stage = stage;
         stage.setTitle("Grand Budapest Hotel Reservation System");
+        stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/grandbudapestlogo.jpg"))); // Set taskbar icon
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            Authentication.logout(currentUser);
             Database.unregisterInstance();
         }));
 
-         stage.setOnCloseRequest(event -> {
+        stage.setOnCloseRequest(event -> {
             System.exit(0);
         });
 
-        
+
         showLoginScreen();
         stage.show();
     }
 
     public void showLoginScreen() {
+        Authentication.logout(currentUser);
+        currentUser = null;
+        selectedRoomForReservation = null;
+        selectedRoomTypeForReservation = null;
+        guestHomeSearchContext = null;
+        lastGuestSearchResults = null;
+
         // Stop any running auto-refresh when returning to login screen
         if (autoRefreshTimeline != null) {
             autoRefreshTimeline.stop();
@@ -114,7 +113,7 @@ public class Main extends Application {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlFile));
             javafx.scene.Parent root = loader.load();
-            
+
             Object controller = loader.getController();
             if (controller != null) {
                 try {
@@ -132,19 +131,89 @@ public class Main extends Application {
     }
 
     public void switchDashboardContent(VBox contentArea, String fxmlFile, Object data) {
+        this.currentView = fxmlFile;
         this.currentContentArea = contentArea;
+        this.currentViewRefresher = null;
         try {
+            Object viewData = data;
+            if (currentUser instanceof Guest && "/GuestHome.fxml".equals(fxmlFile)
+                    && data instanceof Guest
+                    && guestHomeSearchContext != null) {
+                viewData = new GuestHomeController.HomeSearchState(guestHomeSearchContext, false);
+            } else if (currentUser instanceof Guest && "/GuestHome.fxml".equals(fxmlFile)
+                    && data instanceof GuestHomeController.HomeSearchState) {
+                viewData = data;
+            }
+
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlFile));
             javafx.scene.Node node = loader.load();
-            
+
             Object controller = loader.getController();
             if (controller instanceof DashboardContentController contentController) {
-                contentController.initData(this, data);
+                contentController.initData(this, viewData);
             }
-            contentArea.getChildren().setAll(node);
+
+            if (currentUser instanceof Guest && !"/GuestHome.fxml".equals(fxmlFile)) {
+                VBox guestPage = new VBox(14);
+                guestPage.getStyleClass().add("guest-subpage-shell");
+                javafx.scene.layout.VBox.setVgrow(guestPage, javafx.scene.layout.Priority.ALWAYS);
+                guestPage.setMaxHeight(Double.MAX_VALUE);
+
+                ReservationSearchContext reservationBackContext = extractReservationBackContext(fxmlFile, data);
+                boolean returningToReservation = reservationBackContext != null;
+                Button backHome = new Button(returningToReservation ? "BACK TO RESERVATION MENU" : "HOME");
+                backHome.getStyleClass().addAll("outline-action-btn", "guest-back-home-btn");
+                if (returningToReservation) {
+                    backHome.getStyleClass().add("guest-reservation-back-btn");
+                }
+                backHome.setOnAction(event -> {
+                    if (returningToReservation) {
+                        selectedRoomForReservation = null;
+                        switchDashboardContent(getCurrentContentArea(), "/MakeReservation.fxml", reservationBackContext);
+                    } else {
+                        switchDashboardContent(getCurrentContentArea(), "/GuestHome.fxml", currentUser);
+                    }
+                });
+
+                HBox backRow = new HBox(backHome);
+                backRow.getStyleClass().add("guest-back-row");
+                javafx.scene.layout.VBox.setVgrow(node, javafx.scene.layout.Priority.ALWAYS);
+                node.setStyle(node.getStyle() != null ? node.getStyle() : "");
+                guestPage.getChildren().addAll(backRow, node);
+                contentArea.getChildren().setAll(guestPage);
+                this.currentContentArea = contentArea;
+            } else {
+                javafx.scene.layout.VBox.setVgrow(node, javafx.scene.layout.Priority.ALWAYS);
+                contentArea.getChildren().setAll(node);
+                this.currentContentArea = contentArea;
+            }
         } catch (Exception e) {
             System.out.println("Could not load FXML: " + fxmlFile);
             e.printStackTrace();
+        }
+    }
+
+    private ReservationSearchContext extractReservationBackContext(String fxmlFile, Object data) {
+        if (!"/AvailableRooms.fxml".equals(fxmlFile) && !"/RoomDetails.fxml".equals(fxmlFile)) {
+            return null;
+        }
+        if (data instanceof Object[] args) {
+            for (Object arg : args) {
+                if (arg instanceof ReservationSearchContext context) {
+                    return context;
+                }
+            }
+        }
+        return null;
+    }
+
+    public void refreshActiveView() {
+        if (currentView.equals("AllReservations") || currentView.equals("/GenericList.fxml")) {
+            if (currentViewRefresher != null) currentViewRefresher.run();
+        } else if (currentView.equals("LiveChat") || currentView.equals("/Chat.fxml")) {
+            if (currentViewRefresher != null) currentViewRefresher.run();
+        } else {
+            if (currentViewRefresher != null) currentViewRefresher.run();
         }
     }
 
@@ -160,65 +229,109 @@ public class Main extends Application {
         this.selectedRoomForReservation = room;
     }
 
+    public RoomType getSelectedRoomTypeForReservation() {
+        return selectedRoomTypeForReservation;
+    }
+
+    public void setSelectedRoomTypeForReservation(RoomType type) {
+        this.selectedRoomTypeForReservation = type;
+    }
+
+    public ReservationSearchContext getGuestHomeSearchContext() {
+        return guestHomeSearchContext;
+    }
+
+    public void setGuestHomeSearchContext(ReservationSearchContext guestHomeSearchContext) {
+        this.guestHomeSearchContext = guestHomeSearchContext;
+    }
+
+    public List<Room> getLastGuestSearchResults() {
+        return lastGuestSearchResults;
+    }
+
+    public void setLastGuestSearchResults(List<Room> lastGuestSearchResults) {
+        this.lastGuestSearchResults = lastGuestSearchResults;
+    }
+
+    public User getCurrentUser() {
+        return currentUser;
+    }
+
     public void setCurrentUser(User user) {
         this.currentUser = user;
+    }
+
+    private String userInfoText(User user) {
+        return "Logged in as: " + user.getUsername()
+                + "   |   Date: "
+                + SystemTime.getToday().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+    }
+
+    private String receptionistDateText() {
+        return "Today's Date: "
+                + SystemTime.getToday().format(java.time.format.DateTimeFormatter.ofPattern("d/M/yyyy"));
+    }
+
+    private void refreshRuntimeDataFromDatabase() {
+        synchronized (Database.class) {
+            Database.refreshUsersFromDatabase();
+            Database.loadAllRoomTypes();
+            Database.loadAllAmenities();
+            Database.loadAllRooms();
+            Database.loadAllReservations();
+        }
     }
 
     public void showGuestDashboard(Guest guest) {
         try {
             this.currentUser = guest;
 
-            // Stop any existing timeline before starting a new one
             if (autoRefreshTimeline != null) {
                 autoRefreshTimeline.stop();
             }
 
-            autoRefreshTimeline = new Timeline(new KeyFrame(Duration.seconds(2), event -> {
+            autoRefreshTimeline = new Timeline(new KeyFrame(Duration.millis(150), event -> {
                 new Thread(() -> {
                     long currentVersion = Database.getLatestDataVersion();
                     if (localDataVersion == -1) {
                         localDataVersion = currentVersion;
-                    } else if (currentVersion > localDataVersion) {
-                        System.out.println("Database changes detected! Syncing view...");
-                        localDataVersion = currentVersion;
-
-                        SystemTime.syncFromDatabase();
-                        javafx.application.Platform.runLater(() -> {
-                            if (currentDashboardController != null && currentUser != null) {
-                                currentDashboardController.setUserInfo("Logged in as: " + currentUser.getUsername() + "   |   Date: " + SystemTime.getDate());
-                            }
-                            if (currentViewRefresher != null) {
-                                currentViewRefresher.run();
-                            }
-                        });
+                    } else if (currentVersion > localDataVersion && refreshInProgress.compareAndSet(false, true)) {
+                        try {
+                            System.out.println("Database changes detected! Syncing view...");
+                            localDataVersion = currentVersion;
+                            refreshRuntimeDataFromDatabase();
+                            SystemTime.syncFromDatabase();
+                            javafx.application.Platform.runLater(() -> Main.getInstance().refreshActiveView());
+                        } finally {
+                            refreshInProgress.set(false);
+                        }
                     }
                 }).start();
             }));
             autoRefreshTimeline.setCycleCount(Timeline.INDEFINITE);
             autoRefreshTimeline.play();
 
+            // Guest gets a full-page home screen — no sidebar dashboard
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/Dashboard.fxml"));
             BorderPane root = loader.load();
-            
+
             DashboardController controller = loader.getController();
             this.currentDashboardController = controller;
             controller.setTitle("Guest Dashboard");
             SystemTime.syncFromDatabase();
-            controller.setUserInfo("Logged in as: " + guest.getUsername() + "   |   Date: " + SystemTime.getDate());
+            controller.setUserInfo(userInfoText(guest));
 
             VBox menu = controller.getSideMenu();
             VBox content = controller.getContentArea();
+            content.setPadding(Insets.EMPTY);
             this.currentContentArea = content;
 
-            FXMLLoader menuLoader = new FXMLLoader(getClass().getResource("/GuestMenu.fxml"));
-            VBox menuContent = menuLoader.load();
-            GuestMenuController menuController = menuLoader.getController();
-            menuController.initData(this, guest);
-            
-            menu.getChildren().setAll(menuContent);
-            menuController.loadDefaultView();
-            
-        stage.setScene(new Scene(root, WIDTH, HEIGHT));
+            root.setLeft(null);
+            root.setTop(null);
+            menu.getChildren().clear();
+            switchDashboardContent(content, "/GuestHome.fxml", guest);
+
+            stage.setScene(new Scene(root, WIDTH, HEIGHT));
         } catch (Exception e) { e.printStackTrace(); }
     }
     public void showAdminDashboard(Admin admin) {
@@ -230,24 +343,28 @@ public class Main extends Application {
                 autoRefreshTimeline.stop();
             }
 
-            autoRefreshTimeline = new Timeline(new KeyFrame(Duration.seconds(2), event -> {
+            autoRefreshTimeline = new Timeline(new KeyFrame(Duration.millis(500), event -> {
                 new Thread(() -> {
                     long currentVersion = Database.getLatestDataVersion();
                     if (localDataVersion == -1) {
                         localDataVersion = currentVersion;
-                    } else if (currentVersion > localDataVersion) {
-                        System.out.println("Database changes detected! Syncing view...");
-                        localDataVersion = currentVersion;
+                    } else if (currentVersion > localDataVersion && refreshInProgress.compareAndSet(false, true)) {
+                        try {
+                            System.out.println("Database changes detected! Syncing view...");
+                            localDataVersion = currentVersion;
 
-                        SystemTime.syncFromDatabase();
-                        javafx.application.Platform.runLater(() -> {
-                            if (currentDashboardController != null && currentUser != null) {
-                                currentDashboardController.setUserInfo("Logged in as: " + currentUser.getUsername() + "   |   Date: " + SystemTime.getDate());
-                            }
-                            if (currentViewRefresher != null) {
-                                currentViewRefresher.run();
-                            }
-                        });
+                            refreshRuntimeDataFromDatabase();
+
+                            SystemTime.syncFromDatabase();
+                            javafx.application.Platform.runLater(() -> {
+                                if (currentDashboardController != null && currentUser != null) {
+                                    currentDashboardController.setUserInfo(userInfoText(currentUser));
+                                }
+                                Main.getInstance().refreshActiveView();
+                            });
+                        } finally {
+                            refreshInProgress.set(false);
+                        }
                     }
                 }).start();
             }));
@@ -256,12 +373,12 @@ public class Main extends Application {
 
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/Dashboard.fxml"));
             BorderPane root = loader.load();
-            
+
             DashboardController controller = loader.getController();
             this.currentDashboardController = controller;
             controller.setTitle("Admin Dashboard");
             SystemTime.syncFromDatabase();
-            controller.setUserInfo("Logged in as: " + admin.getUsername() + "   |   Date: " + SystemTime.getDate());
+            controller.setUserInfo(userInfoText(admin));
 
             VBox menu = controller.getSideMenu();
             VBox content = controller.getContentArea();
@@ -271,40 +388,42 @@ public class Main extends Application {
             VBox menuContent = menuLoader.load();
             AdminMenuController menuController = menuLoader.getController();
             menuController.initData(this, admin);
-            
+
             menu.getChildren().setAll(menuContent);
             menuController.loadDefaultView();
-            
-        stage.setScene(new Scene(root, WIDTH, HEIGHT));
+
+            stage.setScene(new Scene(root, WIDTH, HEIGHT));
         } catch (Exception e) { e.printStackTrace(); }
     }
+
     public void showReceptionistDashboard(Receptionist rec) {
         try {
             this.currentUser = rec;
 
-            // Stop any existing timeline before starting a new one
             if (autoRefreshTimeline != null) {
                 autoRefreshTimeline.stop();
             }
 
-            autoRefreshTimeline = new Timeline(new KeyFrame(Duration.seconds(2), event -> {
+            autoRefreshTimeline = new Timeline(new KeyFrame(Duration.millis(500), event -> {
                 new Thread(() -> {
                     long currentVersion = Database.getLatestDataVersion();
                     if (localDataVersion == -1) {
                         localDataVersion = currentVersion;
-                    } else if (currentVersion > localDataVersion) {
-                        System.out.println("Database changes detected! Syncing view...");
-                        localDataVersion = currentVersion;
-
-                        SystemTime.syncFromDatabase();
-                        javafx.application.Platform.runLater(() -> {
-                            if (currentDashboardController != null && currentUser != null) {
-                                currentDashboardController.setUserInfo("Logged in as: " + currentUser.getUsername() + "   |   Date: " + SystemTime.getDate());
-                            }
-                            if (currentViewRefresher != null) {
-                                currentViewRefresher.run();
-                            }
-                        });
+                    } else if (currentVersion > localDataVersion && refreshInProgress.compareAndSet(false, true)) {
+                        try {
+                            System.out.println("Database changes detected! Syncing view...");
+                            localDataVersion = currentVersion;
+                            refreshRuntimeDataFromDatabase();
+                            SystemTime.syncFromDatabase();
+                            javafx.application.Platform.runLater(() -> {
+                                if (currentDashboardController != null && currentUser != null) {
+                                    currentDashboardController.setUserInfo(userInfoText(currentUser));
+                                }
+                                Main.getInstance().refreshActiveView();
+                            });
+                        } finally {
+                            refreshInProgress.set(false);
+                        }
                     }
                 }).start();
             }));
@@ -313,26 +432,62 @@ public class Main extends Application {
 
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/Dashboard.fxml"));
             BorderPane root = loader.load();
-            
+
             DashboardController controller = loader.getController();
             this.currentDashboardController = controller;
             controller.setTitle("Receptionist Dashboard");
             SystemTime.syncFromDatabase();
-            controller.setUserInfo("Logged in as: " + rec.getUsername() + "   |   Date: " + SystemTime.getDate());
+            controller.setUserInfo(userInfoText(rec));
 
-            VBox menu = controller.getSideMenu();
+            // Restyle the topbar labels to match the info bar design
+            controller.styleAsReceptionistInfoBar();
+            // Override labels: title → date, userLabel → role badge text
+            controller.setTitle(receptionistDateText());
+            controller.setUserInfo("RECEPTIONIST");
+
+            // Hide the sidebar — receptionist uses a top nav bar instead
+            VBox sidebar = controller.getSideMenu();
+            sidebar.setManaged(false);
+            sidebar.setVisible(false);
+            sidebar.setPrefWidth(0);
+
+            // Restyle the topbar for receptionist: slim info bar showing date + role
+            HBox topBar = controller.getTopBar();
+            if (topBar != null) {
+                topBar.setManaged(true);
+                topBar.setVisible(true);
+                topBar.setPrefHeight(42);
+                topBar.setMinHeight(42);
+                topBar.setMaxHeight(42);
+                topBar.getStyleClass().removeAll("topbar");
+                topBar.getStyleClass().add("topbar-info");
+            }
+
             VBox content = controller.getContentArea();
             this.currentContentArea = content;
 
+            // Load the receptionist horizontal nav menu (HBox root)
             FXMLLoader menuLoader = new FXMLLoader(getClass().getResource("/ReceptionistMenu.fxml"));
-            VBox menuContent = menuLoader.load();
+            HBox menuContent = menuLoader.load();
             ReceptionistMenuController menuController = menuLoader.getController();
             menuController.initData(this, rec);
-            
-            menu.getChildren().setAll(menuContent);
+
+            // Inject nav HBox into the navBar slot in Dashboard's top VBox
+            HBox navBar = controller.getNavBar();
+            if (navBar != null) {
+                navBar.setPrefHeight(58);
+                navBar.setMinHeight(58);
+                navBar.setMaxHeight(58);
+                menuContent.setMaxWidth(Double.MAX_VALUE);
+                HBox.setHgrow(menuContent, javafx.scene.layout.Priority.ALWAYS);
+                navBar.getChildren().setAll(menuContent);
+                // Clear any inline style so .topnav CSS class takes effect
+                navBar.setStyle(null);
+            }
+
             menuController.loadDefaultView();
-            
-        stage.setScene(new Scene(root, WIDTH, HEIGHT));
+
+            stage.setScene(new Scene(root, WIDTH, HEIGHT));
         } catch (Exception e) { e.printStackTrace(); }
     }
 

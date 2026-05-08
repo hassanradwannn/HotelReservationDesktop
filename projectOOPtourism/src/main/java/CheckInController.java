@@ -22,7 +22,7 @@ public class CheckInController implements DashboardContentController {
         Database.refreshReservationsFromDatabase();
         reservationCombo.setItems(FXCollections.observableArrayList(
                 Database.getReservations().stream()
-                        .filter(r -> r.getStatus() == ReservationStatus.CONFIRMED)
+                        .filter(r -> r.getStatus() == ReservationStatus.CHECKING_IN)
                         .filter(r -> r.getCheckInDate().isEqual(SystemTime.getToday()))
                         .collect(Collectors.toList())
         ));

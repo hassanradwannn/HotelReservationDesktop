@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<ScrollPane fitToWidth="true"
+            hbarPolicy="NEVER"
+            vbarPolicy="AS_NEEDED"
+            stylesheets="@styles.css"
+            style="-fx-background: #F5EFE6; -fx-background-color: #F5EFE6; -fx-border-color: transparent;"
+            VBox.vgrow="ALWAYS"
+            maxHeight="Infinity"
+            xmlns="http://javafx.com/javafx/17.0.12"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="ReservationDetailController">
+    <content>
+        <VBox spacing="0" style="-fx-background-color: #F5EFE6;">
+            <padding><Insets bottom="32" left="32" right="32" top="16" /></padding>
+            <children>
+                <Label styleClass="panel-eyebrow" text="RESERVATIONS" />
+                <Label fx:id="titleLabel" styleClass="panel-title" text="Reservation" />
+                <Region prefHeight="18" />
+
+                <HBox alignment="TOP_LEFT" spacing="26" styleClass="reservation-layout">
+                    <children>
+                        <VBox maxWidth="500" prefWidth="500" spacing="14" styleClass="form-card">
+                            <children>
+                                <Label styleClass="reservation-field-label" text="RESERVATION ID" />
+                                <Label fx:id="reservationIdLabel" maxWidth="457.0" prefHeight="45.0" prefWidth="457.0" styleClass="reservation-selected-type" wrapText="true" />
+                                <Label styleClass="reservation-field-label" text="GUEST" />
+                                <Label fx:id="guestLabel" maxWidth="450.0" prefHeight="45.0" prefWidth="450.0" styleClass="reservation-selected-type" wrapText="true" />
+                                <Label styleClass="reservation-field-label" text="ROOM" />
+                                <Label fx:id="roomLabel" maxWidth="449.0" prefHeight="45.0" prefWidth="449.0" styleClass="reservation-selected-type" wrapText="true" />
+                                <Label styleClass="reservation-field-label" text="STATUS" />
+                                <Label fx:id="statusLabel" maxWidth="450.0" prefHeight="45.0" prefWidth="450.0" styleClass="reservation-selected-type" wrapText="true" />
+
+                                <VBox fx:id="extendPane" spacing="12">
+                                    <HBox alignment="CENTER_LEFT" spacing="10">
+                                        <Label styleClass="reservation-field-label" text="EXTEND STAY" />
+                                        <CheckBox fx:id="extendStayCheckBox" onAction="#toggleExtendStay" styleClass="elegant-check" />
+                                    </HBox>
+                                    <DatePicker fx:id="newCheckOutPicker" disable="true" maxWidth="420" prefWidth="419.0" promptText="New check-out date" styleClass="date-picker" />
+                                    <Button fx:id="extendButton" disable="true" onAction="#handleExtendStay" prefHeight="44" prefWidth="449.0" styleClass="primary-action-btn" text="EXTEND STAY" />
+                                </VBox>
+
+                                <VBox fx:id="guestActions" spacing="12">
+                                    <ComboBox fx:id="depositPaymentCombo" maxWidth="420" promptText="Payment Method" styleClass="elegant-input" />
+                                    <Button fx:id="payDepositButton" onAction="#handlePayDeposit" prefHeight="44" prefWidth="449.0" styleClass="primary-action-btn" text="PAY DEPOSIT" />
+                                    <Button fx:id="requestCheckOutButton" onAction="#handleRequestCheckOut" prefHeight="44" prefWidth="449.0" styleClass="primary-action-btn" text="REQUEST CHECK OUT" />
+                                </VBox>
+
+                                <HBox spacing="12">
+                                    <Button onAction="#handleBack" prefHeight="44" prefWidth="214.0" styleClass="outline-action-btn" text="BACK " />
+                                    <Button fx:id="cancelButton" onAction="#handleCancel" prefHeight="44" prefWidth="224.0" styleClass="danger-action-btn" text="CANCEL RESERVATION" />
+                                </HBox>
+
+                                <VBox fx:id="receptionistActions" spacing="12">
+                                    <ComboBox fx:id="paymentCombo" maxWidth="420" promptText="Payment Method" styleClass="elegant-input" />
+                                    <HBox spacing="12">
+                                        <Button fx:id="checkInButton" onAction="#handleCheckIn" prefHeight="44" prefWidth="138.0" styleClass="primary-action-btn" text="CHECK IN" />
+                                        <Button fx:id="checkOutButton" onAction="#handleCheckOut" prefHeight="44" prefWidth="136.0" styleClass="primary-action-btn" text="CHECK OUT" />
+                                        <Button fx:id="invoiceButton" onAction="#handleViewInvoice" prefHeight="44" prefWidth="148.0" styleClass="outline-action-btn" text="VIEW INVOICE" />
+                                    </HBox>
+                                </VBox>
+
+                                <Label fx:id="messageLabel" styleClass="message-label" wrapText="true" />
+                            </children>
+                        </VBox>
+
+                        <VBox prefWidth="330" spacing="16" styleClass="reservation-summary-panel">
+                            <children>
+                                <Label styleClass="reservation-summary-title" text="INVOICE SUMMARY" />
+                                <VBox spacing="4">
+                                    <Label styleClass="reservation-summary-label" text="TOTAL CHARGES" />
+                                    <Label fx:id="totalLabel" styleClass="reservation-summary-value" text="-" />
+                                </VBox>
+                                <VBox spacing="4">
+                                    <Label styleClass="reservation-summary-label" text="PAID SO FAR" />
+                                    <Label fx:id="paidLabel" styleClass="reservation-summary-value" text="-" />
+                                </VBox>
+                                <VBox fx:id="refundBox" spacing="4">
+                                    <Label styleClass="reservation-summary-label" text="REFUNDED FOR EARLY CHECK OUT" />
+                                    <Label fx:id="refundLabel" styleClass="reservation-summary-value" text="-" />
+                                </VBox>
+                                <VBox fx:id="depositDueBox" spacing="4">
+                                    <Label styleClass="reservation-summary-label" text="DEPOSIT DUE" />
+                                    <Label fx:id="depositDueLabel" styleClass="reservation-summary-value" text="-" />
+                                </VBox>
+                                <VBox spacing="4">
+                                    <Label styleClass="reservation-summary-label" text="DATES" />
+                                    <Label fx:id="datesLabel" styleClass="reservation-summary-value" text="-" wrapText="true" />
+                                </VBox>
+                                <VBox fx:id="extensionPreviewPane" spacing="16" visible="false">
+                                    <Region styleClass="reservation-summary-rule" />
+                                    <Label styleClass="reservation-summary-title" text="EXTENSION PREVIEW" />
+                                    <VBox spacing="4">
+                                        <Label styleClass="reservation-summary-label" text="ADDED NIGHTS" />
+                                        <Label fx:id="extensionNightsLabel" styleClass="reservation-summary-value" text="-" />
+                                    </VBox>
+                                    <VBox spacing="4">
+                                        <Label styleClass="reservation-summary-label" text="EXTRA FEES" />
+                                        <Label fx:id="extensionFeeLabel" styleClass="reservation-summary-value" text="-" />
+                                    </VBox>
+                                    <VBox spacing="4">
+                                        <Label styleClass="reservation-summary-label" text="NEW TOTAL" />
+                                        <Label fx:id="extensionNewTotalLabel" styleClass="reservation-summary-value" text="-" />
+                                    </VBox>
+                                    <Region styleClass="reservation-summary-rule" />
+                                </VBox>
+                                <VBox spacing="4" styleClass="reservation-total-box">
+                                    <Label styleClass="reservation-total-label" text="OUTSTANDING" />
+                                    <Label fx:id="outstandingLabel" styleClass="reservation-total-value" text="-" />
+                                </VBox>
+                            </children>
+                        </VBox>
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+    </content>
+</ScrollPane>

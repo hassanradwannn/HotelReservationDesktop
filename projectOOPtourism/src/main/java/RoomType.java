@@ -1,4 +1,5 @@
 public class RoomType {
+    private int id;
     private String name;
     private int capacity;
     private double pricePerNight;
@@ -7,6 +8,14 @@ public class RoomType {
         this.name = name;
         this.capacity = capacity;
         this.pricePerNight = pricePerNight;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getName() {
@@ -27,6 +36,10 @@ public class RoomType {
 
     public double getPricePerNight() {
         return this.pricePerNight;
+    }
+
+    public void setPricePerNight(double pricePerNight) {
+        this.pricePerNight = pricePerNight;
     }
 
     void update(String name, int capacity, double pricePerNight) {

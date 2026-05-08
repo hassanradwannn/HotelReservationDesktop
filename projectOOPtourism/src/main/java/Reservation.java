@@ -1,7 +1,10 @@
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-
 public class Reservation {
+    public static final String GYM_PASS_NAME = "Gym";
+    public static final double GYM_PASS_PRICE = 200.0;
+    private static final PricingService PRICING_SERVICE = new PricingService();
+
     private String reservationId;
     private Guest guest;
     private Room room;
@@ -13,6 +16,15 @@ public class Reservation {
     private LocalDate depositDeadline;
     private boolean depositPaid;
     private boolean fullPaid;
+    private boolean isLateCheckout;
+
+    public boolean isLateCheckout() {
+        return isLateCheckout;
+    }
+
+    public void setLateCheckout(boolean lateCheckout) {
+        isLateCheckout = lateCheckout;
+    }
 
     public Reservation(String reservationId, Guest guest, Room room,
                        LocalDate checkInDate, LocalDate checkOutDate,
@@ -34,15 +46,14 @@ public class Reservation {
     }
 
     public final double getDepositAmount() {
-        if (isSameDayBooking()) {
-            return 0.0;
-        }
-        return this.totalPrice * 0.25;
+        return PRICING_SERVICE.calculateDeposit(this.totalPrice);
     }
 
     public double getRemainingAmount() {
-        return this.totalPrice - getDepositAmount();
+        return PRICING_SERVICE.calculateRemaining(this.totalPrice);
     }
+
+    public double getLateFee() {return PRICING_SERVICE.calculateLateFee(this.totalPrice); }
 
     public boolean hasGymPass() {
         return hasGymPass;
@@ -92,6 +103,10 @@ public class Reservation {
         return checkOutDate;
     }
 
+    public void setCheckOutDate(LocalDate checkOutDate) {
+        this.checkOutDate = checkOutDate;
+    }
+
     public ReservationStatus getStatus() {
         return status;
     }
@@ -106,11 +121,15 @@ public class Reservation {
     }
 
     public void setTotalPrice() {
-        double price = room.getPricePerNight() * checkInDate.until(checkOutDate).getDays();
-        for (Amenity a : room.getAmenities()) {
-            price += a.getPrice();
-        }
-        totalPrice = price;
+        totalPrice = calculateTotalPrice(room, checkInDate, checkOutDate, hasGymPass);
+    }
+
+    public static double calculateTotalPrice(Room room, LocalDate checkInDate, LocalDate checkOutDate, boolean hasGymPass) {
+        return PRICING_SERVICE.calculateTotalPrice(room, checkInDate, checkOutDate, hasGymPass);
+    }
+
+    public static boolean isGymAmenity(Amenity amenity) {
+        return PRICING_SERVICE.isGymAmenity(amenity);
     }
 
     public double getTotalPrice() {
@@ -119,7 +138,7 @@ public class Reservation {
 
     @Override
     public String toString() {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         return "ID: " + getReservationId()
                 + " | Guest: " + getGuest().getUsername()
                 + " | Room: " + getRoom().getRoomNumber()
