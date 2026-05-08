@@ -254,8 +254,8 @@ public class DatabaseInitializer {
                 stmt.setString(3, "Guest");
                 stmt.setDate(4, Date.valueOf(LocalDate.now().minusYears(28)));
                 stmt.setString(5, "MALE");
-                stmt.setString(6, "123 Main Street");
-                stmt.setDouble(7, 100.0);
+                stmt.setString(6, "2 Haram");
+                stmt.setDouble(7, 100000.0);
                 stmt.setString(8, "WiFi, Smart TV");
                 stmt.executeUpdate();
                 System.out.println("Demo guest user 'Hassan' created.");
