@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="0" style="-fx-padding: 10;" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Controllers.GuestProfileController">
+    <children>
+        <Label styleClass="panel-eyebrow" text="ACCOUNT" />
+        <Label styleClass="panel-title" text="My Profile" />
+        <Region prefHeight="18" />
+
+        <HBox alignment="TOP_LEFT" spacing="26" styleClass="reservation-layout">
+            <children>
+                <VBox maxWidth="500" prefWidth="500" spacing="14" styleClass="form-card">
+                    <children>
+                        <Label styleClass="reservation-field-label" text="USERNAME" />
+                        <TextField fx:id="usernameField" maxWidth="450.0" prefHeight="45.0" prefWidth="450.0" promptText="Username" styleClass="profile-edit-input" />
+
+                        <Label styleClass="reservation-field-label" text="BIRTHDAY" />
+                        <DatePicker fx:id="dobPicker" maxWidth="450.0" prefHeight="45.0" prefWidth="450.0" promptText="DD/MM/YYYY" styleClass="profile-edit-date" />
+
+                        <Label styleClass="reservation-field-label" text="ADDRESS" />
+                        <TextField fx:id="addressField" maxWidth="450.0" prefHeight="45.0" prefWidth="450.0" promptText="Address" styleClass="profile-edit-input" />
+
+                        <Label styleClass="reservation-field-label" text="GENDER" />
+                        <ComboBox fx:id="genderBox" maxWidth="450.0" prefHeight="45.0" prefWidth="450.0" promptText="Gender" styleClass="profile-edit-combo" />
+
+                        <Label styleClass="reservation-field-label" text="BALANCE" />
+                        <Label fx:id="balanceLabel" maxWidth="450.0" prefHeight="45.0" prefWidth="450.0" styleClass="reservation-selected-type" />
+
+                        <Label styleClass="reservation-field-label" text="ROOM PREFERENCES" />
+                        <FlowPane fx:id="preferencePillsPane" hgap="8" maxWidth="450.0" minHeight="78.0" prefWidth="450.0" styleClass="profile-preference-pills" vgap="6" />
+
+                        <HBox spacing="12">
+                            <Button onAction="#handleResetProfile" prefHeight="44" prefWidth="214.0" styleClass="outline-action-btn" text="RESET FORM" />
+                            <Button onAction="#handleSaveProfile" prefHeight="44" prefWidth="224.0" styleClass="primary-action-btn" text="SAVE CHANGES" />
+                        </HBox>
+
+                        <Label fx:id="profileMessageLabel" styleClass="message-label" wrapText="true" />
+                    </children>
+                </VBox>
+
+                <VBox prefWidth="330" spacing="16" styleClass="reservation-summary-panel">
+                    <children>
+                        <Label styleClass="reservation-summary-title" text="ACCOUNT SUMMARY" />
+                        <VBox spacing="4">
+                            <Label styleClass="reservation-summary-label" text="USERNAME" />
+                            <Label fx:id="summaryUsernameLabel" styleClass="reservation-summary-value" text="-" wrapText="true" />
+                        </VBox>
+                        <VBox spacing="4">
+                            <Label styleClass="reservation-summary-label" text="BIRTHDAY" />
+                            <Label fx:id="summaryDobLabel" styleClass="reservation-summary-value" text="-" />
+                        </VBox>
+                        <VBox spacing="4">
+                            <Label styleClass="reservation-summary-label" text="GENDER" />
+                            <Label fx:id="summaryGenderLabel" styleClass="reservation-summary-value" text="-" />
+                        </VBox>
+                        <VBox spacing="4">
+                            <Label styleClass="reservation-summary-label" text="BALANCE" />
+                            <Label fx:id="summaryBalanceLabel" styleClass="reservation-summary-value" text="-" />
+                        </VBox>
+                        <Region styleClass="reservation-summary-rule" />
+                        <Label styleClass="reservation-summary-title" text="PREFERENCES" />
+                        <VBox spacing="4" styleClass="reservation-total-box">
+                            <Label styleClass="reservation-total-label" text="AMENITIES" />
+                            <Label fx:id="summaryPreferencesLabel" styleClass="profile-summary-preferences" text="-" wrapText="true" />
+                        </VBox>
+                    </children>
+                </VBox>
+            </children>
+        </HBox>
+    </children>
+</VBox>

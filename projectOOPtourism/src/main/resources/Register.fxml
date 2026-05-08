@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane prefHeight="720.0" prefWidth="1280.0" styleClass="root-pane" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Controllers.RegisterController">
+   <children>
+      <HBox AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
+
+         <!-- Left Panel: Branding -->
+         <VBox prefWidth="520.0" styleClass="login-left-panel" alignment="BOTTOM_LEFT">
+            <children>
+               <VBox VBox.vgrow="ALWAYS" alignment="CENTER_LEFT" spacing="18">
+                  <padding><Insets top="60" left="65" right="65" bottom="60"/></padding>
+                  <children>
+                     <Label text="A" styleClass="hero-text-light" />
+                     <Label text="sanctuary" styleClass="hero-text-italic" />
+                     <Label text="for the discerning" styleClass="hero-text-light" />
+                     <Label text="traveler" styleClass="hero-text-light" />
+                     <Region prefHeight="16"/>
+                     <Label text="A glimmer of civilization in this barbaric slaughterhouse. Dedicated to the highest standards of hospitality." styleClass="hero-subtext" wrapText="true" maxWidth="380"/>
+                  </children>
+               </VBox>
+               <Label text="Est. 1908  &#183;  Cairo, Arab Republic of Egypt" styleClass="hotel-footer-label">
+                  <padding><Insets left="65" bottom="35"/></padding>
+               </Label>
+            </children>
+         </VBox>
+
+         <!-- Right Panel: Register Form -->
+         <VBox prefWidth="760.0" styleClass="login-right-panel" alignment="TOP_LEFT">
+            <children>
+               <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="transparent-scroll">
+                  <content>
+                     <VBox alignment="CENTER_LEFT" spacing="18">
+                        <padding><Insets top="50" left="100" right="100" bottom="50"/></padding>
+                        <children>
+                           <Label text="WELCOME TO THE GRAND BUDAPEST HOTEL" styleClass="form-eyebrow"/>
+                           <Label text="Begin your history with us" styleClass="form-title"/>
+
+                           <Region prefHeight="8"/>
+
+                           <TextField fx:id="usernameField" promptText="username" styleClass="elegant-input" maxWidth="480"/>
+                           <PasswordField fx:id="passwordField" promptText="password" styleClass="elegant-input" maxWidth="480"/>
+                           <TextField fx:id="balanceField" promptText="balance" styleClass="elegant-input" maxWidth="480"/>
+
+                           <!-- FIXED ALIGNMENT BOX -->
+                           <HBox spacing="16" alignment="CENTER_LEFT" maxWidth="480">
+                              <children>
+                                 <DatePicker fx:id="dobPicker" promptText="Date of Birth" styleClass="date-picker" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+                                 <ComboBox fx:id="genderBox" promptText="Gender" styleClass="elegant-input combo-box" prefWidth="150" minWidth="150"/>
+                              </children>
+                           </HBox>
+
+                           <VBox spacing="8" maxWidth="480">
+                              <children>
+                                 <Label text="ROOM PREFERENCES" styleClass="search-field-label"/>
+                                 <FlowPane fx:id="prefsPillsPane" hgap="8" vgap="6" maxWidth="480"/>
+                              </children>
+                           </VBox>
+                           <TextField fx:id="addressField" promptText="address" styleClass="elegant-input" maxWidth="480"/>
+
+                           <Region prefHeight="4"/>
+
+                           <Button text="REGISTER AS PATRON" onAction="#handleRegister" prefHeight="50" prefWidth="260" styleClass="primary-action-btn"/>
+
+                           <HBox spacing="6" alignment="CENTER_LEFT">
+                              <Label text="Already on the ledger?" styleClass="form-link-italic"/>
+                              <Hyperlink text="Sign in here" onAction="#handleSignInLink" styleClass="form-link"/>
+                           </HBox>
+
+                           <Label fx:id="messageLabel" styleClass="message-label" wrapText="true" maxWidth="480"/>
+                        </children>
+                     </VBox>
+                  </content>
+               </ScrollPane>
+            </children>
+         </VBox>
+      </HBox>
+   </children>
+</AnchorPane>
+

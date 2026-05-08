@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox spacing="0" style="-fx-padding: 30 60 30 60; -fx-background-color: transparent;"
+      stylesheets="@styles.css"
+      VBox.vgrow="ALWAYS"
+      maxHeight="Infinity"
+      xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="Controllers.GuestReservationsController">
+    <children>
+        <VBox spacing="0">
+            <Label styleClass="section-eyebrow" text="RESERVATIONS" />
+            <Label styleClass="section-heading" text="My Reservations" />
+        </VBox>
+        <Region prefHeight="18" />
+        <ScrollPane fx:id="scrollPane" fitToWidth="true" hbarPolicy="NEVER"
+                    vbarPolicy="AS_NEEDED"
+                    style="-fx-background: transparent; -fx-background-color: transparent; -fx-border-color: transparent; -fx-padding: 0;"
+                    VBox.vgrow="ALWAYS">
+            <content>
+                <VBox fx:id="cardsContainer" spacing="14"
+                      style="-fx-background-color: transparent; -fx-padding: 2 2 20 2;" />
+            </content>
+        </ScrollPane>
+    </children>
+</VBox>

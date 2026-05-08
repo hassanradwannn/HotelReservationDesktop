@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane styleClass="root-pane" stylesheets="@styles.css"
+            xmlns="http://javafx.com/javafx/19"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="Controllers.DashboardController">
+    <top>
+        <VBox>
+            <HBox fx:id="topBar" alignment="CENTER_LEFT" prefHeight="46" styleClass="topbar">
+                <padding><Insets left="28" right="28"/></padding>
+                <Label fx:id="titleLabel" text="Dashboard" styleClass="topbar-title"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="userLabel" text="Logged in as: " styleClass="topbar-user"/>
+                <ImageView fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true">
+                    <image>
+                        <Image url="@icons/grandbudapestlogo.jpg" />
+                    </image>
+                    <HBox.margin>
+                        <Insets left="10.0" />
+                    </HBox.margin>
+                </ImageView>
+            </HBox>
+            <HBox fx:id="navBar" prefHeight="0" minHeight="0" maxHeight="0"
+                  styleClass="topnav"/>
+        </VBox>
+    </top>
+    <left>
+        <VBox fx:id="sideMenu" prefWidth="240" spacing="4" styleClass="sidebar"
+              BorderPane.alignment="CENTER">
+            <padding><Insets top="20" left="14" right="14" bottom="20"/></padding>
+        </VBox>
+    </left>
+    <center>
+        <VBox fx:id="contentArea" alignment="TOP_CENTER" spacing="20"
+              styleClass="content-area" VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS"/>
+    </center>
+</BorderPane>
