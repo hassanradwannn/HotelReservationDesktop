@@ -292,7 +292,7 @@ public class ReservationDetailController implements DashboardContentController {
             if (paymentMethod == PaymentMethod.CREDIT_CARD) {
                 boolean paymentConfirmed = CreditCardModal.showAndWait((Stage) titleLabel.getScene().getWindow());
                 if (!paymentConfirmed) {
-                    return; // User cancelled the payment
+                    return;
                 }
             }
             ReservationService.checkOutGuest(reservation, paymentMethod);
@@ -318,7 +318,7 @@ public class ReservationDetailController implements DashboardContentController {
             if (paymentMethod == PaymentMethod.CREDIT_CARD) {
                 boolean paymentConfirmed = CreditCardModal.showAndWait((Stage) titleLabel.getScene().getWindow());
                 if (!paymentConfirmed) {
-                    return; // User cancelled the payment
+                    return;
                 }
             }
             ReservationService.payDeposit(reservation, currentGuest, paymentMethod);

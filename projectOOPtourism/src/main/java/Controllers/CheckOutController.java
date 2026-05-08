@@ -54,7 +54,7 @@ public class CheckOutController implements DashboardContentController {
 
             ReservationService.checkOutGuest(selected, paymentMethod);
             mainApp.alert("Success", "Guest checked out.");
-            loadReservations(); // Refresh the list
+            loadReservations();
             reservationCombo.setValue(null);
             paymentCombo.setValue(null);
 

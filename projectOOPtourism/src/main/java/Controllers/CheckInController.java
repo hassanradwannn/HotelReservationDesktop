@@ -50,7 +50,7 @@ public class CheckInController implements DashboardContentController {
 
             ReservationService.checkInGuest(selected, selected.getGuest());
             mainApp.alert("Success", "Guest checked in.");
-            loadReservations(); // Refresh the list
+            loadReservations();
             reservationCombo.setValue(null);
 
         } catch (Exception ex) {

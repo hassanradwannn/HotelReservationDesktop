@@ -60,7 +60,6 @@ public class ReceptionistMenuController {
         this.mainApp = mainApp;
         this.receptionist = receptionist;
         Database.loadAll();
-        // Set initial active button to Reservations
         setActiveButton(btnReservations);
     }
 
@@ -115,7 +114,7 @@ public class ReceptionistMenuController {
         mainApp.showLoginScreen();
     }
 
-    // Kept for backward compat
+    // Older FXML/menu actions still point to this handler.
     @FXML private void showToday() {
         setActiveButton(btnReservations);
         mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/ReceptionistReservations.fxml",

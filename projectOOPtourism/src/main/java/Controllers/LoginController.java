@@ -20,7 +20,6 @@ public class LoginController {
     @FXML private PasswordField passwordField;
     @FXML private Label messageLabel;
 
-    // We keep a reference to Main to navigate to other screens
     private AppContext mainApp;
 
     @FXML
@@ -44,13 +43,9 @@ public class LoginController {
         }
 
         try {
-            // Call the static Authentication logic just like before
             User currentUser = Authentication.login(username, password);
-            
-            // Update the global state in Main
             mainApp.setCurrentUser(currentUser);
 
-            // Navigate based on Role
             if (currentUser instanceof Admin admin) {
                 mainApp.showAdminDashboard(admin);
             } else if (currentUser instanceof Receptionist receptionist) {

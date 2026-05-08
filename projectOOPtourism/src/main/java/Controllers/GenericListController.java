@@ -54,7 +54,7 @@ public class GenericListController implements DashboardContentController {
         dataRefresher.run();
         mainApp.setCurrentViewRefresher(dataRefresher);
 
-        // Add context-specific action buttons
+        // Receptionists need quick reservation filters without leaving the generic list screen.
         if (actionBar != null && mainApp.getCurrentUser() instanceof Receptionist && title.contains("Reservations")) {
             Button todayBtn = new Button("For Today");
             todayBtn.getStyleClass().add("outline-action-btn");

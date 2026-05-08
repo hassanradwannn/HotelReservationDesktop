@@ -39,7 +39,7 @@ public class ReceptionistReservationsController implements DashboardContentContr
         ALL
     }
 
-    // Combo display strings (must match order below)
+    // These labels are also used to translate ComboBox selections back into ViewMode values.
     private static final String OPT_ALL       = "All Reservations";
     private static final String OPT_CHECKIN   = "Check Ins Today";
     private static final String OPT_CHECKOUT  = "Check Out Requests";
@@ -50,7 +50,7 @@ public class ReceptionistReservationsController implements DashboardContentContr
     @FXML private ScrollPane scrollPane;
     @FXML private VBox cardsContainer;
 
-    // Hidden labels kept for controller contract (counts / tab state still computed internally)
+    // Hidden FXML nodes keep older menu bindings and count calculations intact.
     @FXML private VBox checkInTab;
     @FXML private VBox checkOutTab;
     @FXML private VBox residingTab;
@@ -70,7 +70,6 @@ public class ReceptionistReservationsController implements DashboardContentContr
     public void initData(AppContext mainApp, Object data) {
         this.mainApp = mainApp;
 
-        // Populate combo
         if (filterComboBox != null) {
             filterComboBox.setItems(FXCollections.observableArrayList(
                     OPT_ALL, OPT_CHECKIN, OPT_CHECKOUT, OPT_RESIDING));
@@ -86,7 +85,7 @@ public class ReceptionistReservationsController implements DashboardContentContr
         mainApp.setCurrentViewRefresher(this::loadReservations);
     }
 
-    /** Called when the ComboBox selection changes (onAction="#onFilterChanged" in FXML). */
+    /** onAction target from ReceptionistReservations.fxml. */
     @FXML
     private void onFilterChanged() {
         if (filterComboBox == null) return;
@@ -100,8 +99,7 @@ public class ReceptionistReservationsController implements DashboardContentContr
         loadReservations();
     }
 
-    /** Keep the three FXML-linked show* handlers so the controller still compiles
-     *  if anything calls them directly. */
+    /** Older FXML/menu actions still reference these handlers directly. */
     @FXML private void showCheckingIn()     { setMode(ViewMode.CHECKING_IN); }
     @FXML private void showCheckingOut()    { setMode(ViewMode.CHECKING_OUT); }
     @FXML private void showResidingGuests() { setMode(ViewMode.RESIDING); }

@@ -39,7 +39,7 @@ public class Admin extends Staff {
         System.out.println("Staff member '" + username + "' (" + newStaff.getClass().getSimpleName() + ") registered successfully.");
     }
 
-    // CRUD
+    // Console-facing admin helpers kept alongside the JavaFX workflow.
     public void viewRoomTypes() { CatalogService.listRoomTypes().forEach(System.out::println); }
     public void viewAmenities() { CatalogService.listAmenities().forEach(System.out::println); }
 

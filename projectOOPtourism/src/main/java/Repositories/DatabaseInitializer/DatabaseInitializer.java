@@ -16,8 +16,7 @@ import java.sql.Statement;
 import java.time.LocalDate;
 
 /**
- * Initializes the database schema and creates necessary tables
- * @author LOQ
+ * Creates and upgrades the database schema used by the desktop app.
  */
 public class DatabaseInitializer {
     
@@ -33,7 +32,6 @@ public class DatabaseInitializer {
 
     private static void createTables() throws SQLException {
         try (Connection conn = DatabaseConnection.getConnection()) {
-            // Create users table
             String usersTable = """
                 CREATE TABLE IF NOT EXISTS users (
                     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -44,7 +42,7 @@ public class DatabaseInitializer {
                     gender VARCHAR(20),
                     address VARCHAR(255),
                     salary DOUBLE,
-                balance DOUBLE DEFAULT 0.0,
+                    balance DOUBLE DEFAULT 0.0,
                     is_logged_in BOOLEAN DEFAULT FALSE,
                     room_preferences TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -52,7 +50,6 @@ public class DatabaseInitializer {
             """;
             executeUpdate(conn, usersTable);
 
-            // Create room_types table
             String roomTypesTable = """
                 CREATE TABLE IF NOT EXISTS room_types (
                     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -63,7 +60,6 @@ public class DatabaseInitializer {
             """;
             executeUpdate(conn, roomTypesTable);
 
-            // Create rooms table
             String roomsTable = """
                 CREATE TABLE IF NOT EXISTS rooms (
                     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -74,7 +70,6 @@ public class DatabaseInitializer {
             """;
             executeUpdate(conn, roomsTable);
 
-            // Create amenities table
             String amenitiesTable = """
                 CREATE TABLE IF NOT EXISTS amenities (
                     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -84,7 +79,6 @@ public class DatabaseInitializer {
             """;
             executeUpdate(conn, amenitiesTable);
 
-            // Create room_amenities junction table
             String roomAmenitiesTable = """
                 CREATE TABLE IF NOT EXISTS room_amenities (
                     room_number VARCHAR(50) NOT NULL,
@@ -96,7 +90,6 @@ public class DatabaseInitializer {
             """;
             executeUpdate(conn, roomAmenitiesTable);
 
-            // Create reservations table
             String reservationsTable = """
                 CREATE TABLE IF NOT EXISTS reservations (
                     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -113,112 +106,99 @@ public class DatabaseInitializer {
                 )
             """;
             executeUpdate(conn, reservationsTable);
-            // Create invoices table
-        String invoicesTable = """
-            CREATE TABLE IF NOT EXISTS invoices (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                guest_username VARCHAR(100) NOT NULL,
-                room_number VARCHAR(50) NOT NULL,
-                reservation_id VARCHAR(50),
-                total_amount DOUBLE NOT NULL,
-                payment_method VARCHAR(50) NOT NULL,
-                paid BOOLEAN DEFAULT TRUE,
-                payment_date DATE,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """;
-        executeUpdate(conn, invoicesTable);
 
-        String systemSettingsTable = """
-            CREATE TABLE IF NOT EXISTS system_settings (
-                setting_key VARCHAR(50) PRIMARY KEY,
-                setting_value VARCHAR(255) NOT NULL
-            )
-        """;
-        executeUpdate(conn, systemSettingsTable);
+            String invoicesTable = """
+                CREATE TABLE IF NOT EXISTS invoices (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    guest_username VARCHAR(100) NOT NULL,
+                    room_number VARCHAR(50) NOT NULL,
+                    reservation_id VARCHAR(50),
+                    total_amount DOUBLE NOT NULL,
+                    payment_method VARCHAR(50) NOT NULL,
+                    paid BOOLEAN DEFAULT TRUE,
+                    payment_date DATE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """;
+            executeUpdate(conn, invoicesTable);
+
+            String systemSettingsTable = """
+                CREATE TABLE IF NOT EXISTS system_settings (
+                    setting_key VARCHAR(50) PRIMARY KEY,
+                    setting_value VARCHAR(255) NOT NULL
+                )
+            """;
+            executeUpdate(conn, systemSettingsTable);
 
 
             System.out.println("All tables created successfully.");
-            
-            // Gracefully add missing columns to existing tables (if they were created before)
+
+            // These migrations keep older local databases usable after schema changes.
             try {
                 executeUpdate(conn, "ALTER TABLE users ADD COLUMN balance DOUBLE DEFAULT 0.0");
                 System.out.println("Added missing 'balance' column to users table.");
-            } catch (SQLException e) {
-                // Column already exists, safe to ignore
+            } catch (SQLException ignored) {
             }
             try {
                 executeUpdate(conn, "ALTER TABLE users ADD COLUMN is_logged_in BOOLEAN DEFAULT FALSE");
                 System.out.println("Added missing 'is_logged_in' column to users table.");
-            } catch (SQLException e) {
-                // Column already exists, safe to ignore
+            } catch (SQLException ignored) {
             }
             try {
                 executeUpdate(conn, "ALTER TABLE users ADD COLUMN room_preferences TEXT");
                 System.out.println("Added missing 'room_preferences' column to users table.");
-            } catch (SQLException e) {
-                // Column already exists, safe to ignore
+            } catch (SQLException ignored) {
             }
             try {
                 executeUpdate(conn, "ALTER TABLE reservations ADD COLUMN reservation_id VARCHAR(50) UNIQUE NOT NULL AFTER id");
                 System.out.println("Added missing 'reservation_id' column to reservations table.");
-            } catch (SQLException e) {
-                // Column already exists, safe to ignore
+            } catch (SQLException ignored) {
             }
             try {
                 executeUpdate(conn, "ALTER TABLE reservations ADD COLUMN has_gym_pass BOOLEAN DEFAULT FALSE AFTER check_out_date");
                 System.out.println("Added missing 'has_gym_pass' column to reservations table.");
-            } catch (SQLException e) {
-                // Column already exists, safe to ignore
+            } catch (SQLException ignored) {
             }
             try {
                 executeUpdate(conn, "ALTER TABLE invoices ADD COLUMN guest_username VARCHAR(100) NOT NULL AFTER id");
                 System.out.println("Added missing 'guest_username' column to invoices table.");
-            } catch (SQLException e) {
-                // Column already exists, safe to ignore
+            } catch (SQLException ignored) {
             }
             try {
                 executeUpdate(conn, "ALTER TABLE invoices ADD COLUMN room_number VARCHAR(50) NOT NULL AFTER guest_username");
                 System.out.println("Added missing 'room_number' column to invoices table.");
-            } catch (SQLException e) {
-                // Column already exists, safe to ignore
+            } catch (SQLException ignored) {
             }
             try {
                 executeUpdate(conn, "ALTER TABLE invoices ADD COLUMN reservation_id VARCHAR(50) AFTER room_number");
                 System.out.println("Added missing 'reservation_id' column to invoices table.");
-            } catch (SQLException e) {
-                // Column already exists, safe to ignore
+            } catch (SQLException ignored) {
             }
             try {
                 executeUpdate(conn, "ALTER TABLE invoices ADD COLUMN paid BOOLEAN DEFAULT TRUE AFTER payment_method");
                 System.out.println("Added missing 'paid' column to invoices table.");
-            } catch (SQLException e) {
-                // Column already exists, safe to ignore
+            } catch (SQLException ignored) {
             }
             try {
                 executeUpdate(conn, "ALTER TABLE invoices ADD COLUMN payment_date DATE AFTER paid");
                 System.out.println("Added missing 'payment_date' column to invoices table.");
-            } catch (SQLException e) {
-                // Column already exists, safe to ignore
+            } catch (SQLException ignored) {
             }
-        try {
-            executeUpdate(conn, "INSERT IGNORE INTO system_settings (setting_key, setting_value) VALUES ('current_date', '" + java.time.LocalDate.now().toString() + "')");
-            System.out.println("System date tracking initialized.");
-        } catch (SQLException e) {
-            // Safe to ignore
-        }
-        try {
-            executeUpdate(conn, "INSERT IGNORE INTO system_settings (setting_key, setting_value) VALUES ('last_update', '0')");
-            System.out.println("System data versioning initialized.");
-        } catch (SQLException e) {
-            // Safe to ignore
-        }
-        try {
-            executeUpdate(conn, "INSERT IGNORE INTO system_settings (setting_key, setting_value) VALUES ('active_instances', '0')");
-            System.out.println("Active instance tracking initialized.");
-        } catch (SQLException e) {
-            // Safe to ignore
-        }
+            try {
+                executeUpdate(conn, "INSERT IGNORE INTO system_settings (setting_key, setting_value) VALUES ('current_date', '" + java.time.LocalDate.now().toString() + "')");
+                System.out.println("System date tracking initialized.");
+            } catch (SQLException ignored) {
+            }
+            try {
+                executeUpdate(conn, "INSERT IGNORE INTO system_settings (setting_key, setting_value) VALUES ('last_update', '0')");
+                System.out.println("System data versioning initialized.");
+            } catch (SQLException ignored) {
+            }
+            try {
+                executeUpdate(conn, "INSERT IGNORE INTO system_settings (setting_key, setting_value) VALUES ('active_instances', '0')");
+                System.out.println("Active instance tracking initialized.");
+            } catch (SQLException ignored) {
+            }
         }
     }
 
@@ -230,7 +210,6 @@ public class DatabaseInitializer {
 
     private static void insertDemoUsers() throws SQLException {
         try (Connection conn = DatabaseConnection.getConnection()) {
-            // Check if users already exist
             try (PreparedStatement checkStmt = conn.prepareStatement("SELECT COUNT(*) FROM users")) {
                 var rs = checkStmt.executeQuery();
                 if (rs.next() && rs.getInt(1) > 0) {
@@ -245,39 +224,39 @@ public class DatabaseInitializer {
                 """;
 
             try (PreparedStatement stmt = conn.prepareStatement(insertUserSql)) {
-                // Admin user: Admin/Admin@123
+                // Demo login: Admin / Admin@123.
                 stmt.setString(1, "Admin");
                 stmt.setString(2, "Admin@123");
                 stmt.setString(3, "Admin");
                 stmt.setDate(4, Date.valueOf(LocalDate.now().minusYears(30)));
-                stmt.setString(5, null); // gender
-                stmt.setString(6, null); // address
-                stmt.setDouble(7, 0.0); // balance
-                stmt.setString(8, null); // room_preferences
+                stmt.setString(5, null);
+                stmt.setString(6, null);
+                stmt.setDouble(7, 0.0);
+                stmt.setString(8, null);
                 stmt.executeUpdate();
                 System.out.println("Demo admin user 'Admin' created.");
 
-                // Receptionist user: Manar/Manar2002
+                // Demo login: Manar / Manar2002.
                 stmt.setString(1, "Manar");
                 stmt.setString(2, "Manar2002");
                 stmt.setString(3, "Receptionist");
                 stmt.setDate(4, Date.valueOf(LocalDate.now().minusYears(25)));
-                stmt.setString(5, null); // gender
-                stmt.setString(6, null); // address
-                stmt.setDouble(7, 0.0); // balance
-                stmt.setString(8, null); // room_preferences
+                stmt.setString(5, null);
+                stmt.setString(6, null);
+                stmt.setDouble(7, 0.0);
+                stmt.setString(8, null);
                 stmt.executeUpdate();
                 System.out.println("Demo receptionist user 'Manar' created.");
 
-                // Guest user: Hassan/Hassan123
+                // Demo login: Hassan / Hassan123.
                 stmt.setString(1, "Hassan");
                 stmt.setString(2, "Hassan123");
                 stmt.setString(3, "Guest");
                 stmt.setDate(4, Date.valueOf(LocalDate.now().minusYears(28)));
-                stmt.setString(5, "MALE"); // gender
-                stmt.setString(6, "123 Main Street"); // address
-                stmt.setDouble(7, 100.0); // balance
-                stmt.setString(8, "WiFi, Smart TV"); // room_preferences
+                stmt.setString(5, "MALE");
+                stmt.setString(6, "123 Main Street");
+                stmt.setDouble(7, 100.0);
+                stmt.setString(8, "WiFi, Smart TV");
                 stmt.executeUpdate();
                 System.out.println("Demo guest user 'Hassan' created.");
             }

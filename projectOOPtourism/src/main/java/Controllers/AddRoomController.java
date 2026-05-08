@@ -45,15 +45,13 @@ public class AddRoomController implements DashboardContentController {
                 return;
             }
 
-            // Create in-memory
             CatalogService.createRoom(roomNumber, selectedType);
 
-            // Sync to database
             Room newRoom = CatalogService.findRoom(roomNumber);
             if (newRoom != null) {
                 DatabaseSaver.saveRoom(newRoom);
 
-                // Assign default amenities based on room type
+                // New rooms inherit the same default amenities as seeded rooms of this type.
                 java.util.List<Amenity> defaultAmenities = CatalogService.getDefaultAmenitiesForType(selectedType.getName());
                 newRoom.setAmenities(new java.util.ArrayList<>(defaultAmenities));
                 DatabaseSaver.saveRoomAmenities(newRoom);

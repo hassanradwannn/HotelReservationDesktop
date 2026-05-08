@@ -30,7 +30,7 @@ public class DatabaseSync {
     }
 
     public static void syncDefaultDataToMySQL() {
-        // Safe guard: only perform massive startup sync if the database is truly empty
+        // Only backfill the SQL database when the core catalog tables are empty.
         if (!isTableEmpty("rooms") && !isTableEmpty("amenities")) {
             return;
         }

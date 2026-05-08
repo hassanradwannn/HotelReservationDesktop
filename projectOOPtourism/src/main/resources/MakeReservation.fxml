@@ -19,7 +19,6 @@
                    <Label fx:id="selectedRoomTypeLabel" maxWidth="449.0" prefHeight="45.0" prefWidth="449.0" styleClass="reservation-selected-type" wrapText="true" />
                    <TextField fx:id="guestsField" maxWidth="420" promptText="Number of Guests" styleClass="elegant-input" />
 
-                   <!-- Width fixed to 420 to match the boxes above -->
                    <DatePicker fx:id="checkInPicker" maxWidth="420" promptText="Check-in Date" styleClass="date-picker" />
                    <DatePicker fx:id="checkOutPicker" maxWidth="420" promptText="Check-out Date" styleClass="date-picker" />
 

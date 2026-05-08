@@ -17,7 +17,7 @@ import javafx.scene.layout.VBox;
 public class DashboardController {
     @FXML private Label titleLabel;
     @FXML private Label userLabel;
-    @FXML private HBox topBar;   // the title/user info bar at the very top
+    @FXML private HBox topBar;
     @FXML private VBox sideMenu;
     @FXML private VBox contentArea;
     @FXML private HBox navBar;
@@ -34,10 +34,10 @@ public class DashboardController {
     public VBox getSideMenu()    { return sideMenu; }
     public VBox getContentArea() { return contentArea; }
 
-    /** Returns the horizontal nav bar slot in the top VBox. */
+    /** Slot used by the receptionist dashboard for its horizontal menu. */
     public HBox getNavBar() { return navBar; }
 
-    /** Restyles the topBar and its labels to match the receptionist info bar design. */
+    /** Turns the default title bar into the receptionist date and role strip. */
     public void styleAsReceptionistInfoBar() {
         if (titleLabel != null) {
             titleLabel.getStyleClass().removeAll("topbar-title");

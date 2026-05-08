@@ -31,8 +31,6 @@
             <padding><Insets top="18" right="24" bottom="18" left="24"/></padding>
 
             <Label text="RESERVE YOUR SUITE" styleClass="search-card-eyebrow"/>
-
-            <!-- Fields row -->
             <HBox spacing="12" styleClass="search-fields-row" alignment="BOTTOM_LEFT">
 
                 <VBox styleClass="search-field-group" HBox.hgrow="ALWAYS">
@@ -66,8 +64,6 @@
                 <Button text="SEARCH" onAction="#handleSearch"
                         styleClass="hero-search-btn" minWidth="124" prefHeight="42" minHeight="42" maxHeight="42"/>
             </HBox>
-
-            <!-- Amenity pills -->
             <VBox spacing="6">
                 <padding><Insets top="12" bottom="2"/></padding>
                 <Label text="AMENITIES" styleClass="search-field-label"/>

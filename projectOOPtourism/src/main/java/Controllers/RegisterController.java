@@ -135,7 +135,7 @@ public class RegisterController {
                     String.join(", ", selectedPreferences)
             );
 
-            guest.register(); // Calling your original method
+            guest.register();
             mainApp.alert("Success", "Account created successfully. You can now log in.");
             mainApp.showLoginScreen();
 

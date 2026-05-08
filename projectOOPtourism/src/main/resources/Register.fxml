@@ -8,8 +8,6 @@
 <AnchorPane prefHeight="720.0" prefWidth="1280.0" styleClass="root-pane" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Controllers.RegisterController">
    <children>
       <HBox AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
-
-         <!-- Left Panel: Branding -->
          <VBox prefWidth="520.0" styleClass="login-left-panel" alignment="BOTTOM_LEFT">
             <children>
                <VBox VBox.vgrow="ALWAYS" alignment="CENTER_LEFT" spacing="18">
@@ -28,8 +26,6 @@
                </Label>
             </children>
          </VBox>
-
-         <!-- Right Panel: Register Form -->
          <VBox prefWidth="760.0" styleClass="login-right-panel" alignment="TOP_LEFT">
             <children>
                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="transparent-scroll">
@@ -45,8 +41,6 @@
                            <TextField fx:id="usernameField" promptText="username" styleClass="elegant-input" maxWidth="480"/>
                            <PasswordField fx:id="passwordField" promptText="password" styleClass="elegant-input" maxWidth="480"/>
                            <TextField fx:id="balanceField" promptText="balance" styleClass="elegant-input" maxWidth="480"/>
-
-                           <!-- FIXED ALIGNMENT BOX -->
                            <HBox spacing="16" alignment="CENTER_LEFT" maxWidth="480">
                               <children>
                                  <DatePicker fx:id="dobPicker" promptText="Date of Birth" styleClass="date-picker" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>

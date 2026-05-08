@@ -16,19 +16,16 @@
     </properties>
 
     <dependencies>
-        <!-- JavaFX Controls (for buttons, labels, etc.) -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
             <version>${javafx.version}</version>
         </dependency>
-        <!-- JavaFX FXML (for loading .fxml files) -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
             <version>${javafx.version}</version>
         </dependency>
-        <!-- MySQL JDBC Driver -->
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
@@ -52,7 +49,6 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <!-- This must be the fully qualified name of your class that extends Application -->
                     <mainClass>Main</mainClass>
                 </configuration>
             </plugin>

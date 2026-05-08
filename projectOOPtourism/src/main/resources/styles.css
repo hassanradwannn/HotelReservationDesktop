@@ -1,14 +1,6 @@
-/* =====================================================
-   Palette:
-     Blush:       #F7D6D9
-     Rose:        #E8879A
-     Crimson:     #C4415D
-     Burgundy:    #8B2040
-     Cream:       #F9F3EA
-     Gold:        #C8A97E
-     Dark:        #2C2523
-     Warm BG:     #EDE4D8
-   ===================================================== */
+/* Shared palette used across the JavaFX screens:
+   Blush #F7D6D9, Rose #E8879A, Crimson #C4415D, Burgundy #8B2040,
+   Cream #F9F3EA, Gold #C8A97E, Dark #2C2523, Warm BG #EDE4D8. */
 
 .root-pane {
     -fx-background-color: #EDE4D8;
@@ -131,7 +123,7 @@
     -fx-effect: none;
 }
 
-/* ComboBox styled as elegant-input */
+/* ComboBox variant of the base input style. */
 .elegant-input.combo-box {
     -fx-background-color: #EFD9DF;
     -fx-border-color: #C4415D;
@@ -387,7 +379,7 @@
 
 .panel-eyebrow {
     -fx-font-family: "Georgia";
-    -fx-font-size: 16px; /* BUMPED THIS UP SO THE TEXT IS BIGGER */
+    -fx-font-size: 16px;
     -fx-font-weight: bold;
     -fx-text-fill: #C4415D;
     -fx-letter-spacing: 2;
@@ -1417,7 +1409,7 @@
     -fx-font-style: italic;
 }
 
-/* Amenity toggle pills */
+/* Amenity filters behave like compact toggle buttons. */
 .amenity-pill {
     -fx-background-color: transparent;
     -fx-border-color: #C4415D;
@@ -1772,7 +1764,7 @@
     -fx-background-color: #F7D6D9;
 }
 
-/* Final guest-home control overrides: keep these after generic ComboBox styles. */
+/* Guest-home overrides must stay after the generic ComboBox rules. */
 .guest-home-root .search-field-combo.combo-box {
     -fx-background-color: #F7D6D9;
     -fx-background-insets: 0;
@@ -1830,9 +1822,7 @@
 }
 
 
-/* =====================================================
-   Matches new horizontal-nav + avatar-card design.
-   ===================================================== */
+/* Receptionist dashboard and reservation-card styles. */
 
 .root-pane {
     -fx-background-color: #EDE4D8;
@@ -2020,8 +2010,8 @@
 
 /* CreditCardModal styles */
 .credit-card-modal-root {
-    -fx-background-color: #F9F3EA; /* Cream background */
-    -fx-border-color: #C8A97E; /* Gold border */
+    -fx-background-color: #F9F3EA;
+    -fx-border-color: #C8A97E;
     -fx-border-width: 2;
     -fx-background-radius: 0;
     -fx-border-radius: 0;
@@ -2031,22 +2021,22 @@
 .header-label {
     -fx-font-family: "Georgia";
     -fx-font-size: 24px;
-    -fx-text-fill: #8B2040; /* Burgundy */
+    -fx-text-fill: #8B2040;
     -fx-font-weight: bold;
 }
 
 .error-label {
     -fx-font-family: "Georgia";
     -fx-font-size: 11px;
-    -fx-text-fill: #C4415D; /* Crimson */
+    -fx-text-fill: #C4415D;
     -fx-font-style: italic;
     -fx-max-width: Infinity;
-    -fx-pref-height: 15px; /* Give it some height even when empty */
+    -fx-pref-height: 15px;
 }
 
 .primary-button {
-    -fx-background-color: #8B2040; /* Burgundy */
-    -fx-text-fill: #F9F3EA; /* Cream */
+    -fx-background-color: #8B2040;
+    -fx-text-fill: #F9F3EA;
     -fx-font-family: "Georgia";
     -fx-font-size: 13px;
     -fx-font-weight: bold;
@@ -2057,16 +2047,16 @@
 }
 
 .primary-button:hover {
-    -fx-background-color: #C4415D; /* Crimson */
+    -fx-background-color: #C4415D;
 }
 
 .outline-button {
     -fx-background-color: transparent;
-    -fx-text-fill: #8B2040; /* Burgundy */
+    -fx-text-fill: #8B2040;
     -fx-font-family: "Georgia";
     -fx-font-size: 13px;
     -fx-font-weight: bold;
-    -fx-border-color: #8B2040; /* Burgundy */
+    -fx-border-color: #8B2040;
     -fx-border-width: 1.5;
     -fx-border-radius: 0;
     -fx-background-radius: 0;
@@ -2075,9 +2065,9 @@
 }
 
 .outline-button:hover {
-    -fx-background-color: #F7D6D9; /* Blush */
-    -fx-text-fill: #C4415D; /* Crimson */
-    -fx-border-color: #C4415D; /* Crimson */
+    -fx-background-color: #F7D6D9;
+    -fx-text-fill: #C4415D;
+    -fx-border-color: #C4415D;
 }
 
 /* Text fields in modal */
@@ -2099,7 +2089,7 @@
     -fx-background-color: #FFF7E6;
 }
 
-/* Ensure search input fields in guest home have the correct background */
+/* Search fields override the global TextField background inside guest home. */
 .guest-home-root .search-field-input {
     -fx-background-color: #F7D6D9;
 }

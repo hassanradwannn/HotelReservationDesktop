@@ -20,7 +20,6 @@ import java.util.Scanner;
 
 public class ChatDatabase {
 
-    // Chat message data class
     public static class ChatMessage {
         private final String senderUsername;
         private final String message;
@@ -42,7 +41,6 @@ public class ChatDatabase {
         }
     }
 
-    // Chat info data class
     public static class ChatInfo {
         private final int chatId;
         private final String guestUsername;
@@ -62,9 +60,7 @@ public class ChatDatabase {
         public Timestamp getCreatedAt() { return createdAt; }
     }
 
-
-    // Creates the chats and chat_messages tables if they do not already exist.
-    // Called at startup from ChatController so the tables are always ready.
+    // Chat is optional, so the tables are created lazily when the chat screen opens.
     public static void ensureTablesExist() {
         String chatsTable = """
             CREATE TABLE IF NOT EXISTS chats (
@@ -193,7 +189,6 @@ public class ChatDatabase {
         }
     }
 
-    // Load chat messages as a list for UI display
     public static List<ChatMessage> loadChatMessages(int chatId) {
         List<ChatMessage> messages = new ArrayList<>();
         String sql = """
@@ -224,7 +219,6 @@ public class ChatDatabase {
         return messages;
     }
 
-    // Get all chats for a specific user (guest or receptionist)
     public static List<ChatInfo> getUserChats(String username) {
         List<ChatInfo> chats = new ArrayList<>();
         String sql = """
@@ -257,7 +251,6 @@ public class ChatDatabase {
         return chats;
     }
 
-    // Get chat between specific guest and receptionist
     public static ChatInfo getChatBetweenUsers(String guestUsername, String receptionistUsername) {
         String sql = """
             SELECT id, guest_username, receptionist_username, created_at

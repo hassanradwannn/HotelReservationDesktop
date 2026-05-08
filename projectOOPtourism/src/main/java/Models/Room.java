@@ -20,8 +20,7 @@ public class Room {
     public Room(String roomNumber, RoomType roomType) {
         this.roomNumber = roomNumber;
         this.roomType = roomType;
-        // Removed unsafe hardcoded defaults. 
-        // Database.java now handles fetching and linking proper amenities from SQL.
+        // Amenities are attached later from the room_amenities table.
     }
 
     public int getId() {

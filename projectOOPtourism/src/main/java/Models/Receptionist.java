@@ -110,19 +110,16 @@ public class Receptionist extends Staff {
         Room room = reservation.getRoom();
         LocalDate paymentDate = SystemTime.getToday();
 
-        // Print header
         System.out.println("\n" + "=".repeat(60));
         System.out.println(String.format("%20s %s %20s", "", "HOTEL CHECKOUT INVOICE", ""));
         System.out.println("=".repeat(60));
 
-        // Reservation and Guest Information
         System.out.println("\nRESERVATION DETAILS:");
         System.out.println(String.format("  %-25s: %s", "Reservation ID", reservation.getReservationId()));
         System.out.println(String.format("  %-25s: %s", "Guest Name", guest.getUsername()));
         System.out.println(String.format("  %-25s: %s", "Room Number", room.getRoomNumber()));
         System.out.println(String.format("  %-25s: %s", "Room Type", room.getRoomType()));
 
-        // Dates
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         System.out.println("\nSTAY DETAILS:");
         System.out.println(String.format("  %-25s: %s", "Check-In Date", reservation.getCheckInDate().format(formatter)));
@@ -130,18 +127,15 @@ public class Receptionist extends Staff {
         long nights = reservation.getCheckInDate().until(reservation.getCheckOutDate()).getDays();
         System.out.println(String.format("  %-25s: %d night(s)", "Number of Nights", nights));
 
-        // Payment Information
         System.out.println("\nPAYMENT DETAILS:");
         System.out.println(String.format("  %-25s: $%.2f", "Total Stay Cost", reservation.getTotalPrice()));
         System.out.println(String.format("  %-25s: $%.2f", "Amount Paid at Checkout", amountPaid));
         System.out.println(String.format("  %-25s: %s", "Payment Method", paymentMethod));
         System.out.println(String.format("  %-25s: %s", "Payment Date", paymentDate.format(formatter)));
 
-        // Account Balance
         System.out.println("\nACCOUNT INFORMATION:");
         System.out.println(String.format("  %-25s: $%.2f", "Guest Balance", guest.getBalance()));
 
-        // Footer
         System.out.println("\n" + "=".repeat(60));
         System.out.println(String.format("%15s %s %15s", "", "Thank You for Your Stay!", ""));
         System.out.println("=".repeat(60) + "\n");

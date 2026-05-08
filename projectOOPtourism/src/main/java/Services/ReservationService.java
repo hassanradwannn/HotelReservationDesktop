@@ -62,7 +62,6 @@ public abstract class ReservationService {
         reservation.setTotalPrice();
         reservations.add(reservation);
 
-        // Save to database
         DatabaseSaver.saveReservation(
                 reservation.getReservationId(),
                 guest.getUsername(),
@@ -72,21 +71,14 @@ public abstract class ReservationService {
                 addGym,
                 reservation.getStatus().toString());
 
-          // deprecated check for check in date
-      /*  if (checkIn.isEqual(today)) {
-            reservation.setStatus(ReservationStatus.CONFIRMED);
-            reservation.setDepositPaid(true);
-            DatabaseSaver.updateReservationStatus(reservation.getReservationId(), ReservationStatus.CONFIRMED.toString());
-        }*/
-
         return reservation;
     }
 
     public static void cancelReservation(String reservationId) {
         for (Reservation reservation : reservations) {
             if (reservation.getReservationId().equals(reservationId)) {
-                
-                // Refund the deposit back to the guest's balance if it was already paid
+
+                // Refund any paid deposit before marking the reservation cancelled.
                 if (reservation.isDepositPaid()) {
                     Guest guest = reservation.getGuest();
                     User freshData = UserDatabase.findUser(guest.getUsername());
@@ -243,12 +235,12 @@ public abstract class ReservationService {
         return AVAILABILITY_SERVICE.searchAvailableRooms(checkIn, checkOut, requestedType, guests, requestedAmenities);
     }
 
-    // Cancel reservations whose check-in date has passed and are not ongoing/completed/cancelled
+    // Daily status cleanup for deposit deadlines, missed check-ins, and checkout transitions.
     public static void cancelOverdueReservations() {
         LocalDate today = SystemTime.getToday();
         for (Reservation reservation : new ArrayList<>(reservations)) {
 
-            // Only confirm PENDING reservations for today if deposit has been paid
+            // Paid pending reservations enter the check-in queue on arrival day.
             if (reservation.getStatus() == ReservationStatus.PENDING && reservation.getCheckInDate().isEqual(today)) {
                 if (reservation.isDepositPaid()) {
                     reservation.setStatus(ReservationStatus.CONFIRMED);
@@ -256,7 +248,7 @@ public abstract class ReservationService {
                 }
             }
 
-            // Cancel if deposit is overdue (after a day)
+            // Unpaid pending reservations expire after their deposit window.
             if (reservation.getStatus() == ReservationStatus.PENDING && reservation.isDepositOverdue()) {
                 reservation.setStatus(ReservationStatus.CANCELLED);
                 DatabaseSaver.updateReservationStatus(reservation.getReservationId(), ReservationStatus.CANCELLED.toString());

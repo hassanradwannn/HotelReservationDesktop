@@ -29,7 +29,7 @@ public class LateCheckoutPaymentController implements DashboardContentController
 
     @Override
     public void initData(AppContext mainApp, Object data) {
-        // This path is used by the payment wall in Main.loadLateCheckoutPaymentWall()
+        // Main passes the guest and reservation through the overload below.
     }
 
     public void initData(AppContext mainApp, Guest guest, Reservation reservation) {
@@ -54,7 +54,7 @@ public class LateCheckoutPaymentController implements DashboardContentController
 
         double fee = reservation.getLateFee();
 
-        // Refresh balance from DB before deducting
+        // Charge against the latest persisted balance, not the stale dashboard copy.
         User fresh = UserDatabase.findUser(guest.getUsername());
         if (fresh instanceof Guest dbGuest) {
             guest.setBalance(dbGuest.getBalance());

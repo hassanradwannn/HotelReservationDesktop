@@ -44,18 +44,14 @@ public class UserDatabase {
 
                 User user;
 
+                // Staff working hours are not stored in the users table, so restored staff default to 0.
                 if ("ADMIN".equalsIgnoreCase(role)) {
-                    // Admin constructor: (username, password, dateOfBirth, workingHours)
-                    // We don't store working hours, so use default of 0
                     user = new Admin(username, password, dateOfBirth, 0);
                 }
                 else if ("RECEPTIONIST".equalsIgnoreCase(role)) {
-                    // Receptionist constructor: (username, password, dateOfBirth, workingHours)
-                    // We don't store working hours, so use default of 0
                     user = new Receptionist(username, password, dateOfBirth, 0);
                 }
                 else {
-                    // Guest constructor: (username, password, dateOfBirth, balance, address, gender, roomPreferences)
                     double balance = rs.getDouble("balance");
                     String address = rs.getString("address") != null ? rs.getString("address") : "";
                     

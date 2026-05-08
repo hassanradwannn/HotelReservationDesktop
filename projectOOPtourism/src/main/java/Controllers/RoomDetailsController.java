@@ -36,7 +36,7 @@ public class RoomDetailsController implements DashboardContentController {
     public void initData(AppContext mainApp, Object data) {
         this.mainApp = mainApp;
 
-        // Unpack the data passed from AvailableRoomsController
+        // AvailableRoomsController passes this compact booking payload in a fixed order.
         Object[] arrayData = (Object[]) data;
         this.guest = (Guest) arrayData[0];
         this.room = (Room) arrayData[1];
@@ -48,8 +48,8 @@ public class RoomDetailsController implements DashboardContentController {
                 ? context
                 : null;
 
-        mainApp.setSelectedRoomTypeForReservation(null); // Clear lingering general type
-        mainApp.setSelectedRoomForReservation(room); // Ensure it's set for the reserve button
+        mainApp.setSelectedRoomTypeForReservation(null);
+        mainApp.setSelectedRoomForReservation(room);
         mainApp.setCurrentViewRefresher(this::refreshRoomDetails);
         renderRoomDetails();
     }
@@ -152,7 +152,7 @@ public class RoomDetailsController implements DashboardContentController {
 
     @FXML
     private void handleBack() {
-        // Repackage the search criteria to return to the specific Available Rooms list
+        // Preserve the original search when returning to the Available Rooms list.
         Object[] bookingData = new Object[]{ guest, checkIn, checkOut, hasGymPass, availableRooms, searchContext };
         mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/AvailableRooms.fxml", bookingData);
     }

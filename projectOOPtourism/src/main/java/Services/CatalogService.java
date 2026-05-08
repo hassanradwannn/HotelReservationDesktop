@@ -107,7 +107,6 @@ public abstract class CatalogService {
         return Database.getRooms().stream().anyMatch(r -> r.getRoomNumber().equalsIgnoreCase(roomNumber));
     }
 
-    // Create
     public static void createRoomType(String name, double pricePerNight, int capacity) throws AlreadyExistsException {
         if (roomTypeExists(name)) throw new AlreadyExistsException("Room Type", name);
         Database.getRoomTypes().add(new RoomType(name, pricePerNight, capacity));
@@ -125,6 +124,7 @@ public abstract class CatalogService {
         Database.getRooms().add(new Room(roomNumber, type));
     }
 
+    // Room defaults mirror the seeded floor tiers in Database.syncDefaultDataToDatabase().
     public static List<Amenity> getDefaultAmenitiesForType(String typeName) {
         List<Amenity> all = Database.getAmenities();
         List<String> names = new java.util.ArrayList<>();
@@ -151,7 +151,6 @@ public abstract class CatalogService {
                 .collect(java.util.stream.Collectors.toList());
     }
 
-    // Delete
     public static void deleteRoom(Room room) throws InUseException {
         for (Reservation r : Database.getReservations()) {
             if (r.getRoom().getRoomNumber().equalsIgnoreCase(room.getRoomNumber())
@@ -173,7 +172,6 @@ public abstract class CatalogService {
         Database.getAmenities().remove(amenity);
     }
 
-    // Find
     public static Room findRoom(String number) {
         return Database.getRooms().stream()
                 .filter(r -> r.getRoomNumber().equalsIgnoreCase(number))

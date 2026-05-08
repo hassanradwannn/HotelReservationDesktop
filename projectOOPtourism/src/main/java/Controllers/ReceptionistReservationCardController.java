@@ -47,7 +47,7 @@ public class ReceptionistReservationCardController {
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("d/M/yyyy");
 
-    // Palette
+    // Kept here because this card is styled mostly with JavaFX inline styles.
     private static final String CREAM   = "#F9F3EA";
     private static final String CRIMSON = "#C4415D";
     private static final String BURGUNDY= "#8B2040";
@@ -81,10 +81,8 @@ public class ReceptionistReservationCardController {
         String guestName = reservation.getGuest().getUsername();
         String accentColor = statusAccentColor(reservation.getStatus());
 
-        // --- Accent bar ---
         accentBar.setStyle("-fx-background-color: " + accentColor + "; -fx-min-height: 120; -fx-pref-height: 120;");
 
-        // --- Avatar ---
         String initials = getInitials(guestName);
         String avatarBg = avatarColor(reservation.getStatus());
         avatarPane.setStyle(
@@ -101,7 +99,6 @@ public class ReceptionistReservationCardController {
                 + "-fx-text-fill: white;"
                 + "-fx-alignment: center;");
 
-        // --- Guest name ---
         typeNameText.setText(guestName);
         typeNameText.setStyle(
                 "-fx-font-family: 'Georgia';"
@@ -109,7 +106,6 @@ public class ReceptionistReservationCardController {
                 + "-fx-font-weight: bold;"
                 + "-fx-text-fill: " + (isCancelled ? "#9e8880" : DARK) + ";");
 
-        // --- Sub line: Room - Reservation ID ---
         subLineLabel.setText("Room " + reservation.getRoom().getRoomNumber()
                 + " - " + reservation.getReservationId());
         subLineLabel.setStyle(
@@ -117,7 +113,6 @@ public class ReceptionistReservationCardController {
                 + "-fx-font-size: 12px;"
                 + "-fx-text-fill: " + (isCancelled ? "#c4a098" : CRIMSON) + ";");
 
-        // --- Metric headers ---
         String headerColor = isCancelled ? "#c4a8a0" : BURGUNDY;
         String valueColor  = isCancelled ? "#b8a8a4" : DARK;
         styleMetricLabel(checkInHeaderLabel,  "CHECK-IN",  headerColor, 10);
@@ -131,7 +126,6 @@ public class ReceptionistReservationCardController {
         checkInValueLabel.setText(reservation.getCheckInDate().format(DATE_FMT));
         checkOutValueLabel.setText(reservation.getCheckOutDate().format(DATE_FMT));
 
-        // Payment total
         ReservationPaymentSummary summary = paymentSummary == null
                 ? new ReservationPaymentSummary(
                         ReservationService.getGrossPaidAmountBeforeRefunds(reservation),
@@ -141,17 +135,14 @@ public class ReceptionistReservationCardController {
         double total = reservation.getTotalPrice();
         paidValueLabel.setText("$" + mainApp.money(total));
 
-        // Hidden fields (controller contract)
+        // Older FXML bindings still expect these hidden fields to be populated.
         guestValueLabel.setText(guestName);
         outstandingValueLabel.setText("$" + mainApp.money(Math.max(0, total - paid)));
 
-        // --- Status badge ---
         styleStatusBadge();
 
-        // --- Action buttons ---
         addActionButtons();
 
-        // --- Card shell ---
         root.setCursor(Cursor.HAND);
         cardBody.setStyle(cardStyle(isCancelled));
         root.setOnMouseEntered(e -> cardBody.setStyle(cardHoverStyle(isCancelled)));

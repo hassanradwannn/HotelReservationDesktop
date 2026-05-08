@@ -17,32 +17,24 @@
            fx:controller="Controllers.ReceptionistReservationCardController">
     <children>
         <HBox fx:id="cardBody" alignment="CENTER_LEFT" maxWidth="Infinity" spacing="0" mouseTransparent="false">
-
-            <!-- Left accent bar -->
             <Region fx:id="accentBar" minWidth="6" maxWidth="6" prefWidth="6"
                     style="-fx-min-height: 120; -fx-pref-height: 120;"/>
 
-            <!-- Card content -->
             <HBox alignment="CENTER_LEFT" maxWidth="Infinity" HBox.hgrow="ALWAYS">
                 <padding><Insets bottom="22" left="22" right="22" top="22"/></padding>
                 <children>
 
-                    <!-- Avatar circle -->
                     <StackPane fx:id="avatarPane" minWidth="56" minHeight="56" maxWidth="56" maxHeight="56"
                                style="-fx-background-radius: 50; -fx-min-width: 56; -fx-min-height: 56; -fx-max-width: 56; -fx-max-height: 56;">
                         <Label fx:id="iconLabel" style="-fx-font-family: 'Georgia'; -fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: white; -fx-alignment: center;"/>
                     </StackPane>
 
                     <Region minWidth="18" maxWidth="18"/>
-
-                    <!-- Main info block -->
                     <VBox alignment="CENTER_LEFT" spacing="6" HBox.hgrow="ALWAYS">
                         <children>
-                            <!-- Guest name + sub line -->
                             <Label fx:id="typeNameText" styleClass="card-guest-name"/>
                             <Label fx:id="subLineLabel"  styleClass="card-sub-line"/>
 
-                            <!-- Metrics row -->
                             <HBox alignment="CENTER_LEFT" spacing="36" style="-fx-padding: 6 0 0 0;">
                                 <children>
                                     <VBox spacing="2">
@@ -57,7 +49,7 @@
                                         <Label fx:id="paidHeaderLabel"     text="TOTAL"     styleClass="card-metric-header"/>
                                         <Label fx:id="paidValueLabel"                  styleClass="card-metric-value"/>
                                     </VBox>
-                                    <!-- hidden but required by controller -->
+                                    <!-- Hidden labels keep the older controller contract while the visible card is rendered in code. -->
                                     <Label fx:id="guestHeaderLabel"      visible="false" managed="false" text="GUEST"/>
                                     <Label fx:id="guestValueLabel"       visible="false" managed="false"/>
                                     <Label fx:id="outstandingHeaderLabel" visible="false" managed="false" text="OUTSTANDING"/>
@@ -69,8 +61,6 @@
 
                 </children>
             </HBox>
-
-            <!-- Right side: status top, actions bottom -->
             <VBox alignment="TOP_RIGHT" spacing="0" style="-fx-padding: 18 22 18 0;" minHeight="120" prefHeight="120">
                 <children>
                     <Label fx:id="statusBadgeLabel" styleClass="status-badge" VBox.vgrow="NEVER"/>

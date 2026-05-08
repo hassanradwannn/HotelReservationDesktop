@@ -20,7 +20,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import javafx.scene.image.Image; // Import Image class
+import javafx.scene.image.Image;
 import java.util.List;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -79,11 +79,11 @@ public class Main extends Application implements AppContext {
             SystemTime.syncFromDatabase();
         }
 
-        Database.loadAll(); // Seeds empty DBs, fetches all data fresh
+        Database.loadAll();
 
         this.stage = stage;
         stage.setTitle("Grand Budapest Hotel Reservation System");
-        stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/grandbudapestlogo.jpg"))); // Set taskbar icon
+        stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/grandbudapestlogo.jpg")));
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             Authentication.logout(currentUser);
@@ -107,7 +107,7 @@ public class Main extends Application implements AppContext {
         guestHomeSearchContext = null;
         lastGuestSearchResults = null;
 
-        // Stop any running auto-refresh when returning to login screen
+        // Logging out resets view state and stops any dashboard polling tied to the previous user.
         if (autoRefreshTimeline != null) {
             autoRefreshTimeline.stop();
             autoRefreshTimeline = null;
@@ -125,10 +125,9 @@ public class Main extends Application implements AppContext {
             Object controller = loader.getController();
             if (controller != null) {
                 try {
-                    // Decoupled dependency injection: Check if controller has a setMainApp method
+                    // Standalone controllers expose setMainApp; simple FXML views can skip it.
                     controller.getClass().getMethod("setMainApp", AppContext.class).invoke(controller, this);
                 } catch (Exception e) {
-                    // Controller doesn't require mainApp reference, safely ignore
                 }
             }
             stage.setScene(new Scene(root, WIDTH, HEIGHT));
@@ -345,7 +344,6 @@ public class Main extends Application implements AppContext {
         try {
             this.currentUser = admin;
 
-            // Stop any existing timeline before starting a new one
             if (autoRefreshTimeline != null) {
                 autoRefreshTimeline.stop();
             }
@@ -446,7 +444,7 @@ public class Main extends Application implements AppContext {
             SystemTime.syncFromDatabase();
             controller.setUserInfo(userInfoText(rec));
 
-            // Restyle the topbar labels to match the info bar design
+            // The receptionist dashboard reuses Dashboard.fxml but swaps the sidebar for a top nav.
             controller.styleAsReceptionistInfoBar();
             controller.setTitle(receptionistDateText());
             controller.setUserInfo("RECEPTIONIST");
@@ -456,7 +454,6 @@ public class Main extends Application implements AppContext {
             sidebar.setVisible(false);
             sidebar.setPrefWidth(0);
 
-            // Restyle the topbar for receptionist: slim info bar showing date + role
             HBox topBar = controller.getTopBar();
             if (topBar != null) {
                 topBar.setManaged(true);
@@ -471,13 +468,11 @@ public class Main extends Application implements AppContext {
             VBox content = controller.getContentArea();
             this.currentContentArea = content;
 
-            // Load the receptionist horizontal nav menu (HBox root)
             FXMLLoader menuLoader = new FXMLLoader(getClass().getResource("/ReceptionistMenu.fxml"));
             HBox menuContent = menuLoader.load();
             ReceptionistMenuController menuController = menuLoader.getController();
             menuController.initData(this, rec);
 
-            // Inject nav HBox into the navBar slot in Dashboard's top VBox
             HBox navBar = controller.getNavBar();
             if (navBar != null) {
                 navBar.setPrefHeight(58);
@@ -486,7 +481,7 @@ public class Main extends Application implements AppContext {
                 menuContent.setMaxWidth(Double.MAX_VALUE);
                 HBox.setHgrow(menuContent, javafx.scene.layout.Priority.ALWAYS);
                 navBar.getChildren().setAll(menuContent);
-                // Clear any inline style so .topnav CSS class takes effect
+                // Inline styles win over stylesheet rules, so clear this before applying .topnav.
                 navBar.setStyle(null);
             }
 
@@ -509,7 +504,6 @@ public class Main extends Application implements AppContext {
     }
 
     public static void main(String[] args) {
-        // DatabaseSync.syncDefaultDataToMySQL();
         launch(args);
     }
 }

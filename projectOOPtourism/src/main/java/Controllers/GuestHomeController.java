@@ -123,7 +123,7 @@ public class GuestHomeController implements DashboardContentController {
                     );
                     showResults(true);
                 } else {
-                    handleSearch(); // Fallback to search if cache is empty
+                    handleSearch();
                 }
             }
         }

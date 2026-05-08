@@ -108,17 +108,15 @@ public class ChatController implements DashboardContentController {
         List<String> items;
         if (currentUser instanceof Guest) {
             guestDropdown.setPromptText("Select Staff...");
-            // Ensure staff are loaded
+            // Guest chat depends on staff rows that may not be loaded in this view yet.
             if (Database.getStaffMembers().isEmpty()) {
                 Database.refreshUsersFromDatabase();
             }
-            // Guests can chat with both Receptionists and Admins
             items = Database.getStaffMembers().stream()
                     .filter(s -> s instanceof Receptionist || s instanceof Admin)
                     .map(User::getUsername)
                     .toList();
         } else {
-            // Staff (Receptionist or Admin) see all guests
             guestDropdown.setPromptText("Select Guest...");
             items = Database.getActiveGuests();
         }

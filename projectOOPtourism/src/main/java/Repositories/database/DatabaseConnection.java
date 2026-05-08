@@ -14,11 +14,6 @@ import java.sql.SQLException;
 
 public class DatabaseConnection {
 
-
-    /* private static final String URL = "jdbc:mysql://192.168.86.25:3306/hotel_db";
-    private static final String USER = "hassan";
-    private static final String PASSWORD = "admin"; */
-
     private static final String URL = configuredValue("hotel.db.url", "HOTEL_DB_URL", "jdbc:mysql://localhost/hotel_db");
     private static final String USER = configuredValue("hotel.db.user", "HOTEL_DB_USER", "root");
     private static final String PASSWORD = configuredValue("hotel.db.password", "HOTEL_DB_PASSWORD", "password");
@@ -27,6 +22,7 @@ public class DatabaseConnection {
         return DriverManager.getConnection(URL, USER, PASSWORD);
     }
 
+    // JVM properties win over environment variables, which win over the local default.
     private static String configuredValue(String propertyName, String envName, String fallback) {
         String propertyValue = System.getProperty(propertyName);
         if (propertyValue != null && !propertyValue.isBlank()) {

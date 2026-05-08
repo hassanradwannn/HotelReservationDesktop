@@ -17,8 +17,6 @@
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="Controllers.ReceptionistReservationsController">
     <children>
-
-        <!-- Filter bar -->
         <HBox alignment="CENTER_LEFT" spacing="14" style="-fx-padding: 0 0 24 0;">
             <children>
                 <Label text="Filter Reservations:" styleClass="filter-label"/>
@@ -29,19 +27,14 @@
                           onAction="#onFilterChanged"/>
             </children>
         </HBox>
-
-        <!-- Hidden state labels needed by controller -->
+        <!-- Hidden nodes keep older menu bindings and count calculations intact. -->
         <Label fx:id="titleLabel"  visible="false" managed="false" text="All Reservations"/>
         <Label fx:id="checkInCountLabel"  visible="false" managed="false" text="0"/>
         <Label fx:id="checkOutCountLabel" visible="false" managed="false" text="0"/>
         <Label fx:id="residingCountLabel" visible="false" managed="false" text="0"/>
-
-        <!-- Hidden tab VBoxes (controller uses them for active-state tracking) -->
         <VBox fx:id="checkInTab"   visible="false" managed="false"/>
         <VBox fx:id="checkOutTab"  visible="false" managed="false"/>
         <VBox fx:id="residingTab"  visible="false" managed="false"/>
-
-        <!-- Reservation cards -->
         <ScrollPane fx:id="scrollPane"
                     fitToWidth="true"
                     hbarPolicy="NEVER"

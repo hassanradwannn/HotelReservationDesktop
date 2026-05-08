@@ -39,7 +39,6 @@ public class Database {
     public static List<Reservation> getReservations() { return reservations; }
     public static List<Invoice> getInvoices() { return invoices; }
 
-    // --- Table Check Helper ---
     private static boolean isTableEmpty(String tableName) {
         try (Connection conn = DatabaseConnection.getConnection();
              Statement stmt = conn.createStatement();
@@ -53,9 +52,8 @@ public class Database {
         return true;
     }
 
-    // --- Rebuilt Startup Sync ---
+    // Seeds reference data only for fresh databases; existing data is left untouched.
     public static void syncDefaultDataToDatabase() {
-        // 1. Seed Room Types only if empty
         if (isTableEmpty("room_types")) {
             String sql = "INSERT IGNORE INTO room_types (name, price_per_night, capacity) VALUES (?, ?, ?)";
             try (Connection conn = DatabaseConnection.getConnection();
@@ -77,7 +75,6 @@ public class Database {
 
         ensureDefaultAmenities();
         normalizeGymAmenityData();
-  // ONLY GENERATE ROOMS IF TABLE IS EMPTY
         if (isTableEmpty("rooms")) {
             System.out.println("Rooms table empty. Generating hotel floors...");
 
@@ -102,7 +99,7 @@ public class Database {
                         roomStmt.setString(2, type);
                         roomStmt.executeUpdate();
 
-                        // Assign tiered amenities
+                        // Higher floors get richer default amenities.
                         List<String> assignedAmenities = new ArrayList<>();
                         assignedAmenities.add("WiFi");
                         assignedAmenities.add("Smart TV");
@@ -304,16 +301,14 @@ public class Database {
     }
 
     public static void loadAll() {
-        // Sync logic runs first, but handles its own empty-checks
+        // Rebuild the in-memory cache in dependency order after the startup seed check.
         syncDefaultDataToDatabase();
 
-        // Clear local lists to prevent duplicates on refresh
         roomTypes.clear();
         rooms.clear();
         amenities.clear();
         reservations.clear();
 
-        // Essential sequence for Receptionist and Admin views
         refreshUsersFromDatabase();
         loadAllRoomTypes();
         loadAllAmenities();
@@ -415,9 +410,7 @@ public class Database {
         }
     }
 
-    // BUG FIX 2 & 3: If the guests list is empty when this is called (e.g. from
-    // the auto-refresh timeline on a second instance, or on first receptionist
-    // login), we reload users first so reservations are never silently dropped.
+    // Reservations need Guest objects, so rebuild users first when this cache is cold.
     public static void refreshReservationsFromDatabase() {
         if (guests.isEmpty() && staffMembers.isEmpty()) {
             refreshUsersFromDatabase();
@@ -443,14 +436,12 @@ public class Database {
                 java.time.LocalDate checkOut = checkOutSql.toLocalDate();
                 ReservationStatus status = ReservationStatus.valueOf(statusStr.toUpperCase().replace(' ', '_'));
 
-                // BUG FIX 3: If the guest still isn't in memory (registered on
-                // another instance after our last user-load), fetch them live
-                // from the DB rather than silently dropping the reservation.
                 Guest guest = guests.stream()
                         .filter(g -> g.getUsername().equals(guestUsername))
                         .findFirst()
                         .orElse(null);
 
+                // Another app instance may have registered this guest after our last refresh.
                 if (guest == null) {
                     User freshUser = UserDatabase.findUser(guestUsername);
                     if (freshUser instanceof Guest freshGuest) {
@@ -499,7 +490,6 @@ public class Database {
         }
     }
 
-    // --- CRUD Methods ---
     public static void updateRoomType(RoomType rt) {
         String sql = "UPDATE room_types SET name = ?, price_per_night = ?, capacity = ? WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -613,9 +603,7 @@ public class Database {
     }
 
     public static boolean isFirstInstance() {
-        // would otherwise permanently block login. Multi-instance sync still works
-        // via the last_update version mechanism, so this counter is only used for
-        // the date-reset logic on first launch.
+        // The first app window resets simulated dates; last_update handles data sync.
         return SYSTEM_SETTINGS.isFirstInstance();
     }
 
@@ -683,9 +671,7 @@ public class Database {
 
     public static List<String> getActiveGuests() {
         List<String> activeGuests = new ArrayList<>();
-        // BUG FIX 1: Query for role = 'Guest' (mixed-case) to match how
-        // UserDatabase saves the role via getClass().getSimpleName().
-        // The original query used 'GUEST' (uppercase) which never matched.
+        // Roles are stored as Java class names, so compare case-insensitively.
         String sql = "SELECT username FROM users WHERE LOWER(role) = 'guest'";
         try (Connection conn = DatabaseConnection.getConnection();
              Statement stmt = conn.createStatement();

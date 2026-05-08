@@ -26,10 +26,10 @@ public class AdminAmenitiesController implements DashboardContentController {
     public void initData(AppContext mainApp, Object data) {
         this.mainApp = mainApp;
         loadAmenities();
-        
-        // Register for auto-refresh via Dashboard timeline
+
+        // Dashboard polling calls this after another user changes amenity data.
         mainApp.setCurrentViewRefresher(this::loadAmenities);
-        
+
         listView.setOnMouseClicked(event -> {
             if (event.getClickCount() == 2 && listView.getSelectionModel().getSelectedItem() != null) {
                 Amenity selected = listView.getSelectionModel().getSelectedItem();

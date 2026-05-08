@@ -7,13 +7,9 @@
 <AnchorPane prefHeight="720.0" prefWidth="1280.0" styleClass="root-pane" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Controllers.LoginController">
    <children>
       <HBox AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
-
-         <!-- Left Panel: Branding -->
          <VBox alignment="BOTTOM_LEFT" prefWidth="560.0" styleClass="login-left-panel">
             <padding><Insets bottom="0" left="0" right="0" top="0" /></padding>
             <children>
-               <!-- Greek meander border top -->
-
                <VBox alignment="CENTER_LEFT" spacing="20" VBox.vgrow="ALWAYS">
                   <padding><Insets bottom="60" left="65" right="65" top="60" /></padding>
                   <children>
@@ -30,12 +26,8 @@
                </Label>
             </children>
          </VBox>
-
-         <!-- Right Panel: Form -->
          <VBox alignment="TOP_LEFT" prefWidth="720.0" styleClass="login-right-panel">
             <children>
-               <!-- Greek meander border top -->
-
                <VBox alignment="CENTER_LEFT" spacing="22" VBox.vgrow="ALWAYS">
                   <padding><Insets bottom="60" left="100" right="100" top="60" /></padding>
                   <children>

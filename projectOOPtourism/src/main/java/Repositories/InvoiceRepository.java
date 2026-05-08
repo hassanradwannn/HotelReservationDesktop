@@ -283,7 +283,7 @@ public class InvoiceRepository {
         try {
             stmt.executeUpdate("ALTER TABLE invoices ADD COLUMN " + columnDefinition);
         } catch (SQLException ignored) {
-            // Column already exists.
+            // Older local databases may already have this column.
         }
     }
 }

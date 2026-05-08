@@ -29,7 +29,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.regex.Pattern;
 
-public class CreditCardModal { // No longer extends AnchorPane
+public class CreditCardModal {
 
     @FXML
     private TextField cardNumberField;
@@ -63,46 +63,36 @@ public class CreditCardModal { // No longer extends AnchorPane
     private static final Pattern AMEX_PATTERN = Pattern.compile("^3[47][0-9]{13}$");
     private static final Pattern DISCOVER_PATTERN = Pattern.compile("^6(?:011|5[0-9]{2})[0-9]{12}$");
 
-    // Static method to show the modal
+    // Returns true only when the payment form passes validation and the user confirms it.
     public static boolean showAndWait(Stage owner) {
         try {
             FXMLLoader loader = new FXMLLoader(CreditCardModal.class.getResource("/CreditCardModal.fxml"));
-            AnchorPane root = loader.load(); // Load the FXML, AnchorPane is the root
-            CreditCardModal controller = loader.getController(); // Get the controller instance
+            AnchorPane root = loader.load();
+            CreditCardModal controller = loader.getController();
 
             Stage stage = new Stage();
             stage.initOwner(owner);
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.initStyle(StageStyle.UNDECORATED);
-            stage.setScene(new Scene(root)); // Set the loaded root to the scene
+            stage.setScene(new Scene(root));
 
-            controller.setStage(stage); // Pass the stage to the controller instance
-            controller.setupListeners(); // Setup listeners after FXML is loaded and stage is set
+            controller.setStage(stage);
+            controller.setupListeners();
 
             stage.showAndWait();
             return controller.confirmed;
         } catch (IOException e) {
             e.printStackTrace();
-            return false; // Indicate failure
+            return false;
         }
     }
 
-    // Private constructor, as we'll use the static showAndWait method
-    // This constructor is implicitly called by FXMLLoader when fx:controller is specified
+    // FXMLLoader needs a public no-argument constructor for fx:controller.
     public CreditCardModal() {
-        // FXML fields are injected here
     }
 
-    // Setter for the stage, called by showAndWait
     private void setStage(Stage stage) {
         this.stage = stage;
-    }
-
-    @FXML
-    private void initialize() {
-        // This method is called automatically after FXML fields are injected
-        // Any initialization that depends on FXML elements can go here
-        // setupListeners() will be called after the stage is set in showAndWait
     }
 
     private void setupListeners() {
@@ -221,7 +211,7 @@ public class CreditCardModal { // No longer extends AnchorPane
 
     private boolean validateCardNumber() {
         String cardNumber = cardNumberField.getText().replaceAll("[^\\d]", "");
-        if (cardNumber.length() != 16 && cardNumber.length() != 15) { // Amex is 15, others 16
+        if (cardNumber.length() != 16 && cardNumber.length() != 15) {
             cardNumberErrorLabel.setText("Card number must be 15 or 16 digits.");
             return false;
         }
@@ -256,7 +246,7 @@ public class CreditCardModal { // No longer extends AnchorPane
                 expiryDateErrorLabel.setText("Card has expired.");
                 return false;
             }
-            if (expiry.isAfter(YearMonth.now().plusYears(10))) { // Not more than 10 years in future
+            if (expiry.isAfter(YearMonth.now().plusYears(10))) {
                 expiryDateErrorLabel.setText("Expiry date too far in the future.");
                 return false;
             }

@@ -13,20 +13,15 @@
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="Controllers.LateCheckoutPaymentController">
     <children>
-
-        <!-- Header -->
         <Label text="BILLING" styleClass="panel-eyebrow"/>
         <Label text="Late Checkout Fee" styleClass="panel-title"/>
         <Region prefHeight="4"/>
         <Label text="An outstanding fee must be settled before you may continue."
                styleClass="panel-subtitle"/>
         <Region prefHeight="18"/>
-
-        <!-- Fee details card -->
         <VBox spacing="14" styleClass="form-card" maxWidth="500">
             <children>
 
-                <!-- Reservation info -->
                 <Label fx:id="reservationIdLabel"
                        styleClass="profile-field"/>
 
@@ -36,13 +31,9 @@
                         <Label fx:id="feeAmountLabel" styleClass="late-fee-amount"/>
                     </children>
                 </VBox>
-
-                <!-- Guest balance -->
                 <Label fx:id="balanceLabel" styleClass="profile-field"/>
 
                 <Separator style="-fx-background-color: #C8A97E;"/>
-
-                <!-- Payment method -->
                 <ComboBox fx:id="paymentCombo"
                           maxWidth="420.0"
                           promptText="Select Payment Method"
