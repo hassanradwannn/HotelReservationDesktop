@@ -148,6 +148,8 @@ public class Main extends Application {
             if (currentUser instanceof Guest && !"/GuestHome.fxml".equals(fxmlFile)) {
                 VBox guestPage = new VBox(14);
                 guestPage.getStyleClass().add("guest-subpage-shell");
+                javafx.scene.layout.VBox.setVgrow(guestPage, javafx.scene.layout.Priority.ALWAYS);
+                guestPage.setMaxHeight(Double.MAX_VALUE);
 
                 ReservationSearchContext reservationBackContext = extractReservationBackContext(fxmlFile, data);
                 boolean returningToReservation = reservationBackContext != null;
@@ -167,10 +169,13 @@ public class Main extends Application {
 
                 HBox backRow = new HBox(backHome);
                 backRow.getStyleClass().add("guest-back-row");
+                javafx.scene.layout.VBox.setVgrow(node, javafx.scene.layout.Priority.ALWAYS);
+                node.setStyle(node.getStyle() != null ? node.getStyle() : "");
                 guestPage.getChildren().addAll(backRow, node);
                 contentArea.getChildren().setAll(guestPage);
                 this.currentContentArea = contentArea;
             } else {
+                javafx.scene.layout.VBox.setVgrow(node, javafx.scene.layout.Priority.ALWAYS);
                 contentArea.getChildren().setAll(node);
                 this.currentContentArea = contentArea;
             }
@@ -244,6 +249,11 @@ public class Main extends Application {
         return "Logged in as: " + user.getUsername()
                 + "   |   Date: "
                 + SystemTime.getToday().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+    }
+
+    private String receptionistDateText() {
+        return "Today's Date: "
+                + SystemTime.getToday().format(java.time.format.DateTimeFormatter.ofPattern("d/M/yyyy"));
     }
 
     private void refreshRuntimeDataFromDatabase() {
@@ -369,11 +379,11 @@ public class Main extends Application {
             stage.setScene(new Scene(root, WIDTH, HEIGHT));
         } catch (Exception e) { e.printStackTrace(); }
     }
+
     public void showReceptionistDashboard(Receptionist rec) {
         try {
             this.currentUser = rec;
 
-            // Stop any existing timeline before starting a new one
             if (autoRefreshTimeline != null) {
                 autoRefreshTimeline.stop();
             }
@@ -387,9 +397,7 @@ public class Main extends Application {
                         try {
                             System.out.println("Database changes detected! Syncing view...");
                             localDataVersion = currentVersion;
-
                             refreshRuntimeDataFromDatabase();
-
                             SystemTime.syncFromDatabase();
                             javafx.application.Platform.runLater(() -> {
                                 if (currentDashboardController != null && currentUser != null) {
@@ -415,16 +423,52 @@ public class Main extends Application {
             SystemTime.syncFromDatabase();
             controller.setUserInfo(userInfoText(rec));
 
-            VBox menu = controller.getSideMenu();
+            // Restyle the topbar labels to match the info bar design
+            controller.styleAsReceptionistInfoBar();
+            // Override labels: title → date, userLabel → role badge text
+            controller.setTitle(receptionistDateText());
+            controller.setUserInfo("RECEPTIONIST");
+
+            // Hide the sidebar — receptionist uses a top nav bar instead
+            VBox sidebar = controller.getSideMenu();
+            sidebar.setManaged(false);
+            sidebar.setVisible(false);
+            sidebar.setPrefWidth(0);
+
+            // Restyle the topbar for receptionist: slim info bar showing date + role
+            HBox topBar = controller.getTopBar();
+            if (topBar != null) {
+                topBar.setManaged(true);
+                topBar.setVisible(true);
+                topBar.setPrefHeight(42);
+                topBar.setMinHeight(42);
+                topBar.setMaxHeight(42);
+                topBar.getStyleClass().removeAll("topbar");
+                topBar.getStyleClass().add("topbar-info");
+            }
+
             VBox content = controller.getContentArea();
             this.currentContentArea = content;
 
+            // Load the receptionist horizontal nav menu (HBox root)
             FXMLLoader menuLoader = new FXMLLoader(getClass().getResource("/ReceptionistMenu.fxml"));
-            VBox menuContent = menuLoader.load();
+            HBox menuContent = menuLoader.load();
             ReceptionistMenuController menuController = menuLoader.getController();
             menuController.initData(this, rec);
 
-            menu.getChildren().setAll(menuContent);
+            // Inject nav HBox into the navBar slot in Dashboard's top VBox
+            HBox navBar = controller.getNavBar();
+            if (navBar != null) {
+                navBar.setPrefHeight(58);
+                navBar.setMinHeight(58);
+                navBar.setMaxHeight(58);
+                menuContent.setMaxWidth(Double.MAX_VALUE);
+                HBox.setHgrow(menuContent, javafx.scene.layout.Priority.ALWAYS);
+                navBar.getChildren().setAll(menuContent);
+                // Clear any inline style so .topnav CSS class takes effect
+                navBar.setStyle(null);
+            }
+
             menuController.loadDefaultView();
 
             stage.setScene(new Scene(root, WIDTH, HEIGHT));

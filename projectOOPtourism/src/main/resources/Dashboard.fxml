@@ -2,34 +2,37 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.text.Font?>
 
-<BorderPane styleClass="root-pane" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="DashboardController">
+<BorderPane styleClass="root-pane" stylesheets="@styles.css"
+            xmlns="http://javafx.com/javafx/19"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="DashboardController">
     <top>
-        <HBox alignment="CENTER_LEFT" prefHeight="66.0" styleClass="topbar" BorderPane.alignment="CENTER">
-            <padding><Insets left="28" right="28"/></padding>
-            <Label fx:id="titleLabel" text="Dashboard" styleClass="topbar-title"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Label fx:id="userLabel" text="Logged in as: " styleClass="topbar-user"/>
-        </HBox>
+        <VBox>
+            <!-- Primary topbar — shown for admin; hidden for receptionist via Main.java -->
+            <HBox fx:id="topBar" alignment="CENTER_LEFT" prefHeight="46" styleClass="topbar">
+                <padding><Insets left="28" right="28"/></padding>
+                <Label fx:id="titleLabel" text="Dashboard" styleClass="topbar-title"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="userLabel" text="Logged in as: " styleClass="topbar-user"/>
+            </HBox>
+            <!-- Nav bar slot — populated and styled for receptionist; zero-height for others -->
+            <HBox fx:id="navBar" prefHeight="0" minHeight="0" maxHeight="0"
+                  styleClass="topnav"/>
+        </VBox>
     </top>
     <left>
-        <VBox fx:id="sideMenu" prefWidth="240.0" spacing="4.0" styleClass="sidebar" BorderPane.alignment="CENTER">
+        <VBox fx:id="sideMenu" prefWidth="240" spacing="4" styleClass="sidebar"
+              BorderPane.alignment="CENTER">
             <padding><Insets top="20" left="14" right="14" bottom="20"/></padding>
         </VBox>
     </left>
     <center>
-        <ScrollPane fitToWidth="true" styleClass="transparent-scroll" BorderPane.alignment="CENTER" VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
-            <content>
-                <VBox fx:id="contentArea" alignment="TOP_CENTER" spacing="20.0" styleClass="content-area" VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
-                    <padding><Insets top="30" left="32" right="32" bottom="30"/></padding>
-                </VBox>
-            </content>
-        </ScrollPane>
+        <VBox fx:id="contentArea" alignment="TOP_CENTER" spacing="20"
+              styleClass="content-area" VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS"/>
     </center>
 </BorderPane>
