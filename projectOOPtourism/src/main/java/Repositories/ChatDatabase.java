@@ -247,6 +247,38 @@ public class ChatDatabase {
         return messages;
     }
 
+    public static List<ChatMessage> loadChatMessagesAfter(int chatId, int lastMessageId) {
+        List<ChatMessage> messages = new ArrayList<>();
+        String sql = """
+            SELECT id, sender_username, message, sent_at
+            FROM chat_messages
+            WHERE chat_id = ? AND id > ?
+            ORDER BY id ASC, sent_at ASC
+        """;
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, chatId);
+            stmt.setInt(2, lastMessageId);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                messages.add(new ChatMessage(
+                        rs.getInt("id"),
+                        rs.getString("sender_username"),
+                        rs.getString("message"),
+                        rs.getTimestamp("sent_at")
+                ));
+            }
+
+        } catch (Exception e) {
+            System.out.println("Could not load new messages: " + e.getMessage());
+        }
+
+        return messages;
+    }
+
     public static List<ChatInfo> getUserChats(String username) {
         List<ChatInfo> chats = new ArrayList<>();
         String sql = """

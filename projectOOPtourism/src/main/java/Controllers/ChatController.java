@@ -9,8 +9,10 @@ import Utils.*;
 import Utils.exceptions.*;
 import Repositories.database.DatabaseConnection;
 import Repositories.DatabaseInitializer.*;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -49,8 +51,10 @@ public class ChatController implements DashboardContentController {
     private String activeReceptionistUsername;
     private boolean chatServerConnected;
     private final Set<Integer> renderedMessageIds = new HashSet<>();
+    private final Map<String, Integer> pendingOptimisticMessages = new HashMap<>();
     private Timeline liveSyncTimeline;
     private final AtomicBoolean databaseSyncInProgress = new AtomicBoolean(false);
+    private int lastRenderedMessageId;
 
     @Override
     public void initData(AppContext mainApp, Object data) {
@@ -220,6 +224,8 @@ public class ChatController implements DashboardContentController {
 
         chatArea.clear();
         renderedMessageIds.clear();
+        pendingOptimisticMessages.clear();
+        lastRenderedMessageId = 0;
         if (chatClient != null) {
             chatClient.joinChat(guestUser, receptionistUser);
         } else {
@@ -245,8 +251,32 @@ public class ChatController implements DashboardContentController {
         if (messageId > 0 && !renderedMessageIds.add(messageId)) {
             return;
         }
+        if (messageId > 0) {
+            lastRenderedMessageId = Math.max(lastRenderedMessageId, messageId);
+            String pendingKey = messageKey(senderUsername, message);
+            Integer pendingCount = pendingOptimisticMessages.get(pendingKey);
+            if (pendingCount != null && pendingCount > 0) {
+                if (pendingCount == 1) {
+                    pendingOptimisticMessages.remove(pendingKey);
+                } else {
+                    pendingOptimisticMessages.put(pendingKey, pendingCount - 1);
+                }
+                return;
+            }
+        }
         chatArea.appendText(senderUsername + ": " + message + "\n");
         chatArea.setScrollTop(Double.MAX_VALUE);
+    }
+
+    private void appendOptimisticMessage(String senderUsername, String message) {
+        String pendingKey = messageKey(senderUsername, message);
+        pendingOptimisticMessages.merge(pendingKey, 1, Integer::sum);
+        chatArea.appendText(senderUsername + ": " + message + "\n");
+        chatArea.setScrollTop(Double.MAX_VALUE);
+    }
+
+    private String messageKey(String senderUsername, String message) {
+        return senderUsername + "\u0000" + message;
     }
 
     private void startLiveSync() {
@@ -264,9 +294,10 @@ public class ChatController implements DashboardContentController {
         }
 
         int chatId = activeChatId[0];
+        int lastMessageId = lastRenderedMessageId;
         Thread thread = new Thread(() -> {
             try {
-                List<ChatDatabase.ChatMessage> messages = ChatDatabase.loadChatMessages(chatId);
+                List<ChatDatabase.ChatMessage> messages = ChatDatabase.loadChatMessagesAfter(chatId, lastMessageId);
                 Platform.runLater(() -> {
                     if (activeChatId[0] != chatId) {
                         return;
@@ -313,8 +344,9 @@ public class ChatController implements DashboardContentController {
             mainApp.alert("Error", "Chat is not connected.");
             return;
         }
-        chatClient.send(activeGuestUsername, activeReceptionistUsername, currentUser.getUsername(), msg);
+        appendOptimisticMessage(currentUser.getUsername(), msg);
         inputField.clear();
+        chatClient.send(activeGuestUsername, activeReceptionistUsername, currentUser.getUsername(), msg);
         syncActiveChatFromDatabase();
     }
 
