@@ -200,7 +200,7 @@ public class ReservationDetailController implements DashboardContentController {
     }
 
     private void refreshCurrentReservation() {
-        Database.refreshReservationsFromDatabase();
+        Database.refreshReservationsIfStale();
         reservation = Database.getReservations().stream()
                 .filter(r -> r.getReservationId().equals(reservation.getReservationId()))
                 .findFirst()
@@ -247,7 +247,7 @@ public class ReservationDetailController implements DashboardContentController {
         String listTitle = sourceTitle == null || sourceTitle.isBlank() ? "Reservations" : sourceTitle;
         mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GenericList.fxml",
                 new Object[]{listTitle, (java.util.function.Supplier<java.util.List<?>>) () -> {
-                    Database.refreshReservationsFromDatabase();
+                    Database.refreshReservationsIfStale();
                     return Database.getReservations();
                 }});
     }

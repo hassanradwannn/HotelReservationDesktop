@@ -14,8 +14,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import Repositories.database.DatabaseConnection;
 
@@ -30,6 +32,9 @@ public class Database {
     private static List<Staff> staffMembers = new ArrayList<>();
     private static List<Reservation> reservations = new ArrayList<>();
     private static List<Invoice> invoices = new ArrayList<>();
+    private static long cachedDataVersion = -1;
+    private static boolean roomsCacheLoaded;
+    private static boolean reservationsCacheLoaded;
 
     public static List<RoomType> getRoomTypes() { return roomTypes; }
     public static List<Amenity> getAmenities() { return amenities; }
@@ -314,6 +319,7 @@ public class Database {
         loadAllAmenities();
         loadAllRooms();
         loadAllReservations();
+        cachedDataVersion = getLatestDataVersion();
     }
 
     public static void loadAllRoomTypes() {
@@ -344,9 +350,18 @@ public class Database {
 
     public static void loadAllRooms() {
         rooms.clear();
+        Map<String, List<String>> amenityNamesByRoom = new HashMap<>();
         try (Connection conn = DatabaseConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT * FROM rooms")) {
+             Statement stmt = conn.createStatement()) {
+            try (ResultSet amenityRs = stmt.executeQuery("SELECT room_number, amenity_name FROM room_amenities")) {
+                while (amenityRs.next()) {
+                    amenityNamesByRoom
+                            .computeIfAbsent(amenityRs.getString("room_number"), key -> new ArrayList<>())
+                            .add(amenityRs.getString("amenity_name"));
+                }
+            }
+
+            try (ResultSet rs = stmt.executeQuery("SELECT * FROM rooms")) {
             while (rs.next()) {
                 String roomNumber = rs.getString("room_number");
                 String typeName = rs.getString("room_type_name");
@@ -356,30 +371,26 @@ public class Database {
                     room.setId(rs.getInt("id"));
                     room.getAmenities().clear();
 
-                    try (PreparedStatement amStmt = conn.prepareStatement("SELECT amenity_name FROM room_amenities WHERE room_number = ?")) {
-                        amStmt.setString(1, roomNumber);
-                        try (ResultSet amRs = amStmt.executeQuery()) {
-                            while (amRs.next()) {
-                                String amName = amRs.getString("amenity_name");
-                                Amenity amenity = amenities.stream()
-                                        .filter(a -> a.getName().equals(amName))
-                                        .findFirst()
-                                        .orElse(null);
-                                if (amenity == null && CatalogService.isGymAmenityName(amName)) {
-                                    amenity = amenities.stream()
-                                            .filter(a -> CatalogService.isGymAmenityName(a.getName()))
-                                            .findFirst()
-                                            .orElse(null);
-                                }
-                                if (amenity != null) {
-                                    room.getAmenities().add(amenity);
-                                }
-                            }
+                    for (String amName : amenityNamesByRoom.getOrDefault(roomNumber, List.of())) {
+                        Amenity amenity = amenities.stream()
+                                .filter(a -> a.getName().equals(amName))
+                                .findFirst()
+                                .orElse(null);
+                        if (amenity == null && CatalogService.isGymAmenityName(amName)) {
+                            amenity = amenities.stream()
+                                    .filter(a -> CatalogService.isGymAmenityName(a.getName()))
+                                    .findFirst()
+                                    .orElse(null);
+                        }
+                        if (amenity != null) {
+                            room.getAmenities().add(amenity);
                         }
                     }
                     rooms.add(room);
                 }
             }
+            }
+            roomsCacheLoaded = true;
         } catch (SQLException e) { e.printStackTrace(); }
     }
 
@@ -388,7 +399,7 @@ public class Database {
     }
 
     public static List<Reservation> getTodaysReservations() {
-        loadAllReservations();
+        refreshReservationsIfStale();
         return reservations.stream()
                 .filter(r -> r.getStatus() == ReservationStatus.CHECKING_IN
                         && r.getCheckInDate().isEqual(SystemTime.getToday()))
@@ -396,10 +407,38 @@ public class Database {
     }
 
     public static List<Reservation> getCheckingOutReservations() {
-        loadAllReservations();
+        refreshReservationsIfStale();
         return reservations.stream()
                 .filter(r -> r.getStatus() == ReservationStatus.CHECKING_OUT)
                 .toList();
+    }
+
+    public static void refreshRuntimeCacheIfStale() {
+        long latestDataVersion = getLatestDataVersion();
+        if (cachedDataVersion == latestDataVersion && roomsCacheLoaded && reservationsCacheLoaded) {
+            return;
+        }
+
+        refreshUsersFromDatabase();
+        loadAllRoomTypes();
+        loadAllAmenities();
+        loadAllRooms();
+        refreshReservationsFromDatabase();
+        cachedDataVersion = latestDataVersion;
+    }
+
+    public static void refreshReservationsIfStale() {
+        long latestDataVersion = getLatestDataVersion();
+        if (cachedDataVersion == latestDataVersion && reservationsCacheLoaded) {
+            return;
+        }
+        if (rooms.isEmpty() || !roomsCacheLoaded) {
+            loadAllRoomTypes();
+            loadAllAmenities();
+            loadAllRooms();
+        }
+        refreshReservationsFromDatabase();
+        cachedDataVersion = latestDataVersion;
     }
 
     public static void addUser(User user) {
@@ -471,6 +510,7 @@ public class Database {
                     reservations.add(r);
                 }
             }
+            reservationsCacheLoaded = true;
         } catch (Exception e) {
             System.out.println("Error refreshing reservations: " + e.getMessage());
             e.printStackTrace();

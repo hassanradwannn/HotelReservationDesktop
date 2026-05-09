@@ -40,7 +40,7 @@ public class AdminMenuController {
     
     @FXML private void showReservations() {
         mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GenericList.fxml", new Object[]{"Reservations", (Supplier<List<?>>) () -> {
-            Database.refreshReservationsFromDatabase();
+            Database.refreshReservationsIfStale();
             return Database.getReservations();
         }});
     }

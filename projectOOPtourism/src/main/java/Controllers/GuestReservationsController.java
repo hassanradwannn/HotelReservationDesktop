@@ -50,6 +50,7 @@ public class GuestReservationsController implements DashboardContentController {
     private void loadReservations() {
         double previousVvalue = currentScrollPosition();
         int requestId = ++reservationLoadRequestId;
+        showLoadingMessage();
 
         if (reservationLoadTask != null && reservationLoadTask.isRunning()) {
             reservationLoadTask.cancel();
@@ -59,7 +60,7 @@ public class GuestReservationsController implements DashboardContentController {
             @Override
             protected List<Reservation> call() {
                 synchronized (Database.class) {
-                    Database.refreshReservationsFromDatabase();
+                    Database.refreshReservationsIfStale();
                     return Database.getReservations().stream()
                             .filter(r -> r.getGuest().getUsername().equals(guest.getUsername()))
                             .sorted(Comparator
@@ -114,10 +115,21 @@ public class GuestReservationsController implements DashboardContentController {
                 orderedCards.add(error);
             }
         }
+        if (orderedCards.isEmpty()) {
+            Label empty = new Label("No reservations available.");
+            empty.getStyleClass().add("reservation-empty-message");
+            orderedCards.add(empty);
+        }
         reservationCardNodes.keySet().removeIf(key -> !activeKeys.contains(key));
         reservationCardControllers.keySet().removeIf(key -> !activeKeys.contains(key));
         FxNodeSync.syncChildren(cardsContainer, orderedCards);
         restoreScrollPosition(previousVvalue);
+    }
+
+    private void showLoadingMessage() {
+        Label loading = new Label("Loading reservation info...");
+        loading.getStyleClass().add("reservation-empty-message");
+        cardsContainer.getChildren().setAll(loading);
     }
 
     private Node updateReservationCard(String key, Reservation reservation) throws IOException {

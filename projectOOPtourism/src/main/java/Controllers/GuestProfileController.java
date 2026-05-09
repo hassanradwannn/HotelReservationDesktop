@@ -219,7 +219,7 @@ public class GuestProfileController implements DashboardContentController {
 
             DatabaseSaver.updateGuestProfile(oldUsername, updatedGuest);
             Database.refreshUsersFromDatabase();
-            Database.refreshReservationsFromDatabase();
+            Database.refreshReservationsIfStale();
 
             guest = Database.getGuests().stream()
                     .filter(g -> g.getUsername().equals(newUsername))

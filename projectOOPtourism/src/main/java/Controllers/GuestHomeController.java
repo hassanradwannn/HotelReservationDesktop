@@ -423,7 +423,7 @@ public class GuestHomeController implements DashboardContentController {
             @Override
             protected List<Room> call() {
                 synchronized (Database.class) {
-                    Database.refreshReservationsFromDatabase();
+                    Database.refreshReservationsIfStale();
                     List<Room> available = new ArrayList<>();
                     for (RoomType type : request.typesToSearch()) {
                         if (isCancelled()) {

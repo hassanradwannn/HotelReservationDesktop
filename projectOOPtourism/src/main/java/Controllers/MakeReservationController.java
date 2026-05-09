@@ -264,7 +264,7 @@ public class MakeReservationController implements DashboardContentController {
 
     @FXML
     private void handleBookNow() {
-        Database.refreshReservationsFromDatabase();
+        Database.refreshReservationsIfStale();
         try {
             LocalDate in = checkInPicker.getValue();
             LocalDate out = checkOutPicker.getValue();
@@ -298,7 +298,7 @@ public class MakeReservationController implements DashboardContentController {
 
     @FXML
     private void handleChooseRoom() {
-        Database.refreshReservationsFromDatabase();
+        Database.refreshReservationsIfStale();
         LocalDate in = checkInPicker.getValue();
         LocalDate out = checkOutPicker.getValue();
 

@@ -139,12 +139,9 @@ public class ReceptionistReservationsController implements DashboardContentContr
             @Override
             protected ReservationLoadResult call() {
                 List<Reservation> allReservations;
-                long latestDataVersion = Database.getLatestDataVersion();
                 synchronized (Database.class) {
-                    if (lastReservationRefreshVersion != latestDataVersion || Database.getReservations().isEmpty()) {
-                        Database.refreshReservationsFromDatabase();
-                        lastReservationRefreshVersion = latestDataVersion;
-                    }
+                    Database.refreshReservationsIfStale();
+                    lastReservationRefreshVersion = Database.getLatestDataVersion();
                     allReservations = new ArrayList<>(Database.getReservations());
                 }
                 List<Reservation> visibleReservations = filterReservations(allReservations, modeSnapshot);
@@ -253,7 +250,7 @@ public class ReceptionistReservationsController implements DashboardContentContr
         }
 
         if (orderedCards.isEmpty()) {
-            Label empty = new Label("No reservations in this view.");
+            Label empty = new Label("No reservations available.");
             empty.getStyleClass().add("reservation-empty-message");
             orderedCards.add(empty);
         }
@@ -314,7 +311,7 @@ public class ReceptionistReservationsController implements DashboardContentContr
     }
 
     private void showLoadingMessage(ViewMode mode) {
-        Label loading = new Label(mode == ViewMode.ALL ? "Loading all reservations..." : "Loading reservations...");
+        Label loading = new Label("Loading reservation info...");
         loading.getStyleClass().add("reservation-empty-message");
         cardsContainer.getChildren().setAll(loading);
     }

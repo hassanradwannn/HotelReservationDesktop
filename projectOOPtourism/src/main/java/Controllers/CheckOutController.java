@@ -32,7 +32,7 @@ public class CheckOutController implements DashboardContentController {
     }
 
     private void loadReservations() {
-        Database.refreshReservationsFromDatabase();
+        Database.refreshReservationsIfStale();
         reservationCombo.setItems(FXCollections.observableArrayList(
                 Database.getReservations().stream()
                         .filter(r -> r.getStatus() == ReservationStatus.ONGOING

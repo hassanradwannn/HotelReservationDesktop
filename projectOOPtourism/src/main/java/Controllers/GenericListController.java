@@ -47,6 +47,7 @@ public class GenericListController implements DashboardContentController {
         titleLabel.setText(title);
         this.supplier = (Supplier<List<?>>) args[1];
         listView.setItems(listItems);
+        configurePlaceholder();
         configureListCellFactory();
 
         Runnable dataRefresher = this::loadDataAsync;
@@ -73,7 +74,7 @@ public class GenericListController implements DashboardContentController {
             allBtn.setPrefHeight(38);
             allBtn.setOnAction(e -> mainApp.switchDashboardContent(mainApp.getCurrentContentArea(), "/GenericList.fxml",
                     new Object[]{"All Reservations", (Supplier<List<?>>) () -> {
-                        Database.refreshReservationsFromDatabase();
+                        Database.refreshReservationsIfStale();
                         return Database.getReservations();
                     }}));
 
@@ -131,6 +132,9 @@ public class GenericListController implements DashboardContentController {
 
     private void loadDataAsync() {
         int requestId = ++dataLoadRequestId;
+        if (title != null && title.contains("Reservations")) {
+            listView.setPlaceholder(styledPlaceholder("Loading reservation info..."));
+        }
         if (dataLoadTask != null && dataLoadTask.isRunning()) {
             dataLoadTask.cancel();
         }
@@ -147,6 +151,7 @@ public class GenericListController implements DashboardContentController {
         dataLoadTask.setOnSucceeded(event -> {
             if (requestId == dataLoadRequestId) {
                 syncListItems(dataLoadTask.getValue());
+                configurePlaceholder();
             }
         });
 
@@ -198,6 +203,18 @@ public class GenericListController implements DashboardContentController {
                 setTooltip(null);
             }
         });
+    }
+
+    private void configurePlaceholder() {
+        if (title != null && title.contains("Reservations")) {
+            listView.setPlaceholder(styledPlaceholder("No reservations available."));
+        }
+    }
+
+    private Label styledPlaceholder(String text) {
+        Label label = new Label(text);
+        label.getStyleClass().add("reservation-empty-message");
+        return label;
     }
 
     private void syncListItems(List<Object> freshItems) {

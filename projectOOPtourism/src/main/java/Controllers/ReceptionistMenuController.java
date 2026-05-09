@@ -38,7 +38,7 @@ public class ReceptionistMenuController {
 
     @FXML
     public void initialize() {
-        Database.loadAll();
+        Database.refreshRuntimeCacheIfStale();
 
         if (syncTimeline != null) syncTimeline.stop();
         syncTimeline = new Timeline(new KeyFrame(Duration.seconds(2), event -> {
@@ -48,7 +48,7 @@ public class ReceptionistMenuController {
                     localDataVersion = currentVersion;
                 } else if (currentVersion > localDataVersion) {
                     localDataVersion = currentVersion;
-                    Database.refreshReservationsFromDatabase();
+                    Database.refreshRuntimeCacheIfStale();
                 }
             }).start();
         }));
@@ -59,7 +59,7 @@ public class ReceptionistMenuController {
     public void initData(AppContext mainApp, Receptionist receptionist) {
         this.mainApp = mainApp;
         this.receptionist = receptionist;
-        Database.loadAll();
+        Database.refreshRuntimeCacheIfStale();
         setActiveButton(btnReservations);
     }
 
