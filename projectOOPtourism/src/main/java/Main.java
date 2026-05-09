@@ -85,8 +85,9 @@ public class Main extends Application implements AppContext {
         databaseReady = true;
 
         ChatServer.startInBackgroundIfAvailable();
-        UserDatabase.clearLoggedInUsers();
-        if (Database.isFirstInstance()) {
+        boolean firstInstance = Database.isFirstInstance();
+        if (firstInstance) {
+            UserDatabase.clearLoggedInUsers();
             SystemTime.resetToRealToday();
         } else {
             SystemTime.syncFromDatabase();

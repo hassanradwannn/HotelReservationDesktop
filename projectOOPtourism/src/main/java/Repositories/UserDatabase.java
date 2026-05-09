@@ -161,6 +161,19 @@ public class UserDatabase {
         return false;
     }
 
+    public static boolean markUserLoggedInIfAvailable(String username) {
+        String sql = "UPDATE users SET is_logged_in = TRUE WHERE username = ? AND is_logged_in = FALSE";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, username);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.out.println("Error marking user logged in:");
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     public static void setUserLoggedIn(String username, boolean loggedIn) {
         String sql = "UPDATE users SET is_logged_in = ? WHERE username = ?";
         try (Connection conn = DatabaseConnection.getConnection();

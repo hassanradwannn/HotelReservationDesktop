@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ChatServer {
-    public static final String DEFAULT_HOST = "172.20.10.2";
+    public static final String DEFAULT_HOST = "127.0.0.1";
     public static final int DEFAULT_PORT = 5000;
 
     private static final Map<String, Set<ClientHandler>> clientsByUsername = new ConcurrentHashMap<>();

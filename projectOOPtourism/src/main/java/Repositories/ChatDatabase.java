@@ -9,6 +9,7 @@ import Utils.exceptions.*;
 import Repositories.database.DatabaseConnection;
 import Repositories.DatabaseInitializer.*;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -88,8 +89,24 @@ public class ChatDatabase {
              Statement stmt = conn.createStatement()) {
             stmt.execute(chatsTable);
             stmt.execute(messagesTable);
+            ensureMessageIdColumn(conn, stmt);
         } catch (Exception e) {
             System.out.println("Could not ensure chat tables: " + e.getMessage());
+        }
+    }
+
+    private static void ensureMessageIdColumn(Connection conn, Statement stmt) {
+        try {
+            DatabaseMetaData metadata = conn.getMetaData();
+            try (ResultSet columns = metadata.getColumns(null, null, "chat_messages", "id")) {
+                if (columns.next()) {
+                    return;
+                }
+            }
+
+            stmt.execute("ALTER TABLE chat_messages ADD COLUMN id INT AUTO_INCREMENT PRIMARY KEY FIRST");
+        } catch (Exception e) {
+            System.out.println("Could not upgrade chat messages table: " + e.getMessage());
         }
     }
 
@@ -202,10 +219,10 @@ public class ChatDatabase {
     public static List<ChatMessage> loadChatMessages(int chatId) {
         List<ChatMessage> messages = new ArrayList<>();
         String sql = """
-            SELECT sender_username, message, sent_at
+            SELECT id, sender_username, message, sent_at
             FROM chat_messages
             WHERE chat_id = ?
-            ORDER BY sent_at ASC
+            ORDER BY id ASC, sent_at ASC
         """;
 
         try (Connection conn = DatabaseConnection.getConnection();

@@ -15,6 +15,7 @@ import java.util.Set;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -249,14 +250,24 @@ public class ChatController implements DashboardContentController {
     }
 
     private void syncActiveChatFromDatabase() {
-        if (activeChatId[0] == -1) {
+        if (activeChatId[0] == -1 || chatServerConnected) {
             return;
         }
 
-        List<ChatDatabase.ChatMessage> messages = ChatDatabase.loadChatMessages(activeChatId[0]);
-        for (ChatDatabase.ChatMessage message : messages) {
-            appendMessageIfNew(message.getId(), message.getSenderUsername(), message.getMessage());
-        }
+        int chatId = activeChatId[0];
+        Thread thread = new Thread(() -> {
+            List<ChatDatabase.ChatMessage> messages = ChatDatabase.loadChatMessages(chatId);
+            Platform.runLater(() -> {
+                if (activeChatId[0] != chatId) {
+                    return;
+                }
+                for (ChatDatabase.ChatMessage message : messages) {
+                    appendMessageIfNew(message.getId(), message.getSenderUsername(), message.getMessage());
+                }
+            });
+        }, "chat-db-sync");
+        thread.setDaemon(true);
+        thread.start();
     }
 
     private void stopChatResources() {

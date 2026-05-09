@@ -22,10 +22,9 @@ public class AuthService {
         User user = UserDatabase.findUser(username);
         if (user != null) {
             if (user.getPassword().equals(password)) {
-                if (UserDatabase.isUserLoggedIn(username)) {
+                if (!UserDatabase.markUserLoggedInIfAvailable(username)) {
                     throw new UserAlreadyLoggedInException();
                 }
-                UserDatabase.setUserLoggedIn(username, true);
                 updateInMemoryCache(user);
                 return user;
             }
