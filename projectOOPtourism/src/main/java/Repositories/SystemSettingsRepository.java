@@ -57,26 +57,45 @@ public class SystemSettingsRepository {
     }
 
     public boolean isFirstInstance() {
-        String resetSql = "UPDATE system_settings SET setting_value = '1' WHERE setting_key = 'active_instances'";
-        String checkSql = "SELECT setting_value FROM system_settings WHERE setting_key = 'active_instances'";
-        String insertSql = "INSERT IGNORE INTO system_settings (setting_key, setting_value) VALUES ('active_instances', '1')";
+        String checkSql = "SELECT setting_value FROM system_settings WHERE setting_key = 'active_instances' FOR UPDATE";
+        String insertSql = "INSERT INTO system_settings (setting_key, setting_value) VALUES ('active_instances', '1')";
+        String updateSql = "UPDATE system_settings SET setting_value = ? WHERE setting_key = 'active_instances'";
         try (Connection conn = DatabaseConnection.getConnection()) {
-            try (PreparedStatement stmt = conn.prepareStatement(checkSql);
-                 ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    int current = Integer.parseInt(rs.getString("setting_value"));
-                    try (PreparedStatement update = conn.prepareStatement(resetSql)) {
-                        update.executeUpdate();
+            boolean originalAutoCommit = conn.getAutoCommit();
+            conn.setAutoCommit(false);
+            try {
+                int current = 0;
+                boolean exists = false;
+                try (PreparedStatement stmt = conn.prepareStatement(checkSql);
+                     ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        exists = true;
+                        current = Integer.parseInt(rs.getString("setting_value"));
                     }
-                    return current == 0;
                 }
 
-                try (PreparedStatement insert = conn.prepareStatement(insertSql)) {
-                    insert.executeUpdate();
+                if (exists) {
+                    try (PreparedStatement update = conn.prepareStatement(updateSql)) {
+                        update.setString(1, String.valueOf(current + 1));
+                        update.executeUpdate();
+                    }
+                } else {
+                    try (PreparedStatement insert = conn.prepareStatement(insertSql)) {
+                        insert.executeUpdate();
+                    }
                 }
-                return true;
+
+                conn.commit();
+                conn.setAutoCommit(originalAutoCommit);
+                return current == 0;
+            } catch (Exception e) {
+                conn.rollback();
+                conn.setAutoCommit(originalAutoCommit);
+                throw e;
             }
         } catch (Exception e) {
+            System.out.println("Could not register instance: " + e.getMessage());
+            e.printStackTrace();
             return true;
         }
     }
