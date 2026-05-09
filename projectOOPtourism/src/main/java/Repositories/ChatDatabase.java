@@ -21,16 +21,19 @@ import java.util.Scanner;
 public class ChatDatabase {
 
     public static class ChatMessage {
+        private final int id;
         private final String senderUsername;
         private final String message;
         private final Timestamp sentAt;
 
-        public ChatMessage(String senderUsername, String message, Timestamp sentAt) {
+        public ChatMessage(int id, String senderUsername, String message, Timestamp sentAt) {
+            this.id = id;
             this.senderUsername = senderUsername;
             this.message = message;
             this.sentAt = sentAt;
         }
 
+        public int getId() { return id; }
         public String getSenderUsername() { return senderUsername; }
         public String getMessage() { return message; }
         public Timestamp getSentAt() { return sentAt; }
@@ -131,28 +134,35 @@ public class ChatDatabase {
         return -1;
     }
 
-    public static void sendMessage(int chatId, String senderUsername, String message) {
+    public static int sendMessage(int chatId, String senderUsername, String message) {
         String sql = """
             INSERT INTO chat_messages (chat_id, sender_username, message)
             VALUES (?, ?, ?)
         """;
 
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setInt(1, chatId);
             stmt.setString(2, senderUsername);
             stmt.setString(3, message);
             stmt.executeUpdate();
 
+            try (ResultSet keys = stmt.getGeneratedKeys()) {
+                if (keys.next()) {
+                    return keys.getInt(1);
+                }
+            }
         } catch (Exception e) {
             System.out.println("Message save failed: " + e.getMessage());
         }
+
+        return -1;
     }
 
     public static void viewMessages(int chatId) {
         String sql = """
-            SELECT sender_username, message, sent_at
+            SELECT id, sender_username, message, sent_at
             FROM chat_messages
             WHERE chat_id = ?
             ORDER BY sent_at ASC
@@ -206,6 +216,7 @@ public class ChatDatabase {
 
             while (rs.next()) {
                 messages.add(new ChatMessage(
+                        rs.getInt("id"),
                         rs.getString("sender_username"),
                         rs.getString("message"),
                         rs.getTimestamp("sent_at")

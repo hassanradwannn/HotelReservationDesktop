@@ -35,6 +35,7 @@ public class Main extends Application implements AppContext {
     private List<Room> lastGuestSearchResults;
     private VBox currentContentArea;
     private DashboardController currentDashboardController;
+    private DashboardContentController currentContentController;
     private Timeline autoRefreshTimeline;
     private Runnable currentViewRefresher;
     private volatile long localDataVersion = -1;
@@ -138,6 +139,10 @@ public class Main extends Application implements AppContext {
     }
 
     public void switchDashboardContent(VBox contentArea, String fxmlFile, Object data) {
+        if (currentContentController != null) {
+            currentContentController.onRemoved();
+            currentContentController = null;
+        }
         this.currentView = fxmlFile;
         this.currentContentArea = contentArea;
         this.currentViewRefresher = null;
@@ -157,6 +162,7 @@ public class Main extends Application implements AppContext {
 
             Object controller = loader.getController();
             if (controller instanceof DashboardContentController contentController) {
+                currentContentController = contentController;
                 contentController.initData(this, viewData);
             }
 

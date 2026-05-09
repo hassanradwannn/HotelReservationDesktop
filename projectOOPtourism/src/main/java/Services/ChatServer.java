@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ChatServer {
-    public static final String DEFAULT_HOST = "localhost";
+    public static final String DEFAULT_HOST = "172.20.10.6";
     public static final int DEFAULT_PORT = 5000;
 
     private static final Map<String, Set<ClientHandler>> clientsByUsername = new ConcurrentHashMap<>();
@@ -166,7 +166,8 @@ public class ChatServer {
 
             List<ChatDatabase.ChatMessage> history = ChatDatabase.loadChatMessages(chatId);
             for (ChatDatabase.ChatMessage message : history) {
-                send("MESSAGE\t" + chatId + "\t" + encode(message.getSenderUsername()) + "\t" + encode(message.getMessage()));
+                send("MESSAGE\t" + chatId + "\t" + message.getId() + "\t"
+                        + encode(message.getSenderUsername()) + "\t" + encode(message.getMessage()));
             }
         }
 
@@ -186,8 +187,14 @@ public class ChatServer {
                 return;
             }
 
-            ChatDatabase.sendMessage(chatId, senderUsername, message);
-            String payload = "MESSAGE\t" + chatId + "\t" + encode(senderUsername) + "\t" + encode(message);
+            int messageId = ChatDatabase.sendMessage(chatId, senderUsername, message);
+            if (messageId == -1) {
+                send("ERROR\tCould not save message");
+                return;
+            }
+
+            String payload = "MESSAGE\t" + chatId + "\t" + messageId + "\t"
+                    + encode(senderUsername) + "\t" + encode(message);
             broadcastToConversation(guestUsername, receptionistUsername, payload);
         }
 

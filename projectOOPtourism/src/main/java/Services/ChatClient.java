@@ -23,7 +23,7 @@ import javafx.application.Platform;
 
 public class ChatClient implements Closeable {
     public interface MessageListener {
-        void onMessage(int chatId, String senderUsername, String message);
+        void onMessage(int chatId, int messageId, String senderUsername, String message);
     }
 
     private final Socket socket;
@@ -82,7 +82,7 @@ public class ChatClient implements Closeable {
     }
 
     private void handleServerLine(String line) {
-        String[] parts = line.split("\t", 4);
+        String[] parts = line.split("\t", 5);
         if (parts.length == 0) {
             return;
         }
@@ -101,14 +101,28 @@ public class ChatClient implements Closeable {
             return;
         }
         int chatId;
+        int messageId = -1;
         try {
             chatId = Integer.parseInt(parts[1]);
+            if (parts.length >= 5) {
+                messageId = Integer.parseInt(parts[2]);
+            }
         } catch (NumberFormatException e) {
             return;
         }
-        String senderUsername = decode(parts[2]);
-        String message = decode(parts[3]);
-        Platform.runLater(() -> messageListener.onMessage(chatId, senderUsername, message));
+
+        String senderUsername;
+        String message;
+        if (parts.length >= 5) {
+            senderUsername = decode(parts[3]);
+            message = decode(parts[4]);
+        } else {
+            senderUsername = decode(parts[2]);
+            message = decode(parts[3]);
+        }
+
+        int finalMessageId = messageId;
+        Platform.runLater(() -> messageListener.onMessage(chatId, finalMessageId, senderUsername, message));
     }
 
     private void notifyStatus(String status) {

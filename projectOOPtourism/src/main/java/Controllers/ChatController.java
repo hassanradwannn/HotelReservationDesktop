@@ -9,8 +9,12 @@ import Utils.*;
 import Utils.exceptions.*;
 import Repositories.database.DatabaseConnection;
 import Repositories.DatabaseInitializer.*;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -20,6 +24,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
+import javafx.util.Duration;
 
 public class ChatController implements DashboardContentController {
 
@@ -41,6 +46,8 @@ public class ChatController implements DashboardContentController {
     private String activeGuestUsername;
     private String activeReceptionistUsername;
     private boolean chatServerConnected;
+    private final Set<Integer> renderedMessageIds = new HashSet<>();
+    private Timeline liveSyncTimeline;
 
     @Override
     public void initData(AppContext mainApp, Object data) {
@@ -64,6 +71,7 @@ public class ChatController implements DashboardContentController {
             });
 
             header.getChildren().add(guestDropdown);
+            startLiveSync();
 
             if (!guestDropdown.getItems().isEmpty()) {
                 guestDropdown.getSelectionModel().selectFirst();
@@ -71,6 +79,12 @@ public class ChatController implements DashboardContentController {
                 chatArea.setText("No users available to chat with.\n");
                 chatStatus.setText("No users found");
             }
+
+            chatArea.sceneProperty().addListener((obs, oldScene, newScene) -> {
+                if (oldScene != null && newScene == null) {
+                    stopChatResources();
+                }
+            });
 
             mainApp.setCurrentViewRefresher(this::refreshChatView);
         } catch (Exception e) {
@@ -125,7 +139,10 @@ public class ChatController implements DashboardContentController {
 
     private void refreshChatView() {
         if (!chatServerConnected) {
-            showChatDisconnected();
+            connectToChatServer();
+            if (!chatServerConnected) {
+                syncActiveChatFromDatabase();
+            }
             return;
         }
 
@@ -192,25 +209,70 @@ public class ChatController implements DashboardContentController {
         }
 
         chatArea.clear();
+        renderedMessageIds.clear();
         if (chatClient != null) {
             chatClient.joinChat(guestUser, receptionistUser);
         } else {
             List<ChatDatabase.ChatMessage> msgs = ChatDatabase.loadChatMessages(chatId);
             for (ChatDatabase.ChatMessage m : msgs) {
-                chatArea.appendText(m.getSenderUsername() + ": " + m.getMessage() + "\n");
+                appendMessageIfNew(m.getId(), m.getSenderUsername(), m.getMessage());
             }
         }
+        syncActiveChatFromDatabase();
         chatArea.setScrollTop(Double.MAX_VALUE);
         chatStatus.setText("Chatting with " + otherUsername);
         if (chatName != null) chatName.setText(otherUsername);
     }
 
-    private void appendIncomingMessage(int chatId, String senderUsername, String message) {
+    private void appendIncomingMessage(int chatId, int messageId, String senderUsername, String message) {
         if (chatId != activeChatId[0]) {
+            return;
+        }
+        appendMessageIfNew(messageId, senderUsername, message);
+    }
+
+    private void appendMessageIfNew(int messageId, String senderUsername, String message) {
+        if (messageId > 0 && !renderedMessageIds.add(messageId)) {
             return;
         }
         chatArea.appendText(senderUsername + ": " + message + "\n");
         chatArea.setScrollTop(Double.MAX_VALUE);
+    }
+
+    private void startLiveSync() {
+        if (liveSyncTimeline != null) {
+            liveSyncTimeline.stop();
+        }
+        liveSyncTimeline = new Timeline(new KeyFrame(Duration.millis(700), event -> syncActiveChatFromDatabase()));
+        liveSyncTimeline.setCycleCount(Timeline.INDEFINITE);
+        liveSyncTimeline.play();
+    }
+
+    private void syncActiveChatFromDatabase() {
+        if (activeChatId[0] == -1) {
+            return;
+        }
+
+        List<ChatDatabase.ChatMessage> messages = ChatDatabase.loadChatMessages(activeChatId[0]);
+        for (ChatDatabase.ChatMessage message : messages) {
+            appendMessageIfNew(message.getId(), message.getSenderUsername(), message.getMessage());
+        }
+    }
+
+    private void stopChatResources() {
+        if (liveSyncTimeline != null) {
+            liveSyncTimeline.stop();
+            liveSyncTimeline = null;
+        }
+        if (chatClient != null) {
+            chatClient.close();
+            chatClient = null;
+        }
+    }
+
+    @Override
+    public void onRemoved() {
+        stopChatResources();
     }
 
     @FXML
