@@ -10,6 +10,7 @@ import Repositories.DatabaseInitializer.DatabaseInitializer;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -40,6 +41,7 @@ public class Main extends Application implements AppContext {
     private Runnable currentViewRefresher;
     private volatile long localDataVersion = -1;
     private final AtomicBoolean refreshInProgress = new AtomicBoolean(false);
+    private boolean databaseReady;
     private String currentView = "";
     private static Main instance;
 
@@ -71,7 +73,17 @@ public class Main extends Application implements AppContext {
     @Override
     public void start(Stage stage) {
         instance = this;
-        DatabaseInitializer.initializeDatabase();
+        this.stage = stage;
+        stage.setTitle("Grand Budapest Hotel Reservation System");
+        stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/grandbudapestlogo.jpg")));
+
+        if (!DatabaseInitializer.initializeDatabase()) {
+            showDatabaseConnectionError();
+            stage.show();
+            return;
+        }
+        databaseReady = true;
+
         ChatServer.startInBackgroundIfAvailable();
         UserDatabase.clearLoggedInUsers();
         if (Database.isFirstInstance()) {
@@ -82,22 +94,59 @@ public class Main extends Application implements AppContext {
 
         Database.loadAll();
 
-        this.stage = stage;
-        stage.setTitle("Grand Budapest Hotel Reservation System");
-        stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/grandbudapestlogo.jpg")));
-
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            Authentication.logout(currentUser);
-            Database.unregisterInstance();
-        }));
-
         stage.setOnCloseRequest(event -> {
-            System.exit(0);
+            event.consume();
+            shutdownApplication();
         });
 
 
         showLoginScreen();
         stage.show();
+    }
+
+    @Override
+    public void stop() {
+        shutdownApplication();
+    }
+
+    private void shutdownApplication() {
+        boolean firstShutdownRequest = AppLifecycle.beginShutdown();
+
+        if (autoRefreshTimeline != null) {
+            autoRefreshTimeline.stop();
+            autoRefreshTimeline = null;
+        }
+        currentViewRefresher = null;
+        if (currentContentController != null) {
+            currentContentController.onRemoved();
+            currentContentController = null;
+        }
+
+        if (firstShutdownRequest) {
+            if (databaseReady) {
+                Authentication.logout(currentUser);
+                Database.unregisterInstance();
+            }
+            Platform.exit();
+        }
+    }
+
+    private void showDatabaseConnectionError() {
+        VBox root = new VBox(14);
+        root.setPadding(new Insets(30));
+        root.setStyle("-fx-background-color: #F7EFE5;");
+
+        javafx.scene.control.Label title = new javafx.scene.control.Label("Database connection failed");
+        title.setStyle("-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: #2B2421;");
+
+        javafx.scene.control.Label message = new javafx.scene.control.Label(
+                "Could not connect to MySQL at " + DatabaseConnection.urlForDisplay()
+                        + ".\n\nStart MySQL, check the IP address/port, or set HOTEL_DB_URL to the correct database URL.");
+        message.setWrapText(true);
+        message.setStyle("-fx-font-size: 14; -fx-text-fill: #8A726B;");
+
+        root.getChildren().setAll(title, message);
+        stage.setScene(new Scene(root, WIDTH, HEIGHT));
     }
 
     public void showLoginScreen() {
@@ -119,6 +168,9 @@ public class Main extends Application implements AppContext {
     }
 
     public void switchScene(String fxmlFile) {
+        if (AppLifecycle.isShuttingDown()) {
+            return;
+        }
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlFile));
             javafx.scene.Parent root = loader.load();
@@ -139,6 +191,9 @@ public class Main extends Application implements AppContext {
     }
 
     public void switchDashboardContent(VBox contentArea, String fxmlFile, Object data) {
+        if (AppLifecycle.isShuttingDown()) {
+            return;
+        }
         if (currentContentController != null) {
             currentContentController.onRemoved();
             currentContentController = null;
@@ -221,6 +276,9 @@ public class Main extends Application implements AppContext {
     }
 
     public void refreshActiveView() {
+        if (AppLifecycle.isShuttingDown()) {
+            return;
+        }
         if (currentView.equals("AllReservations") || currentView.equals("/GenericList.fxml")) {
             if (currentViewRefresher != null) currentViewRefresher.run();
         } else if (currentView.equals("LiveChat") || currentView.equals("/Chat.fxml")) {
@@ -287,11 +345,7 @@ public class Main extends Application implements AppContext {
 
     private void refreshRuntimeDataFromDatabase() {
         synchronized (Database.class) {
-            Database.refreshUsersFromDatabase();
-            Database.loadAllRoomTypes();
-            Database.loadAllAmenities();
-            Database.loadAllRooms();
-            Database.loadAllReservations();
+            Database.refreshRuntimeCacheIfStale();
         }
     }
 
@@ -304,7 +358,10 @@ public class Main extends Application implements AppContext {
             }
 
             autoRefreshTimeline = new Timeline(new KeyFrame(Duration.millis(150), event -> {
-                new Thread(() -> {
+                Thread thread = new Thread(() -> {
+                    if (AppLifecycle.isShuttingDown()) {
+                        return;
+                    }
                     long currentVersion = Database.getLatestDataVersion();
                     if (localDataVersion == -1) {
                         localDataVersion = currentVersion;
@@ -314,12 +371,20 @@ public class Main extends Application implements AppContext {
                             localDataVersion = currentVersion;
                             refreshRuntimeDataFromDatabase();
                             SystemTime.syncFromDatabase();
-                            javafx.application.Platform.runLater(() -> Main.getInstance().refreshActiveView());
+                            if (!AppLifecycle.isShuttingDown()) {
+                                Platform.runLater(() -> {
+                                    if (!AppLifecycle.isShuttingDown()) {
+                                        Main.getInstance().refreshActiveView();
+                                    }
+                                });
+                            }
                         } finally {
                             refreshInProgress.set(false);
                         }
                     }
-                }).start();
+                }, "guest-auto-refresh");
+                thread.setDaemon(true);
+                thread.start();
             }));
             autoRefreshTimeline.setCycleCount(Timeline.INDEFINITE);
             autoRefreshTimeline.play();
@@ -355,7 +420,10 @@ public class Main extends Application implements AppContext {
             }
 
             autoRefreshTimeline = new Timeline(new KeyFrame(Duration.millis(500), event -> {
-                new Thread(() -> {
+                Thread thread = new Thread(() -> {
+                    if (AppLifecycle.isShuttingDown()) {
+                        return;
+                    }
                     long currentVersion = Database.getLatestDataVersion();
                     if (localDataVersion == -1) {
                         localDataVersion = currentVersion;
@@ -367,17 +435,24 @@ public class Main extends Application implements AppContext {
                             refreshRuntimeDataFromDatabase();
 
                             SystemTime.syncFromDatabase();
-                            javafx.application.Platform.runLater(() -> {
-                                if (currentDashboardController != null && currentUser != null) {
-                                    currentDashboardController.setUserInfo(userInfoText(currentUser));
-                                }
-                                Main.getInstance().refreshActiveView();
-                            });
+                            if (!AppLifecycle.isShuttingDown()) {
+                                Platform.runLater(() -> {
+                                    if (AppLifecycle.isShuttingDown()) {
+                                        return;
+                                    }
+                                    if (currentDashboardController != null && currentUser != null) {
+                                        currentDashboardController.setUserInfo(userInfoText(currentUser));
+                                    }
+                                    Main.getInstance().refreshActiveView();
+                                });
+                            }
                         } finally {
                             refreshInProgress.set(false);
                         }
                     }
-                }).start();
+                }, "admin-auto-refresh");
+                thread.setDaemon(true);
+                thread.start();
             }));
             autoRefreshTimeline.setCycleCount(Timeline.INDEFINITE);
             autoRefreshTimeline.play();
@@ -416,7 +491,10 @@ public class Main extends Application implements AppContext {
             }
 
             autoRefreshTimeline = new Timeline(new KeyFrame(Duration.millis(500), event -> {
-                new Thread(() -> {
+                Thread thread = new Thread(() -> {
+                    if (AppLifecycle.isShuttingDown()) {
+                        return;
+                    }
                     long currentVersion = Database.getLatestDataVersion();
                     if (localDataVersion == -1) {
                         localDataVersion = currentVersion;
@@ -426,17 +504,24 @@ public class Main extends Application implements AppContext {
                             localDataVersion = currentVersion;
                             refreshRuntimeDataFromDatabase();
                             SystemTime.syncFromDatabase();
-                            javafx.application.Platform.runLater(() -> {
-                                if (currentDashboardController != null && currentUser != null) {
-                                    currentDashboardController.setUserInfo(userInfoText(currentUser));
-                                }
-                                Main.getInstance().refreshActiveView();
-                            });
+                            if (!AppLifecycle.isShuttingDown()) {
+                                Platform.runLater(() -> {
+                                    if (AppLifecycle.isShuttingDown()) {
+                                        return;
+                                    }
+                                    if (currentDashboardController != null && currentUser != null) {
+                                        currentDashboardController.setUserInfo(userInfoText(currentUser));
+                                    }
+                                    Main.getInstance().refreshActiveView();
+                                });
+                            }
                         } finally {
                             refreshInProgress.set(false);
                         }
                     }
-                }).start();
+                }, "receptionist-auto-refresh");
+                thread.setDaemon(true);
+                thread.start();
             }));
             autoRefreshTimeline.setCycleCount(Timeline.INDEFINITE);
             autoRefreshTimeline.play();

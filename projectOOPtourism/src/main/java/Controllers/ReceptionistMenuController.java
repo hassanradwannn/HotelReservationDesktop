@@ -42,7 +42,10 @@ public class ReceptionistMenuController {
 
         if (syncTimeline != null) syncTimeline.stop();
         syncTimeline = new Timeline(new KeyFrame(Duration.seconds(2), event -> {
-            new Thread(() -> {
+            Thread thread = new Thread(() -> {
+                if (AppLifecycle.isShuttingDown()) {
+                    return;
+                }
                 long currentVersion = Database.getLatestDataVersion();
                 if (localDataVersion == -1) {
                     localDataVersion = currentVersion;
@@ -50,7 +53,9 @@ public class ReceptionistMenuController {
                     localDataVersion = currentVersion;
                     Database.refreshRuntimeCacheIfStale();
                 }
-            }).start();
+            }, "receptionist-menu-sync");
+            thread.setDaemon(true);
+            thread.start();
         }));
         syncTimeline.setCycleCount(Timeline.INDEFINITE);
         syncTimeline.play();

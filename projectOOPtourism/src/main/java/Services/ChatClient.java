@@ -97,6 +97,9 @@ public class ChatClient implements Closeable {
     }
 
     private void handleMessage(String[] parts) {
+        if (AppLifecycle.isShuttingDown()) {
+            return;
+        }
         if (parts.length < 4) {
             return;
         }
@@ -122,12 +125,23 @@ public class ChatClient implements Closeable {
         }
 
         int finalMessageId = messageId;
-        Platform.runLater(() -> messageListener.onMessage(chatId, finalMessageId, senderUsername, message));
+        Platform.runLater(() -> {
+            if (!AppLifecycle.isShuttingDown()) {
+                messageListener.onMessage(chatId, finalMessageId, senderUsername, message);
+            }
+        });
     }
 
     private void notifyStatus(String status) {
         if (statusListener != null) {
-            Platform.runLater(() -> statusListener.accept(status));
+            if (AppLifecycle.isShuttingDown()) {
+                return;
+            }
+            Platform.runLater(() -> {
+                if (!AppLifecycle.isShuttingDown()) {
+                    statusListener.accept(status);
+                }
+            });
         }
     }
 

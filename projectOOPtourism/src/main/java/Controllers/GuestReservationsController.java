@@ -155,6 +155,12 @@ public class GuestReservationsController implements DashboardContentController {
             return;
         }
         scrollPane.setVvalue(vvalue);
-        Platform.runLater(() -> scrollPane.setVvalue(vvalue));
+        if (!AppLifecycle.isShuttingDown()) {
+            Platform.runLater(() -> {
+                if (!AppLifecycle.isShuttingDown()) {
+                    scrollPane.setVvalue(vvalue);
+                }
+            });
+        }
     }
 }

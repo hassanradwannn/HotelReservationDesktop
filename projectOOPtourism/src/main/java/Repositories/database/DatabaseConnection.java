@@ -14,12 +14,35 @@ import java.sql.SQLException;
 
 public class DatabaseConnection {
 
-    private static final String URL = configuredValue("hotel.db.url", "HOTEL_DB_URL", "jdbc:mysql://172.20.10.6:3306/hotel_db");
+    private static final String URL = withRequiredOptions(configuredValue(
+            "hotel.db.url",
+            "HOTEL_DB_URL",
+            "jdbc:mysql://172.20.10.2:3306/hotel_db"));
     private static final String USER = configuredValue("hotel.db.user", "HOTEL_DB_USER", "H");
     private static final String PASSWORD = configuredValue("hotel.db.password", "HOTEL_DB_PASSWORD", "hassan2007_");
+    private static final int LOGIN_TIMEOUT_SECONDS = 3;
+
+    static {
+        DriverManager.setLoginTimeout(LOGIN_TIMEOUT_SECONDS);
+    }
 
     public static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(URL, USER, PASSWORD);
+        try {
+            return DriverManager.getConnection(URL, USER, PASSWORD);
+        } catch (SQLException e) {
+            throw new SQLException(
+                    "Could not connect to MySQL at " + urlForDisplay()
+                            + ". Check that MySQL is running, the host/IP is reachable, port 3306 is open, "
+                            + "and HOTEL_DB_URL/hotel.db.url points to the correct machine.",
+                    e.getSQLState(),
+                    e.getErrorCode(),
+                    e);
+        }
+    }
+
+    public static String urlForDisplay() {
+        int queryStart = URL.indexOf('?');
+        return queryStart >= 0 ? URL.substring(0, queryStart) : URL;
     }
 
     // JVM properties win over environment variables, which win over the local default.
@@ -35,5 +58,28 @@ public class DatabaseConnection {
         }
 
         return fallback;
+    }
+
+    private static String withRequiredOptions(String url) {
+        if (url == null || !url.startsWith("jdbc:mysql://")) {
+            return url;
+        }
+
+        String updated = appendOptionIfMissing(url, "connectTimeout", "3000");
+        updated = appendOptionIfMissing(updated, "socketTimeout", "5000");
+        updated = appendOptionIfMissing(updated, "useSSL", "false");
+        updated = appendOptionIfMissing(updated, "allowPublicKeyRetrieval", "true");
+        updated = appendOptionIfMissing(updated, "serverTimezone", "UTC");
+        return updated;
+    }
+
+    private static String appendOptionIfMissing(String url, String key, String value) {
+        String lowerUrl = url.toLowerCase();
+        if (lowerUrl.contains("?" + key.toLowerCase() + "=") || lowerUrl.contains("&" + key.toLowerCase() + "=")) {
+            return url;
+        }
+
+        String separator = url.contains("?") ? "&" : "?";
+        return url + separator + key + "=" + value;
     }
 }

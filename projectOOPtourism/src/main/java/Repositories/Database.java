@@ -313,6 +313,8 @@ public class Database {
         rooms.clear();
         amenities.clear();
         reservations.clear();
+        roomsCacheLoaded = false;
+        reservationsCacheLoaded = false;
 
         refreshUsersFromDatabase();
         loadAllRoomTypes();

@@ -299,9 +299,15 @@ public class ReceptionistReservationsController implements DashboardContentContr
         FxNodeSync.syncChildren(cardsContainer, orderedCards);
 
         if (endIndex < reservations.size()) {
-            Platform.runLater(() -> renderNextBatch(
-                    reservations, paymentSummaries, previousVvalue,
-                    orderedCards, activeKeys, endIndex, requestId));
+            if (!AppLifecycle.isShuttingDown()) {
+                Platform.runLater(() -> {
+                    if (!AppLifecycle.isShuttingDown()) {
+                        renderNextBatch(
+                                reservations, paymentSummaries, previousVvalue,
+                                orderedCards, activeKeys, endIndex, requestId);
+                    }
+                });
+            }
             return;
         }
 
@@ -338,7 +344,13 @@ public class ReceptionistReservationsController implements DashboardContentContr
     private void restoreScrollPosition(double vvalue) {
         if (scrollPane == null) return;
         scrollPane.setVvalue(vvalue);
-        Platform.runLater(() -> scrollPane.setVvalue(vvalue));
+        if (!AppLifecycle.isShuttingDown()) {
+            Platform.runLater(() -> {
+                if (!AppLifecycle.isShuttingDown()) {
+                    scrollPane.setVvalue(vvalue);
+                }
+            });
+        }
     }
 
     private static class ReservationLoadResult {

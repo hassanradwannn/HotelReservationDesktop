@@ -20,13 +20,15 @@ import java.time.LocalDate;
  */
 public class DatabaseInitializer {
     
-    public static void initializeDatabase() {
+    public static boolean initializeDatabase() {
         try {
             createTables();
             insertDemoUsers();
             System.out.println("Database initialization completed successfully.");
+            return true;
         } catch (SQLException e) {
             System.out.println("Error initializing database: " + e.getMessage());
+            return false;
         }
     }
 
