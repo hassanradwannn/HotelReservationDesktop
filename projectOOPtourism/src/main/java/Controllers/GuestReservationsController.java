@@ -38,6 +38,7 @@ public class GuestReservationsController implements DashboardContentController {
     private final Map<String, GuestReservationCardController> reservationCardControllers = new LinkedHashMap<>();
     private Task<List<Reservation>> reservationLoadTask;
     private int reservationLoadRequestId;
+    private boolean hasRenderedReservations;
 
     @Override
     public void initData(AppContext mainApp, Object data) {
@@ -50,7 +51,14 @@ public class GuestReservationsController implements DashboardContentController {
     private void loadReservations() {
         double previousVvalue = currentScrollPosition();
         int requestId = ++reservationLoadRequestId;
-        showLoadingMessage();
+        CachedGuestReservationSnapshot cachedSnapshot = getCachedGuestReservations();
+        if (!cachedSnapshot.hasAnyCachedReservations()) {
+            showLoadingMessage();
+            hasRenderedReservations = false;
+        } else {
+            renderReservations(cachedSnapshot.guestReservations(), previousVvalue);
+            hasRenderedReservations = true;
+        }
 
         if (reservationLoadTask != null && reservationLoadTask.isRunning()) {
             reservationLoadTask.cancel();
@@ -77,6 +85,7 @@ public class GuestReservationsController implements DashboardContentController {
                 return;
             }
             renderReservations(reservationLoadTask.getValue(), previousVvalue);
+            hasRenderedReservations = true;
         });
 
         reservationLoadTask.setOnFailed(event -> {
@@ -84,11 +93,33 @@ public class GuestReservationsController implements DashboardContentController {
             if (error != null) {
                 error.printStackTrace();
             }
+            if (requestId == reservationLoadRequestId && !hasRenderedReservations) {
+                showMessage("Could not load reservations. Please check the database connection.");
+            }
         });
 
         Thread thread = new Thread(reservationLoadTask, "guest-reservation-load");
         thread.setDaemon(true);
         thread.start();
+    }
+
+    private CachedGuestReservationSnapshot getCachedGuestReservations() {
+        synchronized (Database.class) {
+            boolean hasAnyCachedReservations = !Database.getReservations().isEmpty();
+            List<Reservation> guestReservations = Database.getReservations().stream()
+                    .filter(r -> r.getGuest().getUsername().equals(guest.getUsername()))
+                    .sorted(Comparator
+                            .comparingInt((Reservation r) -> statusPriority(r.getStatus()))
+                            .thenComparing(Reservation::getCheckInDate)
+                            .thenComparing(Reservation::getReservationId))
+                    .toList();
+            return new CachedGuestReservationSnapshot(hasAnyCachedReservations, guestReservations);
+        }
+    }
+
+    private record CachedGuestReservationSnapshot(
+            boolean hasAnyCachedReservations,
+            List<Reservation> guestReservations) {
     }
 
     private int statusPriority(ReservationStatus status) {
@@ -127,7 +158,12 @@ public class GuestReservationsController implements DashboardContentController {
     }
 
     private void showLoadingMessage() {
+        showMessage("Loading reservation info...");
+    }
+
+    private void showMessage(String text) {
         Label loading = new Label("Loading reservation info...");
+        loading.setText(text);
         loading.getStyleClass().add("reservation-empty-message");
         cardsContainer.getChildren().setAll(loading);
     }

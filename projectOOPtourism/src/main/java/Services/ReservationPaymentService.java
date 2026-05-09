@@ -107,12 +107,13 @@ public class ReservationPaymentService {
                                 rawSummary.getEarlyCheckOutRefundAmount()));
             }
         } catch (Exception ex) {
+            System.out.println("Could not load payment summaries: " + ex.getMessage());
             for (Reservation reservation : reservations) {
                 summaries.put(
                         reservation.getReservationId(),
                         new ReservationPaymentSummary(
-                                getGrossPaidAmountBeforeRefunds(reservation),
-                                getEarlyCheckOutRefundAmount(reservation)));
+                                paidAmountWithDepositFallback(reservation, 0.0, false),
+                                0.0));
             }
         }
         return summaries;

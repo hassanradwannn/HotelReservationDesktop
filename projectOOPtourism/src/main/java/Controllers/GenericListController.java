@@ -160,6 +160,10 @@ public class GenericListController implements DashboardContentController {
             if (error != null) {
                 error.printStackTrace();
             }
+            if (requestId == dataLoadRequestId) {
+                listView.setPlaceholder(styledPlaceholder("Could not load data. Please check the database connection."));
+                listItems.clear();
+            }
         });
 
         Thread thread = new Thread(dataLoadTask, "generic-list-load");

@@ -65,6 +65,7 @@ public class ReceptionistReservationsController implements DashboardContentContr
     private Task<ReservationLoadResult> reservationLoadTask;
     private int reservationLoadRequestId;
     private int renderRequestId;
+    private boolean hasRenderedReservations;
 
     @Override
     public void initData(AppContext mainApp, Object data) {
@@ -129,7 +130,20 @@ public class ReceptionistReservationsController implements DashboardContentContr
         ViewMode modeSnapshot = mode;
 
         if (titleLabel != null) titleLabel.setText(titleForMode(modeSnapshot));
-        showLoadingMessage(modeSnapshot);
+        List<Reservation> cachedReservations = getCachedReservations();
+        List<Reservation> cachedVisibleReservations = filterReservations(cachedReservations, modeSnapshot);
+        if (cachedReservations.isEmpty()) {
+            showLoadingMessage(modeSnapshot);
+            hasRenderedReservations = false;
+        } else {
+            updateCounts(cachedReservations);
+            renderReservations(
+                    cachedVisibleReservations,
+                    estimatePaymentSummaries(cachedVisibleReservations),
+                    previousVvalue,
+                    modeSnapshot);
+            hasRenderedReservations = true;
+        }
 
         if (reservationLoadTask != null && reservationLoadTask.isRunning()) {
             reservationLoadTask.cancel();
@@ -156,16 +170,45 @@ public class ReceptionistReservationsController implements DashboardContentContr
             ReservationLoadResult result = reservationLoadTask.getValue();
             updateCounts(result.allReservations);
             renderReservations(result.visibleReservations, result.paymentSummaries, previousVvalue, modeSnapshot);
+            hasRenderedReservations = true;
         });
 
         reservationLoadTask.setOnFailed(event -> {
             Throwable error = reservationLoadTask.getException();
             if (error != null) error.printStackTrace();
+            if (requestId == reservationLoadRequestId && !hasRenderedReservations) {
+                showMessage("Could not load reservations. Please check the database connection.");
+            }
         });
 
         Thread thread = new Thread(reservationLoadTask, "receptionist-reservation-load");
         thread.setDaemon(true);
         thread.start();
+    }
+
+    private List<Reservation> getCachedReservations() {
+        synchronized (Database.class) {
+            return new ArrayList<>(Database.getReservations());
+        }
+    }
+
+    private Map<String, ReservationPaymentSummary> estimatePaymentSummaries(List<Reservation> reservations) {
+        Map<String, ReservationPaymentSummary> summaries = new LinkedHashMap<>();
+        for (Reservation reservation : reservations) {
+            double paid = statusImpliesDepositPaid(reservation.getStatus())
+                    ? reservation.getDepositAmount()
+                    : 0.0;
+            summaries.put(reservation.getReservationId(), new ReservationPaymentSummary(paid, 0.0));
+        }
+        return summaries;
+    }
+
+    private boolean statusImpliesDepositPaid(ReservationStatus status) {
+        return status == ReservationStatus.CONFIRMED
+                || status == ReservationStatus.CHECKING_IN
+                || status == ReservationStatus.ONGOING
+                || status == ReservationStatus.CHECKING_OUT
+                || status == ReservationStatus.COMPLETED;
     }
 
     private void updateCounts(List<Reservation> reservations) {
@@ -317,7 +360,11 @@ public class ReceptionistReservationsController implements DashboardContentContr
     }
 
     private void showLoadingMessage(ViewMode mode) {
-        Label loading = new Label("Loading reservation info...");
+        showMessage("Loading reservation info...");
+    }
+
+    private void showMessage(String text) {
+        Label loading = new Label(text);
         loading.getStyleClass().add("reservation-empty-message");
         cardsContainer.getChildren().setAll(loading);
     }
