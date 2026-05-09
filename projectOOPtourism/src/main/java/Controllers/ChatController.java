@@ -50,6 +50,7 @@ public class ChatController implements DashboardContentController {
     private String activeGuestUsername;
     private String activeReceptionistUsername;
     private boolean chatServerConnected;
+    private boolean socketDeliveryAvailable;
     private final Set<Integer> renderedMessageIds = new HashSet<>();
     private final Map<String, Integer> pendingOptimisticMessages = new HashMap<>();
     private Timeline liveSyncTimeline;
@@ -102,29 +103,47 @@ public class ChatController implements DashboardContentController {
     private void connectToChatServer() {
         try {
             chatClient = new ChatClient(
-                    ChatServer.DEFAULT_HOST,
+                    ChatServer.defaultHost(),
                     ChatServer.DEFAULT_PORT,
                     currentUser.getUsername(),
                     this::appendIncomingMessage,
                     this::handleChatStatus);
             chatServerConnected = true;
+            socketDeliveryAvailable = true;
             sendButton.setDisable(false);
             inputField.setDisable(false);
         } catch (Exception e) {
-            showChatDisconnected();
+            markSocketUnavailable();
         }
     }
 
     private void handleChatStatus(String status) {
         chatStatus.setText(status);
-        if (status != null && status.toLowerCase().contains("disconnected")) {
+        if (status != null && status.toLowerCase().contains("unexpected")) {
+            socketDeliveryAvailable = false;
+            sendButton.setDisable(true);
+            inputField.setDisable(true);
+            chatStatus.setText("Chat socket unavailable");
+        } else if (status != null && status.toLowerCase().contains("disconnected")) {
             chatServerConnected = false;
+            socketDeliveryAvailable = false;
+            sendButton.setDisable(true);
+            inputField.setDisable(true);
         }
+    }
+
+    private void markSocketUnavailable() {
+        chatServerConnected = false;
+        socketDeliveryAvailable = false;
+        chatStatus.setText("Chat socket unavailable");
+        sendButton.setDisable(true);
+        inputField.setDisable(true);
     }
 
     private void showChatDisconnected() {
         chatClient = null;
         chatServerConnected = false;
+        socketDeliveryAvailable = false;
         activeChatId[0] = -1;
         chatStatus.setText("Chat is not connected");
         chatArea.setText("Chat is not connected to localhost.\nStart the chat server, then reopen chat.");
@@ -188,11 +207,6 @@ public class ChatController implements DashboardContentController {
     }
 
     public void loadChatHistory(String otherUsername) {
-        if (!chatServerConnected) {
-            showChatDisconnected();
-            return;
-        }
-
         if (otherUsername == null) {
             activeChatId[0] = -1;
             chatArea.setText("Please select a user from the dropdown above to view chat history...\n");
@@ -226,7 +240,7 @@ public class ChatController implements DashboardContentController {
         renderedMessageIds.clear();
         pendingOptimisticMessages.clear();
         lastRenderedMessageId = 0;
-        if (chatClient != null) {
+        if (chatClient != null && socketDeliveryAvailable) {
             chatClient.joinChat(guestUser, receptionistUser);
         } else {
             List<ChatDatabase.ChatMessage> msgs = ChatDatabase.loadChatMessages(chatId);
@@ -339,9 +353,8 @@ public class ChatController implements DashboardContentController {
             mainApp.alert("Error", "Please select a chat first.");
             return;
         }
-        if (chatClient == null) {
-            showChatDisconnected();
-            mainApp.alert("Error", "Chat is not connected.");
+        if (chatClient == null || !socketDeliveryAvailable) {
+            mainApp.alert("Error", "Chat socket is not connected. Messages are not sent through database fallback.");
             return;
         }
         appendOptimisticMessage(currentUser.getUsername(), msg);

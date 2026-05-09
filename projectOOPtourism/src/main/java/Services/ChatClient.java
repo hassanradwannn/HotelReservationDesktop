@@ -82,6 +82,9 @@ public class ChatClient implements Closeable {
     }
 
     private void handleServerLine(String line) {
+        if (line == null || line.isBlank()) {
+            return;
+        }
         String[] parts = line.split("\t", 5);
         if (parts.length == 0) {
             return;
@@ -92,7 +95,7 @@ public class ChatClient implements Closeable {
             case "JOINED" -> notifyStatus("Live chat connected");
             case "MESSAGE" -> handleMessage(parts);
             case "ERROR" -> notifyStatus(parts.length > 1 ? parts[1] : "Chat server error");
-            default -> notifyStatus("Unexpected chat server response");
+            default -> notifyStatus("Unexpected chat server response: " + parts[0]);
         }
     }
 

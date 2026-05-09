@@ -45,8 +45,23 @@ public class DatabaseConnection {
         return queryStart >= 0 ? URL.substring(0, queryStart) : URL;
     }
 
+    public static String hostForDisplay() {
+        String displayUrl = urlForDisplay();
+        String prefix = "jdbc:mysql://";
+        if (!displayUrl.startsWith(prefix)) {
+            return "127.0.0.1";
+        }
+
+        String hostAndRest = displayUrl.substring(prefix.length());
+        int slashIndex = hostAndRest.indexOf('/');
+        String hostAndPort = slashIndex >= 0 ? hostAndRest.substring(0, slashIndex) : hostAndRest;
+        int portSeparator = hostAndPort.lastIndexOf(':');
+        String host = portSeparator >= 0 ? hostAndPort.substring(0, portSeparator) : hostAndPort;
+        return host.isBlank() ? "127.0.0.1" : host;
+    }
+
     // JVM properties win over environment variables, which win over the local default.
-    private static String configuredValue(String propertyName, String envName, String fallback) {
+    public static String configuredValue(String propertyName, String envName, String fallback) {
         String propertyValue = System.getProperty(propertyName);
         if (propertyValue != null && !propertyValue.isBlank()) {
             return propertyValue;
