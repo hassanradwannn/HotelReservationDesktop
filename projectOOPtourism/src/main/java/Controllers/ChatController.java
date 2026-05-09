@@ -12,6 +12,7 @@ import Repositories.DatabaseInitializer.*;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -49,6 +50,7 @@ public class ChatController implements DashboardContentController {
     private boolean chatServerConnected;
     private final Set<Integer> renderedMessageIds = new HashSet<>();
     private Timeline liveSyncTimeline;
+    private final AtomicBoolean databaseSyncInProgress = new AtomicBoolean(false);
 
     @Override
     public void initData(AppContext mainApp, Object data) {
@@ -100,12 +102,19 @@ public class ChatController implements DashboardContentController {
                     ChatServer.DEFAULT_PORT,
                     currentUser.getUsername(),
                     this::appendIncomingMessage,
-                    status -> chatStatus.setText(status));
+                    this::handleChatStatus);
             chatServerConnected = true;
             sendButton.setDisable(false);
             inputField.setDisable(false);
         } catch (Exception e) {
             showChatDisconnected();
+        }
+    }
+
+    private void handleChatStatus(String status) {
+        chatStatus.setText(status);
+        if (status != null && status.toLowerCase().contains("disconnected")) {
+            chatServerConnected = false;
         }
     }
 
@@ -244,27 +253,31 @@ public class ChatController implements DashboardContentController {
         if (liveSyncTimeline != null) {
             liveSyncTimeline.stop();
         }
-        liveSyncTimeline = new Timeline(new KeyFrame(Duration.millis(700), event -> syncActiveChatFromDatabase()));
+        liveSyncTimeline = new Timeline(new KeyFrame(Duration.millis(1000), event -> syncActiveChatFromDatabase()));
         liveSyncTimeline.setCycleCount(Timeline.INDEFINITE);
         liveSyncTimeline.play();
     }
 
     private void syncActiveChatFromDatabase() {
-        if (activeChatId[0] == -1 || chatServerConnected) {
+        if (activeChatId[0] == -1 || !databaseSyncInProgress.compareAndSet(false, true)) {
             return;
         }
 
         int chatId = activeChatId[0];
         Thread thread = new Thread(() -> {
-            List<ChatDatabase.ChatMessage> messages = ChatDatabase.loadChatMessages(chatId);
-            Platform.runLater(() -> {
-                if (activeChatId[0] != chatId) {
-                    return;
-                }
-                for (ChatDatabase.ChatMessage message : messages) {
-                    appendMessageIfNew(message.getId(), message.getSenderUsername(), message.getMessage());
-                }
-            });
+            try {
+                List<ChatDatabase.ChatMessage> messages = ChatDatabase.loadChatMessages(chatId);
+                Platform.runLater(() -> {
+                    if (activeChatId[0] != chatId) {
+                        return;
+                    }
+                    for (ChatDatabase.ChatMessage message : messages) {
+                        appendMessageIfNew(message.getId(), message.getSenderUsername(), message.getMessage());
+                    }
+                });
+            } finally {
+                databaseSyncInProgress.set(false);
+            }
         }, "chat-db-sync");
         thread.setDaemon(true);
         thread.start();
@@ -279,6 +292,7 @@ public class ChatController implements DashboardContentController {
             chatClient.close();
             chatClient = null;
         }
+        databaseSyncInProgress.set(false);
     }
 
     @Override
@@ -301,6 +315,7 @@ public class ChatController implements DashboardContentController {
         }
         chatClient.send(activeGuestUsername, activeReceptionistUsername, currentUser.getUsername(), msg);
         inputField.clear();
+        syncActiveChatFromDatabase();
     }
 
     @FXML
