@@ -4,8 +4,8 @@
 This is a JavaFX-based hotel reservation system built using Object-Oriented Programming principles. The system allows guests, receptionists, and administrators to manage hotel operations including room reservations, check-ins/check-outs, payments, and system configurations.
 
 ## Technologies Used
-- **Java 21** - Core programming language
-- **JavaFX 21** - GUI framework
+- **Java 17** - Core programming language
+- **JavaFX 17** - GUI framework
 - **Maven** - Build and dependency management
 - **MySQL** - Database for persistent storage
 - **FXML** - Declarative UI markup
@@ -13,20 +13,20 @@ This is a JavaFX-based hotel reservation system built using Object-Oriented Prog
 ## Project Structure
 ```
 projectOOPtourism/
-├── src/
-│   └── main/
-│       ├── java/
-│       │   ├── [Controllers] - JavaFX controller classes
-│       │   ├── [Models] - Entity classes (Guest, Room, Reservation, etc.)
-│       │   ├── [Services] - Business logic services
-│       │   ├── [Repositories] - Data access layers
-│       │   ├── [Utils] - Utility classes
-│       │   └── Main.java - Application entry point
-│       └── resources/
-│           ├── [FXML files] - UI layouts
-│           └── styles.css - Styling
-├── pom.xml - Maven configuration
-└── README.md - This file
+|-- src/
+|   `-- main/
+|       |-- java/
+|       |   |-- Controllers/ - JavaFX controller classes
+|       |   |-- Models/ - Entity classes (Guest, Room, Reservation, etc.)
+|       |   |-- Services/ - Business logic services
+|       |   |-- Repositories/ - Data access layers
+|       |   |-- Utils/ - Utility classes and exceptions
+|       |   `-- Main.java - Application entry point
+|       `-- resources/
+|           |-- [FXML files] - UI layouts
+|           `-- styles.css - Styling
+|-- pom.xml - Maven configuration
+`-- README.md - This file
 ```
 
 ## Key Components
@@ -47,7 +47,7 @@ projectOOPtourism/
 - Includes utility methods for checking table emptiness and data versioning
 
 ### 3. Model Classes
-- **User Hierarchy**: `User` (abstract) → `Guest`, `Staff` → `Admin`, `Receptionist`
+- **User Hierarchy**: `User` (abstract) -> `Guest`, `Staff` -> `Admin`, `Receptionist`
 - **Hotel Entities**: `Room`, `RoomType`, `Amenity`
 - **Reservation System**: `Reservation`, `ReservationStatus`, `Invoice`
 - **Support Classes**: `SystemTime`, `Gender`, `PaymentMethod`, `Payable`
@@ -117,7 +117,7 @@ Each FXML file has a corresponding controller class that handles:
 7. On check-out date, status updates to `CHECKING_OUT` then to `COMPLETED` after payment
 
 ## Configuration
-- Database connection details are in `database/DatabaseConnection.java`
+- Database connection details are in `src/main/java/Repositories/database/DatabaseConnection.java`
 - JavaFX module path and VM arguments are configured in `nbactions.xml`
 - Maven dependencies are managed in `pom.xml`
 
@@ -133,3 +133,10 @@ Each FXML file has a corresponding controller class that handles:
 - **Observer**: Property change listeners in JavaFX bindings
 - **Strategy**: Different pricing algorithms in `PricingService`
 - **Template Method**: Common workflows in controller classes
+
+## Future Improvements
+- Implement proper internationalization (i18n)
+- Add unit and integration tests
+- Enhance security with stronger password hashing
+- Add reporting and analytics features
+- Implement mobile-responsive design

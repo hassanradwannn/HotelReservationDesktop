@@ -1,0 +1,2105 @@
+/* =====================================================
+   Palette:
+     Blush:       #F7D6D9
+     Rose:        #E8879A
+     Crimson:     #C4415D
+     Burgundy:    #8B2040
+     Cream:       #F9F3EA
+     Gold:        #C8A97E
+     Dark:        #2C2523
+     Warm BG:     #EDE4D8
+   ===================================================== */
+
+.root-pane {
+    -fx-background-color: #EDE4D8;
+}
+
+.login-left-panel {
+    -fx-background-color: #C4415D;
+    -fx-pref-width: 520;
+}
+
+.login-right-panel {
+    -fx-background-color: #F5EDE3;
+    -fx-pref-width: 760;
+}
+
+
+
+/* Hero typography on left panel */
+.hero-text-light {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 52px;
+    -fx-text-fill: #F9F3EA;
+    -fx-wrap-text: true;
+}
+
+.hero-text-italic {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 52px;
+    -fx-font-style: italic;
+    -fx-text-fill: #faf0c9;
+    -fx-wrap-text: true;
+}
+
+.hero-subtext {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #D4C4BC;
+    -fx-wrap-text: true;
+}
+
+.hotel-footer-label {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 12px;
+    -fx-text-fill: #B8A89E;
+}
+
+/* Form typography on right panel */
+.form-eyebrow {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #C4415D;
+    -fx-letter-spacing: 2;
+}
+
+.form-title {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 36px;
+    -fx-text-fill: #2C2523;
+}
+
+.form-link-label {
+    -fx-font-family: "Georgia";
+    -fx-font-style: italic;
+    -fx-font-size: 14px;
+    -fx-text-fill: #2C2523;
+}
+
+.form-link-italic {
+    -fx-font-family: "Georgia";
+    -fx-font-style: italic;
+    -fx-font-size: 14px;
+    -fx-text-fill: #2C2523;
+}
+
+.form-link {
+    -fx-font-family: "Georgia";
+    -fx-font-style: italic;
+    -fx-font-size: 14px;
+    -fx-text-fill: #C4415D;
+    -fx-border-color: transparent;
+    -fx-underline: false;
+}
+
+.form-link:hover {
+    -fx-text-fill: #8B2040;
+    -fx-underline: true;
+}
+
+.form-sep {
+    -fx-background-color: #C8A97E;
+    -fx-pref-height: 1;
+}
+
+.demo-hint {
+    -fx-font-size: 11px;
+    -fx-text-fill: #b0978a;
+    -fx-wrap-text: true;
+}
+
+.elegant-input {
+    -fx-background-color: #EFD9DF;
+    -fx-background-radius: 0;
+    -fx-border-color: #C4415D;
+    -fx-border-radius: 0;
+    -fx-border-width: 0 0 1.5 0;
+    -fx-padding: 12 14 12 14;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 14px;
+    -fx-text-fill: #2C2523;
+    -fx-prompt-text-fill: #b09090;
+    -fx-pref-height: 48px;
+    -fx-max-width: Infinity;
+}
+
+.elegant-input:focused {
+    -fx-background-color: #F7D6D9;
+    -fx-border-color: #8B2040;
+    -fx-effect: none;
+}
+
+/* ComboBox styled as elegant-input */
+.elegant-input.combo-box {
+    -fx-background-color: #EFD9DF;
+    -fx-border-color: #C4415D;
+    -fx-border-width: 0 0 1.5 0;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+}
+
+.elegant-input.combo-box:focused {
+    -fx-border-color: #8B2040;
+}
+
+.elegant-input.combo-box .list-cell {
+    -fx-font-family: "Georgia";
+    -fx-text-fill: #2C2523;
+    -fx-background-color: #EFD9DF;
+}
+
+.date-picker {
+    -fx-background-color: #EFD9DF;
+    -fx-background-insets: 0;
+    -fx-border-color: #C4415D;
+    -fx-border-width: 0 0 1.5 0;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-font-family: "Georgia";
+    -fx-pref-height: 48px;
+    -fx-max-width: Infinity;
+}
+
+.date-picker > .text-field {
+    -fx-background-color: #EFD9DF;
+    -fx-text-fill: #2C2523;
+    -fx-prompt-text-fill: #b09090;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 14px;
+    -fx-padding: 12 14 12 14;
+}
+
+.date-picker > .arrow-button {
+    -fx-background-color: #C4415D;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+}
+
+.date-picker > .arrow-button > .arrow {
+    -fx-background-color: #F9F3EA;
+}
+
+.date-picker:focused {
+    -fx-border-color: #8B2040;
+}
+
+.date-picker-popup {
+    -fx-background-color: #F9F3EA;
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+}
+
+.date-picker-popup > .month-year-pane {
+    -fx-background-color: #8B2040;
+}
+
+.date-picker-popup > .month-year-pane .label {
+    -fx-text-fill: #F9F3EA;
+    -fx-font-family: "Georgia";
+    -fx-font-weight: bold;
+}
+
+.date-picker-popup > .month-year-pane .button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #F9F3EA;
+    -fx-background-radius: 0;
+}
+
+.date-picker-popup > .calendar-grid {
+    -fx-background-color: #F9F3EA;
+}
+
+.date-picker-popup .day-name-cell {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #8B2040;
+    -fx-background-color: #F9F3EA;
+}
+
+.date-picker-popup .day-cell {
+    -fx-background-color: #F9F3EA;
+    -fx-text-fill: #2C2523;
+    -fx-font-family: "Georgia";
+    -fx-border-color: transparent;
+}
+
+.date-picker-popup .day-cell:hover {
+    -fx-background-color: #F7D6D9;
+}
+
+.date-picker-popup .day-cell:selected {
+    -fx-background-color: #C4415D;
+    -fx-text-fill: #FFFFFF;
+}
+
+.date-picker-popup .day-cell:disabled {
+    -fx-opacity: 0.35;
+    -fx-background-color: #EFE4D6;
+}
+
+.elegant-radio {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 14px;
+    -fx-text-fill: #2C2523;
+}
+
+.elegant-check {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2C2523;
+    -fx-cursor: hand;
+    -fx-padding: 8 0 8 0;
+}
+
+.elegant-check .box {
+    -fx-background-color: #F7D6D9;
+    -fx-background-insets: 0;
+    -fx-border-color: #C4415D;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-pref-width: 18;
+    -fx-pref-height: 18;
+}
+
+.elegant-check:hover .box {
+    -fx-background-color: #E9AAB7;
+    -fx-border-color: #8B2040;
+}
+
+.elegant-check:selected .box {
+    -fx-background-color: #8B2040;
+    -fx-border-color: #8B2040;
+}
+
+.elegant-check:selected .mark {
+    -fx-background-color: #F9F3EA;
+}
+
+.elegant-check:disabled {
+    -fx-opacity: 0.72;
+}
+
+.primary-action-btn {
+    -fx-background-color: #8B2040;
+    -fx-text-fill: #F9F3EA;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 0;
+    -fx-cursor: hand;
+    -fx-letter-spacing: 1;
+}
+
+.primary-action-btn:hover {
+    -fx-background-color: #C4415D;
+}
+
+.primary-action-btn:pressed {
+    -fx-background-color: #6d1832;
+}
+
+.outline-action-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #8B2040;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-border-color: #8B2040;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-cursor: hand;
+}
+
+.outline-action-btn:hover {
+    -fx-background-color: #F7D6D9;
+    -fx-text-fill: #C4415D;
+    -fx-border-color: #C4415D;
+}
+
+.hero-italic-link,
+.hero-italic-link:visited {
+    -fx-font-family: "Georgia";
+    -fx-font-style: italic;
+    -fx-font-size: 13px;
+    -fx-text-fill: #C4415D;
+    -fx-border-color: transparent;
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+    -fx-underline: false;
+}
+
+.hero-italic-link:hover {
+    -fx-text-fill: #8B2040;
+    -fx-underline: true;
+}
+
+.guest-subpage-shell {
+    -fx-background-color: transparent;
+    -fx-padding: 30 32 30 32;
+}
+
+.guest-date-label {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #F9F3EA;
+}
+
+.guest-back-row {
+    -fx-alignment: CENTER_LEFT;
+}
+
+.guest-back-home-btn {
+    -fx-pref-height: 38;
+    -fx-pref-width: 132;
+}
+
+.guest-reservation-back-btn {
+    -fx-pref-width: 270;
+}
+
+.danger-action-btn {
+    -fx-background-color: #C4415D;
+    -fx-text-fill: #F9F3EA;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 0;
+    -fx-cursor: hand;
+}
+
+.danger-action-btn:hover {
+    -fx-background-color: #8B2040;
+}
+
+.message-label {
+    -fx-text-fill: #C4415D;
+    -fx-font-family: "Georgia";
+    -fx-font-style: italic;
+    -fx-font-size: 13px;
+}
+
+.panel-eyebrow {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 16px; /* BUMPED THIS UP SO THE TEXT IS BIGGER */
+    -fx-font-weight: bold;
+    -fx-text-fill: #C4415D;
+    -fx-letter-spacing: 2;
+}
+
+.panel-title {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 30px;
+    -fx-text-fill: #2C2523;
+}
+
+.profile-field {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 15px;
+    -fx-text-fill: #2C2523;
+    -fx-wrap-text: true;
+}
+
+.profile-edit-input {
+    -fx-background-color: #F9F3EA;
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+    -fx-padding: 12 14 12 14;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 15px;
+    -fx-text-fill: #2C2523;
+    -fx-prompt-text-fill: #A88984;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+}
+
+.profile-edit-input:focused {
+    -fx-border-color: #8B2040;
+    -fx-background-color: #FFF7E6;
+}
+
+.profile-edit-date {
+    -fx-background-color: #F9F3EA;
+    -fx-background-insets: 0;
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+}
+
+.profile-edit-date > .text-field {
+    -fx-background-color: #F9F3EA;
+    -fx-text-fill: #2C2523;
+    -fx-prompt-text-fill: #A88984;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 15px;
+    -fx-padding: 12 14 12 14;
+}
+
+.profile-edit-date > .arrow-button {
+    -fx-background-color: #C4415D;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+}
+
+.profile-edit-date > .arrow-button > .arrow {
+    -fx-background-color: #F9F3EA;
+}
+
+.profile-edit-date:focused {
+    -fx-border-color: #8B2040;
+}
+
+.profile-edit-combo {
+    -fx-background-color: #F9F3EA;
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 15px;
+}
+
+.profile-edit-combo:focused {
+    -fx-border-color: #8B2040;
+}
+
+.profile-edit-combo .list-cell {
+    -fx-background-color: #F9F3EA;
+    -fx-text-fill: #2C2523;
+    -fx-font-family: "Georgia";
+}
+
+.profile-preference-pills {
+    -fx-background-color: #F9F3EA;
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+    -fx-padding: 10 10 10 10;
+}
+
+.profile-summary-preferences {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #FFFFFF;
+}
+
+.form-card {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 0;
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 0 0 0 3;
+    -fx-padding: 22 24 22 24;
+    -fx-effect: dropshadow(gaussian, rgba(44,37,35,0.08), 10, 0.10, 0, 3);
+}
+
+.reservation-layout {
+    -fx-fill-height: false;
+}
+
+.reservation-field-label {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #8B2040;
+    -fx-letter-spacing: 2;
+}
+
+.reservation-selected-type {
+    -fx-background-color: #F9F3EA;
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+    -fx-padding: 12 14 12 14;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 15px;
+    -fx-text-fill: #2C2523;
+}
+
+.reservation-summary-panel {
+    -fx-background-color: #8B2040;
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+    -fx-padding: 26 26 26 26;
+    -fx-effect: dropshadow(gaussian, rgba(44,37,35,0.14), 12, 0.18, 0, 4);
+}
+
+.reservation-summary-title {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #C8A97E;
+    -fx-letter-spacing: 2;
+}
+
+.reservation-summary-label {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 12px;
+    -fx-text-fill: #E9AAB7;
+}
+
+.reservation-summary-value {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #F9F3EA;
+}
+
+.reservation-summary-rule {
+    -fx-background-color: #C4415D;
+    -fx-min-height: 1;
+    -fx-pref-height: 1;
+    -fx-max-height: 1;
+}
+
+.reservation-amenity-line {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #F9F3EA;
+}
+
+.reservation-total-box {
+    -fx-background-color: #C4415D;
+    -fx-padding: 16 16 16 16;
+}
+
+.reservation-total-label {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #C8A97E;
+    -fx-letter-spacing: 1;
+}
+
+.reservation-total-value {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #FFFFFF;
+}
+
+.reception-tab-card {
+    -fx-background-color: #F9F3EA;
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+    -fx-padding: 16 20 16 20;
+    -fx-min-width: 230;
+    -fx-pref-width: 230;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(44,37,35,0.08), 8, 0.08, 0, 2);
+}
+
+.reception-tab-card-active {
+    -fx-background-color: #8B2040;
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1.5;
+}
+
+.reception-tab-label {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #C4415D;
+}
+
+.reception-tab-card-active .reception-tab-label {
+    -fx-text-fill: #C8A97E;
+}
+
+.reception-tab-count {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 32px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2C2523;
+}
+
+.reception-tab-card-active .reception-tab-count {
+    -fx-text-fill: #FFFFFF;
+}
+
+.reservation-empty-message {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #8B2040;
+    -fx-background-color: #F9F3EA;
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+    -fx-padding: 18 20 18 20;
+}
+
+.elegant-list {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 14px;
+    -fx-background-color: #FFFFFF;
+    -fx-control-inner-background: #FFFFFF;
+    -fx-text-fill: #2C2523;
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+}
+
+.elegant-list .list-cell {
+    -fx-background-color: #F9F3EA;
+    -fx-text-fill: #2C2523;
+    -fx-padding: 10 14 10 14;
+    -fx-border-color: transparent transparent #EFE4D6 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.elegant-list .list-cell:odd {
+    -fx-background-color: #FFFFFF;
+}
+
+.elegant-list .list-cell:selected {
+    -fx-background-color: #F7D6D9;
+    -fx-text-fill: #8B2040;
+}
+
+.topbar {
+    -fx-background-color: #8B2040;
+}
+
+.topbar-title {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 22px;
+    -fx-text-fill: #F9F3EA;
+}
+
+.topbar-user {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-text-fill: #D8CCC6;
+}
+
+.sidebar {
+    -fx-background-color: #F9F3EA;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 2, 0);
+}
+
+.content-area {
+    -fx-background-color: #EDE4D8;
+}
+
+.room-hero-banner {
+    -fx-background-color: #C4415D;
+    -fx-min-height: 210;
+    -fx-max-height: 210;
+}
+
+.hero-room-text {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 46px;
+    -fx-text-fill: #F9F3EA;
+    -fx-font-weight: bold;
+}
+
+.hero-room-italic {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 46px;
+    -fx-font-style: italic;
+    -fx-text-fill: #D4C4BC;
+}
+
+.hero-room-sub {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #D4C4BC;
+}
+
+.search-bar-wrapper {
+    -fx-background-color: #F5EDE3;
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(43,36,33,0.18), 24, 0.18, 0, 8);
+}
+
+.search-bar-inner {
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+    -fx-background-color: #F9F3EA;
+    -fx-background-radius: 0;
+    -fx-padding: 0;
+}
+
+.search-bar-label {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 11px;
+    -fx-letter-spacing: 2;
+    -fx-text-fill: #C8A97E;
+    -fx-padding: 14 18 14 18;
+}
+
+.search-btn {
+    -fx-background-color: #C8A97E;
+    -fx-text-fill: #F9F3EA;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-letter-spacing: 2;
+    -fx-background-radius: 0;
+    -fx-cursor: hand;
+    -fx-padding: 14 22 14 22;
+}
+
+.search-btn:hover {
+    -fx-background-color: #8B2040;
+}
+
+.search-fields-row {
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 10 0 0 0;
+}
+
+.search-field-group {
+    -fx-padding: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-spacing: 6;
+}
+
+.search-field-label {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-letter-spacing: 2;
+    -fx-text-fill: #8B2040;
+}
+
+.search-field-input,
+.search-field-combo,
+.search-date-picker,
+.search-spinner {
+    -fx-background-color: #F7D6D9;
+    -fx-background-insets: 0;
+    -fx-border-color: #B33A56;
+    -fx-border-insets: 0;
+    -fx-border-width: 1;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 14px;
+    -fx-text-fill: #2C2523;
+    -fx-prompt-text-fill: #b0978a;
+    -fx-pref-height: 42;
+    -fx-min-height: 42;
+    -fx-max-height: 42;
+}
+
+.search-field-input {
+    -fx-padding: 8 12 8 12;
+}
+
+.search-field-input:focused {
+    -fx-border-color: #8B2040;
+    -fx-effect: none;
+}
+
+.search-field-combo {
+    -fx-padding: 0 8 0 8;
+}
+
+.search-field-combo .list-cell {
+    -fx-font-family: "Georgia";
+    -fx-text-fill: #2C2523;
+    -fx-background-color: #F7D6D9;
+}
+
+.search-field-combo > .arrow-button {
+    -fx-background-color: #F7D6D9;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+}
+
+.search-field-combo > .arrow-button > .arrow {
+    -fx-background-color: #8B2040;
+}
+
+.combo-box-popup .list-view {
+    -fx-background-color: #F9F3EA;
+    -fx-border-color: #C8A97E;
+}
+
+.combo-box-popup .list-cell {
+    -fx-background-color: #F9F3EA;
+    -fx-text-fill: #2C2523;
+    -fx-font-family: "Georgia";
+}
+
+.combo-box-popup .list-cell:hover,
+.combo-box-popup .list-cell:selected {
+    -fx-background-color: #F7D6D9;
+    -fx-text-fill: #8B2040;
+}
+
+.search-date-picker > .text-field {
+    -fx-background-color: #F7D6D9;
+    -fx-text-fill: #2C2523;
+    -fx-prompt-text-fill: #b0978a;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 14px;
+    -fx-padding: 8 12 8 12;
+}
+
+.search-date-picker > .arrow-button {
+    -fx-background-color: #8B2040;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+    -fx-padding: 0 12 0 12;
+}
+
+.search-date-picker > .arrow-button > .arrow {
+    -fx-background-color: #F9F3EA;
+}
+
+.search-spinner .text-field {
+    -fx-background-color: #F7D6D9;
+    -fx-text-fill: #2C2523;
+    -fx-font-family: "Georgia";
+}
+
+.search-spinner .increment-arrow-button,
+.search-spinner .decrement-arrow-button {
+    -fx-background-color: #F7D6D9;
+    -fx-border-color: #B33A56;
+    -fx-border-width: 0 0 0 1;
+}
+
+.search-spinner .increment-arrow,
+.search-spinner .decrement-arrow {
+    -fx-background-color: #8B2040;
+}
+
+.rooms-section {
+    -fx-background-color: #EDE4D8;
+}
+
+.section-eyebrow {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 11px;
+    -fx-letter-spacing: 2;
+    -fx-text-fill: #C4415D;
+    -fx-font-weight: bold;
+}
+
+.section-heading {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 32px;
+    -fx-text-fill: #2C2523;
+}
+
+.room-card {
+    -fx-background-color: #FFFFFF;
+    -fx-padding: 22;
+    -fx-alignment: center-left;
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-effect: dropshadow(gaussian, rgba(44,37,35,0.10), 10, 0.12, 0, 3);
+    -fx-cursor: hand;
+}
+
+.preferred-room-card {
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+}
+
+.room-card-image {
+    -fx-background-radius: 0;
+    -fx-min-height: 160;
+    -fx-max-height: 160;
+}
+
+.room-card-image-header {
+    -fx-min-height: 160;
+    -fx-max-height: 160;
+    -fx-background-color: #E8879A;
+}
+
+.room-card-title {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 20px;
+    -fx-text-fill: #2C2523;
+}
+
+.room-title, .room-price, .room-amenities {
+    -fx-text-fill: #2C2523;
+}
+
+.room-image-box {
+    -fx-min-height: 160;
+    -fx-max-height: 160;
+}
+
+.room-card-desc {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 12px;
+    -fx-text-fill: #2C2523;
+    -fx-wrap-text: true;
+}
+
+.room-card-price {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #8B2040;
+}
+
+.room-card-book-btn {
+    -fx-background-color: #8B2040;
+    -fx-text-fill: #F9F3EA;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 0;
+    -fx-cursor: hand;
+    -fx-padding: 10 18 10 18;
+}
+
+.room-card-book-btn:hover {
+    -fx-background-color: #C4415D;
+}
+
+.room-image-placeholder {
+    -fx-background-color: linear-gradient(to bottom right, #EFE4D6, #E6A4B4);
+    -fx-background-radius: 0;
+    -fx-border-color: #C9AA7C;
+    -fx-border-width: 1;
+}
+
+.room-image-text {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 30px;
+    -fx-text-fill: #8F1D3F;
+    -fx-font-style: italic;
+}
+
+.chat-card {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+    -fx-padding: 20;
+    -fx-effect: dropshadow(gaussian, rgba(80,45,35,0.10), 14, 0.20, 0, 4);
+}
+
+.chat-name {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 18px;
+    -fx-text-fill: #2C2523;
+}
+
+.transparent-scroll {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+    -fx-background-insets: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 0;
+}
+
+.transparent-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.transparent-scroll:focused {
+    -fx-background-insets: 0;
+    -fx-border-color: transparent;
+}
+
+.scroll-bar {
+    -fx-background-color: #F9F3EA;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.scroll-bar:vertical {
+    -fx-pref-width: 14;
+}
+
+.scroll-bar:horizontal {
+    -fx-pref-height: 14;
+}
+
+.scroll-bar .track {
+    -fx-background-color: #F9F3EA;
+    -fx-background-radius: 0;
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 0 0 0 1;
+}
+
+.scroll-bar:horizontal .track {
+    -fx-border-width: 1 0 0 0;
+}
+
+.scroll-bar .thumb {
+    -fx-background-color: #A98B62;
+    -fx-background-radius: 0;
+    -fx-background-insets: 2;
+}
+
+.scroll-bar .thumb:hover {
+    -fx-background-color: #8B704F;
+}
+
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button {
+    -fx-background-color: #F9F3EA;
+    -fx-background-radius: 0;
+    -fx-border-color: #C8A97E;
+    -fx-padding: 2;
+}
+
+.scroll-bar:vertical .increment-button,
+.scroll-bar:vertical .decrement-button {
+    -fx-border-width: 1 0 1 1;
+}
+
+.scroll-bar:horizontal .increment-button,
+.scroll-bar:horizontal .decrement-button {
+    -fx-border-width: 1 1 0 1;
+}
+
+.scroll-bar .increment-arrow,
+.scroll-bar .decrement-arrow {
+    -fx-background-color: #8B2040;
+    -fx-padding: 3;
+}
+
+.scroll-pane,
+.scroll-pane > .viewport,
+.scroll-pane > .corner {
+    -fx-background-insets: 0;
+    -fx-border-width: 0;
+}
+
+.table-view {
+    -fx-background-color: #F9F3EA;
+    -fx-border-color: #C8A97E;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: #8B2040;
+    -fx-background-radius: 0;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: #F9F3EA;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+}
+
+.table-row-cell:odd {
+    -fx-background-color: #F9F3EA;
+}
+
+.table-row-cell:even {
+    -fx-background-color: #EFE4D6;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: #F7D6D9;
+    -fx-text-fill: #2C2523;
+}
+
+.side-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #2C2523;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 14px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+    -fx-cursor: hand;
+    -fx-pref-width: 212px;
+    -fx-pref-height: 44px;
+    -fx-padding: 0 0 0 16;
+}
+
+.side-btn:hover {
+    -fx-background-color: #F7D6D9;
+    -fx-text-fill: #8B2040;
+}
+
+.side-btn-active {
+    -fx-background-color: #8B2040;
+    -fx-text-fill: #F9F3EA;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 14px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-background-radius: 0;
+    -fx-cursor: hand;
+    -fx-pref-width: 212px;
+    -fx-pref-height: 44px;
+    -fx-padding: 0 0 0 16;
+}
+
+.root-pane { -fx-background-color: #EDE4D8; }
+
+.card-container {
+    -fx-background-color: #F9F3EA;
+    -fx-background-radius: 0;
+    -fx-effect: dropshadow(gaussian, rgba(44,37,35,0.18), 28, 0.22, 0, 8);
+}
+
+.left-panel {
+    -fx-background-color: #F9F3EA;
+    -fx-background-radius: 0;
+}
+
+.right-panel {
+    -fx-background-color: #EFE4D6;
+    -fx-background-radius: 0;
+}
+
+.input-field {
+    -fx-background-color: #EFD9DF;
+    -fx-background-radius: 0;
+    -fx-border-color: #C4415D;
+    -fx-border-radius: 0;
+    -fx-border-width: 0 0 1.5 0;
+    -fx-padding: 12 14 12 14;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 14px;
+    -fx-text-fill: #2C2523;
+    -fx-prompt-text-fill: #b0978a;
+    -fx-pref-height: 48px;
+}
+
+.input-field:focused {
+    -fx-background-color: #F7D6D9;
+    -fx-border-color: #8B2040;
+    -fx-effect: none;
+}
+
+.main-btn {
+    -fx-background-color: #8B2040;
+    -fx-text-fill: #F9F3EA;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-background-radius: 0;
+    -fx-cursor: hand;
+    -fx-font-weight: bold;
+}
+
+.main-btn:hover { -fx-background-color: #C4415D; }
+.main-btn:pressed { -fx-background-color: #6d1832; }
+
+.outline-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #8B2040;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-border-color: #8B2040;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-cursor: hand;
+}
+
+.outline-btn:hover {
+    -fx-background-color: #F7D6D9;
+    -fx-border-color: #C4415D;
+    -fx-text-fill: #C4415D;
+}
+
+.book-btn {
+    -fx-background-color: #C4415D;
+    -fx-text-fill: #F9F3EA;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-background-radius: 0;
+    -fx-cursor: hand;
+    -fx-font-weight: bold;
+}
+
+.book-btn:hover { -fx-background-color: #8B2040; }
+
+.danger-btn {
+    -fx-background-color: #C4415D;
+    -fx-text-fill: #F9F3EA;
+    -fx-font-size: 13px;
+    -fx-background-radius: 0;
+    -fx-cursor: hand;
+}
+
+.danger-btn:hover { -fx-background-color: #8B2040; }
+
+.main-button {
+    -fx-background-color: #8B2040;
+    -fx-text-fill: white;
+    -fx-font-family: "Georgia";
+    -fx-font-weight: bold;
+    -fx-background-radius: 0;
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+}
+
+.main-button:hover { -fx-background-color: #C4415D; }
+
+.outline-button {
+    -fx-background-color: transparent;
+    -fx-border-color: #8B2040;
+    -fx-border-radius: 0;
+    -fx-text-fill: #8B2040;
+    -fx-font-family: "Georgia";
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
+.outline-button:hover { -fx-background-color: #F7D6D9; }
+
+
+.section-title {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 30px;
+    -fx-text-fill: #2B2421;
+}
+
+.info-label {
+    -fx-text-fill: #2B2421;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 15px;
+}
+
+.chat-title {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 18px;
+    -fx-text-fill: #2B2421;
+}
+
+.chat-status {
+    -fx-font-size: 12px;
+    -fx-text-fill: #8A726B;
+}
+
+.chat-area {
+    -fx-control-inner-background: #F9F3EA;
+    -fx-text-fill: #2B2421;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 14px;
+    -fx-background-radius: 0;
+    -fx-border-color: #EFE4D6;
+    -fx-border-width: 1;
+    -fx-padding: 10;
+}
+
+.chat-area .content {
+    -fx-background-color: -fx-control-inner-background;
+}
+
+.combo-box {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #C8A97E;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-border-width: 0 0 1.5 0;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 14px;
+}
+
+.combo-box:focused { -fx-border-color: #8B2040; }
+
+.combo-box .list-cell {
+    -fx-text-fill: #2C2523;
+    -fx-font-family: "Georgia";
+}
+
+.scroll-pane {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+}
+
+.scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+.section-card {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 0;
+    -fx-effect: dropshadow(gaussian, rgba(44,37,35,0.10), 12, 0.15, 0, 4);
+    -fx-padding: 20;
+}
+
+.separator .line {
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+}
+
+.guest-home-root {
+    -fx-background-color: #EDE4D8;
+}
+
+.guest-hero {
+    -fx-background-color: #C4415D;
+}
+
+.hero-bold {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 46px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #F9F3EA;
+}
+
+.hero-italic {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 46px;
+    -fx-font-style: italic;
+    -fx-text-fill: #faf0c9;
+}
+
+.hero-sub {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-text-fill: #E8CDD4;
+    -fx-font-weight: bold;
+}
+
+.guest-search-card-wrapper {
+    -fx-background-color: #C4415D;
+    -fx-padding: 0 0 38 0;
+}
+
+.search-card-inner {
+    -fx-background-color: #F9F3EA;
+    -fx-border-color: #C4415D;
+    -fx-border-width: 1;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-effect: dropshadow(gaussian, rgba(44,37,35,0.22), 24, 0.18, 0, 6);
+}
+
+.search-card-eyebrow {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 10px;
+    -fx-letter-spacing: 2;
+    -fx-text-fill: #C8A97E;
+    -fx-padding: 0 0 10 0;
+}
+
+.hero-search-btn {
+    -fx-background-color: #8B2040;
+    -fx-background-insets: 0;
+    -fx-border-color: #8B2040;
+    -fx-border-width: 1;
+    -fx-border-insets: 0;
+    -fx-text-fill: #F9F3EA;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-letter-spacing: 2;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+    -fx-padding: 0 24 0 24;
+    -fx-alignment: CENTER;
+    -fx-cursor: hand;
+}
+
+.hero-search-btn:hover {
+    -fx-background-color: #C4415D;
+}
+
+.search-error-label {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-text-fill: #C4415D;
+    -fx-font-style: italic;
+}
+
+/* Amenity toggle pills */
+.amenity-pill {
+    -fx-background-color: transparent;
+    -fx-border-color: #C4415D;
+    -fx-border-width: 1;
+    -fx-border-radius: 20;
+    -fx-background-radius: 20;
+    -fx-text-fill: #2C2523;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-padding: 5 14 5 14;
+    -fx-cursor: hand;
+}
+
+.amenity-pill:hover {
+    -fx-background-color: #F7D6D9;
+}
+
+.amenity-pill-active {
+    -fx-background-color: #C4415D;
+    -fx-text-fill: #F9F3EA;
+    -fx-border-color: #C4415D;
+}
+
+.amenity-pill:selected {
+    -fx-background-color: #C4415D;
+    -fx-text-fill: #F9F3EA;
+    -fx-border-color: #C4415D;
+}
+
+.quick-card-rose {
+    -fx-background-color: #C4415D;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+    -fx-min-height: 220;
+    -fx-pref-height: 220;
+}
+
+.quick-card-rose:hover {
+    -fx-background-color: #E8879A;
+}
+
+.quick-card-cream {
+    -fx-background-color: #F5EDE3;
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+    -fx-cursor: hand;
+    -fx-min-height: 220;
+    -fx-pref-height: 220;
+}
+
+.quick-card-cream:hover {
+    -fx-background-color: #EFE4D6;
+}
+
+.quick-card-burgundy {
+    -fx-background-color: #8B2040;
+    -fx-cursor: hand;
+    -fx-min-height: 220;
+    -fx-pref-height: 220;
+}
+
+.quick-card-burgundy:hover {
+    -fx-background-color: #6d1832;
+}
+
+.quick-card-link {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #F9F3EA;
+    -fx-underline: true;
+    -fx-letter-spacing: 1;
+    -fx-cursor: hand;
+}
+
+.quick-card-link-dark {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #C4415D;
+    -fx-underline: true;
+    -fx-letter-spacing: 1;
+    -fx-cursor: hand;
+}
+
+.quick-card-link-light {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #F7D6D9;
+    -fx-underline: true;
+    -fx-letter-spacing: 1;
+    -fx-cursor: hand;
+}
+
+.quick-card-muted {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #8a726b;
+    -fx-letter-spacing: 1;
+}
+
+.quick-card-body {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-text-fill: #F9F3EA;
+    -fx-wrap-text: true;
+}
+
+.quick-card-body-light {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-text-fill: #E8CDD4;
+    -fx-wrap-text: true;
+}
+
+.quick-card-quote {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-font-style: italic;
+    -fx-text-fill: #8a726b;
+    -fx-wrap-text: true;
+}
+
+.results-summary-band {
+    -fx-background-color: #C4415D;
+}
+
+.summary-label {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-letter-spacing: 3;
+    -fx-text-fill: #D8A5AE;
+}
+
+.summary-value {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #FFFFFF;
+}
+
+.summary-divider {
+    -fx-background-color: #E8B8C0;
+    -fx-min-width: 2;
+    -fx-pref-width: 2;
+    -fx-max-width: 2;
+    -fx-min-height: 38;
+    -fx-opacity: 0.75;
+}
+
+.modify-search-btn {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-border-color: #E8B8C0;
+    -fx-border-insets: 0;
+    -fx-border-width: 1;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-text-fill: #FFFFFF;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-padding: 0 18 0 18;
+    -fx-cursor: hand;
+}
+
+.modify-search-btn:hover {
+    -fx-background-color: rgba(255,255,255,0.10);
+}
+
+.results-list-shell {
+    -fx-background-color: #F5EDE3;
+}
+
+.results-count-label {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 22px;
+    -fx-text-fill: #8B2040;
+}
+
+.room-type-result-row {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(44,37,35,0.08), 8, 0.10, 0, 2);
+}
+
+.preferred-room-result-row {
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+}
+
+.room-type-result-visual {
+    -fx-background-color: #E8879A;
+    -fx-border-color: transparent #C8A97E transparent transparent;
+    -fx-border-width: 0 1 0 0;
+}
+
+.room-type-icon-label {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 60px;
+    -fx-text-fill: #8F1D3F;
+    -fx-font-style: italic;
+}
+
+.room-type-result-visual-0 {
+    -fx-background-color: #E8879A;
+}
+
+.room-type-result-visual-1 {
+    -fx-background-color: #F3EADF;
+}
+
+.room-type-result-visual-2 {
+    -fx-background-color: #8B2040;
+}
+
+.room-type-result-visual-3 {
+    -fx-background-color: #C4415D;
+}
+
+.room-type-result-marker {
+    -fx-min-width: 46;
+    -fx-min-height: 46;
+    -fx-pref-width: 46;
+    -fx-pref-height: 46;
+    -fx-max-width: 46;
+    -fx-max-height: 46;
+    -fx-background-color: transparent;
+    -fx-border-color: #F7D6D9;
+    -fx-border-width: 7;
+    -fx-border-radius: 28;
+    -fx-background-radius: 28;
+}
+
+.room-type-result-marker-diamond {
+    -fx-background-color: #C8A97E;
+    -fx-border-color: transparent;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+}
+
+.room-type-result-marker-star {
+    -fx-background-color: #F7D6D9;
+    -fx-border-color: transparent;
+    -fx-background-radius: 3;
+}
+
+.room-type-result-marker-cluster {
+    -fx-background-color: #F7D6D9;
+    -fx-border-color: transparent;
+    -fx-background-radius: 24;
+}
+
+.room-type-result-details {
+    -fx-background-color: #FFFFFF;
+}
+
+.room-type-result-title {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 24px;
+    -fx-text-fill: #1F1816;
+}
+
+.room-type-result-description {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 15px;
+    -fx-text-fill: #8B2040;
+    -fx-line-spacing: 2;
+}
+
+.room-count-badge {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #EFD9DF;
+    -fx-border-width: 1;
+    -fx-padding: 8 18 8 18;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #C4415D;
+}
+
+.room-type-result-amenity-chip {
+    -fx-background-color: #F9F3EA;
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+    -fx-border-radius: 14;
+    -fx-background-radius: 14;
+    -fx-padding: 5 20 5 20;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 12px;
+    -fx-text-fill: #8B2040;
+}
+
+.preferred-amenity-chip {
+    -fx-background-color: #FFF7E6;
+    -fx-border-color: #C4415D;
+    -fx-border-width: 2;
+    -fx-text-fill: #2C2523;
+    -fx-effect: dropshadow(gaussian, rgba(196,65,93,0.28), 10, 0.22, 0, 0);
+}
+
+.room-type-result-price-panel {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: transparent transparent transparent #C8A97E;
+    -fx-border-width: 0 0 0 1;
+}
+
+.room-type-result-price-box {
+    -fx-border-color: transparent transparent #C8A97E transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.room-type-result-price {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 34px;
+    -fx-text-fill: #8B2040;
+}
+
+.room-type-result-price-sub {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-text-fill: #8B2040;
+}
+
+.room-type-result-total {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1F1816;
+}
+
+.room-type-result-reserve-btn {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-text-fill: #8B2040;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-letter-spacing: 4;
+    -fx-background-radius: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-border-insets: 0;
+    -fx-cursor: hand;
+}
+
+.room-type-result-reserve-btn:hover {
+    -fx-background-color: #F7D6D9;
+}
+
+/* Final guest-home control overrides: keep these after generic ComboBox styles. */
+.guest-home-root .search-field-combo.combo-box {
+    -fx-background-color: #F7D6D9;
+    -fx-background-insets: 0;
+    -fx-border-color: #B33A56;
+    -fx-border-insets: 0;
+    -fx-border-width: 1;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-padding: 0;
+    -fx-pref-height: 42;
+    -fx-min-height: 42;
+    -fx-max-height: 42;
+}
+
+.guest-home-root .search-field-combo.combo-box > .list-cell {
+    -fx-background-color: #F7D6D9;
+    -fx-text-fill: #2C2523;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 14px;
+    -fx-padding: 0 12 0 12;
+}
+
+.guest-home-root .search-field-combo.combo-box > .arrow-button {
+    -fx-background-color: #F7D6D9;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-border-color: transparent;
+    -fx-padding: 0 14 0 14;
+}
+
+.guest-home-root .search-field-combo.combo-box > .arrow-button > .arrow {
+    -fx-background-color: #8B2040;
+}
+
+.guest-home-root .search-field-combo.combo-box:focused {
+    -fx-border-color: #8B2040;
+}
+
+.guest-home-root .search-date-picker.date-picker {
+    -fx-background-color: #F7D6D9;
+    -fx-background-insets: 0;
+    -fx-border-color: #B33A56;
+    -fx-border-insets: 0;
+    -fx-border-width: 1;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+}
+
+.guest-home-root .search-date-picker.date-picker > .text-field {
+    -fx-background-color: #F7D6D9;
+}
+
+.guest-home-root .search-date-picker.date-picker > .arrow-button {
+    -fx-background-color: #8B2040;
+}
+
+
+/* =====================================================
+   Matches new horizontal-nav + avatar-card design.
+   ===================================================== */
+
+.root-pane {
+    -fx-background-color: #EDE4D8;
+}
+
+.content-area {
+    -fx-background-color: #F5EFE6;
+    -fx-padding: 0;
+}
+
+.topbar-info {
+    -fx-background-color: #C4415D;
+    -fx-min-height: 42;
+    -fx-pref-height: 42;
+}
+
+.topbar-date {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: rgba(255,255,255,0.85);
+}
+
+.topbar-role-badge {
+    -fx-background-color: #8B2040;
+    -fx-text-fill: #F9F3EA;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 18 6 18;
+    -fx-background-radius: 0;
+}
+
+.topnav {
+    -fx-background-color: #C4415D;
+    -fx-min-height: 58;
+    -fx-pref-height: 58;
+}
+
+.nav-btn {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-text-fill: rgba(255,255,255,0.68);
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 0 26 0 26;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+    -fx-cursor: hand;
+    -fx-pref-height: 58;
+    -fx-min-height: 58;
+}
+
+.nav-btn:hover {
+    -fx-background-color: rgba(255,255,255,0.10);
+    -fx-text-fill: white;
+}
+
+.nav-btn-active {
+    -fx-background-color: rgba(139,32,64,0.55);
+    -fx-text-fill: white;
+    -fx-border-color: transparent transparent white transparent;
+    -fx-border-width: 0 0 3 0;
+}
+
+.nav-btn-active:hover {
+    -fx-background-color: rgba(139,32,64,0.65);
+    -fx-text-fill: white;
+}
+
+.nav-btn-logout {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-text-fill: rgba(255,255,255,0.50);
+    -fx-font-family: "Georgia";
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-padding: 0 10 0 26;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+    -fx-cursor: hand;
+    -fx-pref-height: 58;
+    -fx-min-height: 58;
+}
+
+.nav-btn-logout:hover {
+    -fx-text-fill: white;
+}
+
+.filter-label {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #8B2040;
+}
+
+.filter-combo {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2C2523;
+    -fx-background-color: white;
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-cursor: hand;
+    -fx-pref-height: 40;
+}
+
+.filter-combo > .list-cell {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-text-fill: #2C2523;
+    -fx-background-color: white;
+    -fx-padding: 6 14 6 14;
+}
+
+.filter-combo > .arrow-button {
+    -fx-background-color: white;
+    -fx-background-radius: 0;
+}
+
+.filter-combo > .arrow-button > .arrow {
+    -fx-background-color: #8B2040;
+}
+
+.filter-combo:focused {
+    -fx-border-color: #8B2040;
+}
+
+.card-guest-name {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2C2523;
+}
+
+.card-sub-line {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 12px;
+    -fx-text-fill: #C4415D;
+}
+
+.card-metric-header {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #8B2040;
+}
+
+.card-metric-value {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2C2523;
+}
+
+.status-badge {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 5 18 5 18;
+    -fx-background-radius: 20;
+    -fx-text-fill: white;
+}
+
+.reservation-empty-message {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #8B2040;
+    -fx-background-color: #F9F3EA;
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+    -fx-padding: 18 20 18 20;
+}
+
+.error-message {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-text-fill: #C4415D;
+}
+
+/* CreditCardModal styles */
+.credit-card-modal-root {
+    -fx-background-color: #F9F3EA; /* Cream background */
+    -fx-border-color: #C8A97E; /* Gold border */
+    -fx-border-width: 2;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+    -fx-effect: dropshadow(gaussian, rgba(44,37,35,0.18), 24, 0.18, 0, 8);
+}
+
+.header-label {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 24px;
+    -fx-text-fill: #8B2040; /* Burgundy */
+    -fx-font-weight: bold;
+}
+
+.error-label {
+    -fx-font-family: "Georgia";
+    -fx-font-size: 11px;
+    -fx-text-fill: #C4415D; /* Crimson */
+    -fx-font-style: italic;
+    -fx-max-width: Infinity;
+    -fx-pref-height: 15px; /* Give it some height even when empty */
+}
+
+.primary-button {
+    -fx-background-color: #8B2040; /* Burgundy */
+    -fx-text-fill: #F9F3EA; /* Cream */
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 0;
+    -fx-cursor: hand;
+    -fx-letter-spacing: 1;
+    -fx-padding: 10 20 10 20;
+}
+
+.primary-button:hover {
+    -fx-background-color: #C4415D; /* Crimson */
+}
+
+.outline-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #8B2040; /* Burgundy */
+    -fx-font-family: "Georgia";
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-border-color: #8B2040; /* Burgundy */
+    -fx-border-width: 1.5;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-cursor: hand;
+    -fx-padding: 10 20 10 20;
+}
+
+.outline-button:hover {
+    -fx-background-color: #F7D6D9; /* Blush */
+    -fx-text-fill: #C4415D; /* Crimson */
+    -fx-border-color: #C4415D; /* Crimson */
+}
+
+/* Text fields in modal */
+.text-field {
+    -fx-background-color: #F9F3EA;
+    -fx-border-color: #C8A97E;
+    -fx-border-width: 1;
+    -fx-padding: 8 10 8 10;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 14px;
+    -fx-text-fill: #2C2523;
+    -fx-prompt-text-fill: #A88984;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+}
+
+.text-field:focused {
+    -fx-border-color: #8B2040;
+    -fx-background-color: #FFF7E6;
+}
+
+/* Ensure search input fields in guest home have the correct background */
+.guest-home-root .search-field-input {
+    -fx-background-color: #F7D6D9;
+}

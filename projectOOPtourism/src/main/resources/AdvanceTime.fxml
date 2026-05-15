@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="0" style="-fx-padding: 10;" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Controllers.AdvanceTimeController">
+    <children>
+       <Label styleClass="panel-eyebrow" text="SYSTEM" />
+       <Label styleClass="panel-title" text="Advance System Time" />
+       <Region prefHeight="18" />
+
+       <VBox maxWidth="500" spacing="14" styleClass="form-card">
+          <children>
+             <Label fx:id="todayLabel" styleClass="profile-field" text="Current date: DD/MM/YYYY" />
+             <TextField fx:id="daysField" maxWidth="420.0" promptText="Days to advance" styleClass="elegant-input" />
+             <Button onAction="#handleAdvanceTime" prefHeight="44.0" prefWidth="200.0" styleClass="primary-action-btn" text="ADVANCE TIME" />
+             <Button onAction="#handleResetTime" prefHeight="44.0" prefWidth="230.0" styleClass="outline-action-btn" text="RESET DATE" />
+          </children>
+       </VBox>
+    </children>
+</VBox>
